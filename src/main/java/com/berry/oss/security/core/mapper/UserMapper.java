@@ -1,8 +1,8 @@
 package com.berry.oss.security.core.mapper;
 
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.berry.oss.security.core.entity.Role;
 import com.berry.oss.security.core.entity.User;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.Set;

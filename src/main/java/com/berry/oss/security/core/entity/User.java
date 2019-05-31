@@ -1,9 +1,9 @@
 package com.berry.oss.security.core.entity;
 
+import lombok.Data;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
-
-import lombok.Data;
 
 
 /**

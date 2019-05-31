@@ -1,11 +1,11 @@
 package com.berry.oss.security.core.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.berry.oss.security.core.entity.Role;
 import com.berry.oss.security.core.entity.User;
 import com.berry.oss.security.core.mapper.UserMapper;
 import com.berry.oss.security.core.service.IUserDaoService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;

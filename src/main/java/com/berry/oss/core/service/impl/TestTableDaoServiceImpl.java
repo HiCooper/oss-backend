@@ -1,9 +1,9 @@
 package com.berry.oss.core.service.impl;
 
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.berry.oss.core.entity.TestTable;
 import com.berry.oss.core.mapper.TestTableMapper;
 import com.berry.oss.core.service.ITestTableDaoService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 
 /**

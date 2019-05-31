@@ -1,7 +1,7 @@
 package com.berry.oss.security.core.service;
 
-import com.berry.oss.security.core.entity.Role;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.berry.oss.security.core.entity.Role;
 
 /**
  * <p>

@@ -1,7 +1,7 @@
 package com.berry.oss.core.service;
 
-import com.berry.oss.core.entity.TestTable;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.berry.oss.core.entity.TestTable;
 
 /**
  * <p>
