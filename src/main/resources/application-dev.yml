@@ -41,14 +41,6 @@ spring:
       host: 127.0.0.1
       port: 8500
 
-  mail:
-    host: smtp.163.com
-    port: 25
-    username: berry_cooper@163.com
-    password: kakaxi123
-  thymeleaf:
-    cache: false
-
 server:
   undertow:
     buffer-size: 1024

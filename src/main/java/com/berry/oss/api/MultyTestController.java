@@ -11,8 +11,6 @@ import com.berry.oss.security.SecurityUtils;
 import com.berry.oss.security.jwt.JwtFilter;
 import com.berry.oss.security.jwt.TokenProvider;
 import com.berry.oss.security.vm.LoginVM;
-import com.berry.oss.service.MailService;
-import com.berry.oss.service.MailTestUser;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -49,30 +47,11 @@ import java.util.Optional;
 @Api(value = "测试", tags = "测试接口")
 public class MultyTestController {
 
-
-    @Resource
-    private MailService mailService;
-
     @Resource
     private AuthenticationManager authenticationManager;
 
     @Autowired
     private TokenProvider tokenProvider;
-
-
-    @GetMapping("sendEmail")
-    @ApiOperation(value = "发送邮件测试", httpMethod = "GET")
-    public Result sendEmail() {
-        MailTestUser user = new MailTestUser();
-        user.setEmail("294237781@qq.com");
-        user.setActivated(true);
-        user.setActivationKey("100keypppp");
-        user.setLangKey("zh-ch");
-        user.setLogin("admin");
-        mailService.sendActivationEmail(user);
-        mailService.sendCreationEmail(user);
-        return ResultFactory.wrapper();
-    }
 
     @GetMapping("test12")
     public Result test() {

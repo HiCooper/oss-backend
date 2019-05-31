@@ -6,13 +6,6 @@ spring:
     name: OSS_SERVICE
   profiles:
     active: dev
-  messages:
-    basename: i18n/messages
-  mail:
-    host: smtp.163.com
-    port: 25
-    username: berry_cooper@163.com
-    password: kakaxi123
   mvc:
     favicon:
       enabled: false
