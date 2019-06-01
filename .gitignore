@@ -31,3 +31,5 @@ pylog
 
 /__pycache__/
 script/**/__pycache__/
+.DS_Store
+gradle/wrapper/gradle-wrapper.properties
