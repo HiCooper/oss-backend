@@ -25,11 +25,11 @@ import java.util.Scanner;
 public class CodeGenerator {
 
 
-    private static final String db = "47.101.42.169:3306/security-test";
-    private static final String dbUsername = "root";
-    private static final String dbPassword = "3edcvfr4";
-    private static final String tableName = "role";
-    private static final String moduleName = "role";
+    private static final String db = "47.101.42.169:3306/db_oss_service";
+    private static final String dbUsername = "berry";
+    private static final String dbPassword = "okmnji123";
+    private static final String tableName = "object_info";
+    private static final String moduleName = "object";
     private static final String author = "HiCooper";
 
     /**
@@ -54,7 +54,7 @@ public class CodeGenerator {
         // 数据源配置
         DataSourceConfig dsc = new DataSourceConfig();
         dsc.setUrl("jdbc:mysql://" + db + "?useUnicode=true&useSSL=false&characterEncoding=utf8");
-        dsc.setDriverName("com.mysql.jdbc.Driver");
+        dsc.setDriverName("com.mysql.cj.jdbc.Driver");
         dsc.setUsername(dbUsername);
         dsc.setPassword(dbPassword);
         mpg.setDataSource(dsc);
@@ -62,7 +62,7 @@ public class CodeGenerator {
         // 包配置
         PackageConfig pc = new PackageConfig();
         pc.setModuleName(moduleName);
-        pc.setParent("com.berry.oss.security.core");
+        pc.setParent("com.berry.oss.core");
         mpg.setPackageInfo(pc);
 
         // 自定义配置

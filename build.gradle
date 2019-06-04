@@ -64,7 +64,9 @@ dependencies {
     compile "org.springframework.boot:spring-boot-starter-security"
     compile('org.springframework.boot:spring-boot-starter-freemarker')
     compile('org.springframework.boot:spring-boot-starter-undertow')
-    compile('org.springframework.boot:spring-boot-starter-web')
+    compile('org.springframework.boot:spring-boot-starter-web'){
+        exclude module: 'spring-boot-starter-tomcat'
+    }
     compile('org.springframework.boot:spring-boot-starter-data-redis')
     
     runtime('mysql:mysql-connector-java')

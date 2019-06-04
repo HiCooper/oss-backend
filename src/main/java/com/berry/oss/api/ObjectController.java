@@ -2,6 +2,7 @@ package com.berry.oss.api;
 
 import com.berry.oss.common.Result;
 import com.berry.oss.common.ResultFactory;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("api/object")
+@Api(tags = "对象管理")
 public class ObjectController {
 
     @GetMapping("list")

@@ -1,5 +1,6 @@
 package com.berry.oss.api;
 
+import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @date 2019/6/4 15:43
  */
 @RestController
-@RequestMapping("统计信息")
+@RequestMapping("statis")
+@Api(tags = "统计信息")
 public class StatisticsController {
 }
