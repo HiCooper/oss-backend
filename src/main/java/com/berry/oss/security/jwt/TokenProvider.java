@@ -117,7 +117,7 @@ public class TokenProvider {
     }
 
     /**
-     * 获取权限信息
+     * 从 jwt 获取权限信息
      *
      * @param jwt
      * @return 授权凭证

@@ -3,7 +3,6 @@ package com.berry.oss.common.utils;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -12,14 +11,15 @@ public class SHA256 {
 
     private static final String ALGORITHMS_NAME = "SHA-256";
 
-    public static void main(String[] args) throws IOException, NoSuchAlgorithmException {
+    public static void main(String[] args) {
         String sha256Hash = hash("/Users/xueancao/Downloads/program-pkg/googlechrome.dmg");
         System.out.println(sha256Hash.toUpperCase());
     }
 
     /**
+     * 计算文件hash
      * @param filePath 文件路径
-     * @return
+     * @return 16进制hash
      */
     public static String hash(String filePath) {
         long start = System.currentTimeMillis();
@@ -27,7 +27,6 @@ public class SHA256 {
         String strDes;
         try {
             BufferedInputStream in = new BufferedInputStream(new FileInputStream(file));
-
             MessageDigest digest = MessageDigest.getInstance(ALGORITHMS_NAME);
             // 每次读取16M
             int bufferSize = 16 * 1024;
@@ -41,7 +40,7 @@ public class SHA256 {
         } catch (Exception e) {
             throw new RuntimeException("Unable to compute hash while signing request: " + e.getMessage(), e);
         }
-        System.out.println("take time " + (System.currentTimeMillis() - start));
+        System.out.println("calculate complete take time: " + (System.currentTimeMillis() - start) / 1000);
         return strDes;
     }
 

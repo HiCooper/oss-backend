@@ -1,6 +1,6 @@
 package com.berry.oss;
 
-import com.berry.oss.api.MultyTestController;
+import com.berry.oss.api.AuthController;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -20,7 +20,7 @@ public class OSSServiceApplicationTests {
 
     @Before
     public void setUp() throws Exception {
-        mvc = MockMvcBuilders.standaloneSetup(new MultyTestController()).build();
+        mvc = MockMvcBuilders.standaloneSetup(new AuthController()).build();
     }
 
     @Test

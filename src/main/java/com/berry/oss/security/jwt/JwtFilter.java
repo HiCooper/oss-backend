@@ -40,6 +40,7 @@ public class JwtFilter extends GenericFilterBean {
         HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
         String jwt = resolveToken(httpServletRequest);
         if (StringUtils.isNotBlank(jwt) && this.tokenProvider.validateToken(jwt)) {
+            // 验证jwt 设置授权信息到该线程上下文
             Authentication authentication = this.tokenProvider.getAuthentication(jwt);
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }

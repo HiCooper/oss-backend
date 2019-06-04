@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        springBootVersion = '2.1.0.RELEASE'
+        springBootVersion = '2.1.5.RELEASE'
     }
     repositories {
         mavenCentral()
@@ -44,9 +44,6 @@ dependencies {
     compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
     compile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.6'
 
-    compile group: 'org.apache.poi', name: 'poi', version: '4.0.0'
-    compile group: 'org.apache.poi', name: 'poi-ooxml', version: '4.0.0'
-
     compile group: 'io.springfox', name: 'springfox-swagger2', version: '2.9.2'
     compile group: 'io.springfox', name: 'springfox-swagger-ui', version: '2.9.2'
     compile group: 'io.springfox', name: 'springfox-staticdocs', version: '2.6.1'
@@ -55,8 +52,6 @@ dependencies {
     compile group: 'com.google.guava', name: 'guava', version: '23.0'
     
     compile group: 'commons-beanutils', name: 'commons-beanutils', version: '1.9.3'
-    // https://mvnrepository.com/artifact/com.belerweb/pinyin4j
-    compile group: 'com.belerweb', name: 'pinyin4j', version: '2.5.1'
 
 //    mybatis-plus
     compile('com.baomidou:mybatis-plus-boot-starter:3.0.3')
