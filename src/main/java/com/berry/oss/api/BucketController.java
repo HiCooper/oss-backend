@@ -31,14 +31,14 @@ public class BucketController {
         return ResultFactory.wrapper();
     }
 
-    @GetMapping("{id}")
-    public Result detail(@PathVariable("id")String id){
+    @GetMapping("detail")
+    public Result detail(@RequestParam String id){
         System.out.println("详情：" + id);
         return ResultFactory.wrapper();
     }
 
-    @DeleteMapping("{id}")
-    public Result delete(@PathVariable("id")String id){
+    @DeleteMapping("delete")
+    public Result delete(@RequestParam String id){
         System.out.println("删除" + id);
         return ResultFactory.wrapper();
     }
