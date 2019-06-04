@@ -76,7 +76,7 @@ public final class CommonConstant {
          * 权限
          */
         PRIVATE("私有"),
-        PUBLICREAD("公共读"),
+        PUBLIC_READ("公共读"),
         PUBLIC("公开");
 
         private String name;
