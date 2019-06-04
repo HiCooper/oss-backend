@@ -19,5 +19,5 @@ public class CreateBucketMo {
     @NotBlank
     private String name;
 
-    private String acl = CommonConstant.AclType.PRIVATE.getName();
+    private String acl = CommonConstant.AclType.PRIVATE.name();
 }
