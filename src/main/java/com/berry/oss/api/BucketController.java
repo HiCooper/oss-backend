@@ -6,9 +6,12 @@ import com.berry.oss.common.ResultFactory;
 import com.berry.oss.common.utils.StringUtils;
 import com.berry.oss.core.entity.BucketInfo;
 import com.berry.oss.core.service.IBucketInfoDaoService;
+import com.berry.oss.module.mo.CreateBucketMo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -41,7 +44,11 @@ public class BucketController {
 
     @PostMapping("create")
     @ApiOperation("创建 Bucket")
-    public Result create() {
+    public Result create(@Validated @RequestBody CreateBucketMo mo) {
+        BucketInfo bucketInfo = new BucketInfo();
+        BeanUtils.copyProperties(mo, bucketInfo);
+        bucketInfo.setId(StringUtils.getRandomStr(32));
+        bucketInfoDaoService.save(bucketInfo);
         return ResultFactory.wrapper();
     }
 

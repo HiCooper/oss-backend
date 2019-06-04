@@ -9,7 +9,7 @@ import java.util.Map;
  * @date 2018-03-26
  * Description 公共常量
  */
-public class CommonConstant {
+public final class CommonConstant {
 
     /**
      * 默认分页查询记录条数
@@ -69,6 +69,25 @@ public class CommonConstant {
             return code;
         }
 
+    }
+
+    public enum AclType {
+        /**
+         * 权限
+         */
+        PRIVATE("私有"),
+        PUBLICREAD("公共读"),
+        PUBLIC("公开");
+
+        private String name;
+
+        AclType(String name){
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
     }
 
 
