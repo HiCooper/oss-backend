@@ -1,7 +1,5 @@
 package com.berry.oss.service;
 
-import com.berry.oss.common.ResultCode;
-
 /**
  * Created with IntelliJ IDEA.
  *
@@ -11,5 +9,4 @@ import com.berry.oss.common.ResultCode;
  * Use：
  */
 public interface IBucketService {
-    ResultCode list();
 }
