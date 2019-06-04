@@ -45,8 +45,6 @@ server:
   undertow:
     buffer-size: 1024
     direct-buffers: true
-    io-threads: 4
-    worker-threads: 20
 
 
 #mybatis
