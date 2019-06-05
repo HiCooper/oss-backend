@@ -28,6 +28,11 @@ public class ObjectInfo implements Serializable {
     private String id;
 
     /**
+     *  Bucket id
+     */
+    private String bucketId;
+
+    /**
      * 文件名
      */
     private String fileName;
