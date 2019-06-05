@@ -8,7 +8,6 @@ import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.berry.oss.common.ResultCode;
 import com.berry.oss.common.exceptions.BaseException;
-import com.berry.oss.security.core.entity.User;
 import com.berry.oss.security.vm.UserInfoDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
