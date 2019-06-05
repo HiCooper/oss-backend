@@ -12,6 +12,8 @@ import com.berry.oss.core.service.IBucketInfoDaoService;
 import com.berry.oss.core.service.IObjectInfoDaoService;
 import com.berry.oss.module.mo.CreateBucketMo;
 import com.berry.oss.module.mo.UpdateBucketAclMo;
+import com.berry.oss.security.SecurityUtils;
+import com.berry.oss.security.vm.UserInfoDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.BeanUtils;
@@ -47,7 +49,9 @@ public class BucketController {
     @GetMapping("list")
     @ApiOperation("获取 Bucket 列表")
     public Result list(@RequestParam(required = false) String name) {
+        UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
         QueryWrapper<BucketInfo> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_id", currentUser.getId());
         if (StringUtils.isNotBlank(name)) {
             queryWrapper.like("name", name);
         }
@@ -57,9 +61,11 @@ public class BucketController {
     @PostMapping("create")
     @ApiOperation("创建 Bucket")
     public Result create(@Validated @RequestBody CreateBucketMo mo) {
+        UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
         BucketInfo bucketInfo = new BucketInfo();
         BeanUtils.copyProperties(mo, bucketInfo);
         bucketInfo.setId(StringUtils.getRandomStr(32));
+        bucketInfo.setUserId(currentUser.getId());
         bucketInfoDaoService.save(bucketInfo);
         return ResultFactory.wrapper();
     }
@@ -73,8 +79,9 @@ public class BucketController {
     @DeleteMapping("delete")
     @ApiOperation("删除 Bucket")
     public Result delete(@RequestParam String bucketId) {
+        UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
         // 检查该 Bucket 是否为空，非空 Bucket 不能删除
-        int count = objectInfoDaoService.count(new QueryWrapper<ObjectInfo>().eq("bucket_id", bucketId));
+        int count = objectInfoDaoService.count(new QueryWrapper<ObjectInfo>().eq("bucket_id", bucketId).eq("user_id", currentUser.getId()));
         if (count != 0) {
             throw new BaseException("403", "Bucket 内容不为空，不能删除");
         }

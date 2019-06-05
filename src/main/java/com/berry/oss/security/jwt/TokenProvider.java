@@ -8,13 +8,14 @@ import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.berry.oss.common.ResultCode;
 import com.berry.oss.common.exceptions.BaseException;
+import com.berry.oss.security.core.entity.User;
+import com.berry.oss.security.vm.UserInfoDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 
 import java.io.UnsupportedEncodingException;
@@ -40,6 +41,8 @@ public class TokenProvider {
      */
     private static final String AUTHORITIES_KEY = "auth_com";
 
+    private static final String USER_ID_KEY = "userId";
+
     private static final String SECRET = "com.berry.secret";
 
     private static final String ISSUER = "okmnji123";
@@ -61,7 +64,7 @@ public class TokenProvider {
      * @param rememberMe     是否记住我
      * @return 加密token
      */
-    public String createAndSignToken(Authentication authentication, boolean rememberMe) {
+    public String createAndSignToken(Authentication authentication, Integer userId, boolean rememberMe) {
 
         String authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
@@ -81,6 +84,7 @@ public class TokenProvider {
             token = JWT.create()
                     .withSubject(authentication.getName())
                     .withClaim(AUTHORITIES_KEY, authorities)
+                    .withClaim(USER_ID_KEY, userId)
                     .withIssuer(ISSUER)
                     .withExpiresAt(validity)
                     .sign(algorithm);
@@ -123,19 +127,24 @@ public class TokenProvider {
      * @return 授权凭证
      */
     Authentication getAuthentication(String jwt) throws UnsupportedEncodingException {
-        Algorithm algorithm = Algorithm.HMAC256(SECRET);
-        JWTVerifier verifier = JWT.require(algorithm)
-                .withIssuer(ISSUER)
-                .build(); //Reusable verifier instance
-        DecodedJWT decodedJWT = verifier.verify(jwt);
-        Map<String, Claim> claimMap = decodedJWT.getClaims();
+        Map<String, Claim> claimMap = getClaimMap(jwt);
         Collection<? extends GrantedAuthority> authorities =
                 Arrays.stream(claimMap.get(AUTHORITIES_KEY).asString().split(","))
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
 
-        User principal = new User(claimMap.get("sub").asString(), "", authorities);
+        UserInfoDTO principal = new UserInfoDTO();
+        principal.setUsername(claimMap.get("sub").asString());
+        principal.setId(claimMap.get(USER_ID_KEY).asInt());
+        return new UsernamePasswordAuthenticationToken(principal, jwt, authorities);
+    }
 
-        return new UsernamePasswordAuthenticationToken(principal, decodedJWT.getToken(), authorities);
+    private static Map<String, Claim> getClaimMap(String jwt) throws UnsupportedEncodingException {
+        Algorithm algorithm = Algorithm.HMAC256(SECRET);
+        JWTVerifier verifier = JWT.require(algorithm)
+                .withIssuer(ISSUER)
+                .build(); //Reusable verifier instance
+        DecodedJWT decodedJWT = verifier.verify(jwt);
+        return decodedJWT.getClaims();
     }
 }

@@ -28,6 +28,11 @@ public class ObjectInfo implements Serializable {
     private String id;
 
     /**
+     * 用户id
+     */
+    private Integer userId;
+
+    /**
      *  Bucket id
      */
     private String bucketId;
@@ -60,12 +65,12 @@ public class ObjectInfo implements Serializable {
     /**
      * 格式化文件大小
      */
-    private Double formatedSize;
+    private Double formattedSize;
 
     /**
      * 是否为文件夹
      */
-    private Boolean isdir;
+    private Boolean isDir;
 
     /**
      * 创建时间

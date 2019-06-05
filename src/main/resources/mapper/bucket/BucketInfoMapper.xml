@@ -5,6 +5,7 @@
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.berry.oss.core.entity.BucketInfo">
         <id column="id" property="id" />
+        <result column="user_id" property="userId" />
         <result column="name" property="name" />
         <result column="acl" property="acl" />
         <result column="create_time" property="createTime" />
@@ -13,7 +14,7 @@
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, name, acl, create_time, update_time
+        id, name, userId, acl, create_time, update_time
     </sql>
 
 </mapper>

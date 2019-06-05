@@ -1,8 +1,11 @@
 package com.berry.oss.api;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.berry.oss.common.ResultCode;
 import com.berry.oss.common.exceptions.BaseException;
 import com.berry.oss.security.AuthoritiesConstants;
+import com.berry.oss.security.core.entity.User;
+import com.berry.oss.security.core.service.IUserDaoService;
 import com.berry.oss.security.jwt.JwtFilter;
 import com.berry.oss.security.jwt.TokenProvider;
 import com.berry.oss.security.vm.LoginVM;
@@ -40,6 +43,9 @@ public class AuthController {
     private AuthenticationManager authenticationManager;
 
     @Autowired
+    private IUserDaoService userDaoService;
+
+    @Autowired
     private TokenProvider tokenProvider;
 
     @PreAuthorize("hasRole(\"" + AuthoritiesConstants.ADMIN + "\")")
@@ -51,13 +57,19 @@ public class AuthController {
     @PostMapping("/login")
     @ApiOperation("登录")
     public ResponseEntity<JwtToken> authorize(@Valid @RequestBody LoginVM loginVM, HttpServletResponse response) {
+        // 用户是否存在
+        User user = userDaoService.getOne(new QueryWrapper<User>().eq("username", loginVM.getUsername()));
+        if (user == null) {
+            throw new BaseException(ResultCode.ACCOUNT_NOT_EXIST);
+        }
+        // 密码是否正确
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(loginVM.getUsername(), loginVM.getPassword());
 
         try {
             Authentication authentication = this.authenticationManager.authenticate(authenticationToken);
             SecurityContextHolder.getContext().setAuthentication(authentication);
             boolean rememberMe = (loginVM.getRememberMe() == null) ? false : loginVM.getRememberMe();
-            String jwt = this.tokenProvider.createAndSignToken(authentication, rememberMe);
+            String jwt = this.tokenProvider.createAndSignToken(authentication, user.getId(),rememberMe);
             HttpHeaders httpHeaders = new HttpHeaders();
             httpHeaders.add(JwtFilter.AUTHORIZATION_HEADER, jwt);
             Cookie cookie = new Cookie(JwtFilter.AUTHORIZATION_HEADER, jwt);

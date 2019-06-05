@@ -28,6 +28,11 @@ public class BucketInfo implements Serializable {
     private String id;
 
     /**
+     * 用户id
+     */
+    private Integer userId;
+
+    /**
      * Bucket名称
      */
     private String name;
