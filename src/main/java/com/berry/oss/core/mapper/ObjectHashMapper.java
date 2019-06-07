@@ -1,7 +1,7 @@
 package com.berry.oss.core.mapper;
 
-import com.berry.oss.core.entity.ObjectHash;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.berry.oss.core.entity.ObjectHash;
 
 /**
  * <p>
