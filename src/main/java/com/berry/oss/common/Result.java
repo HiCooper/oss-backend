@@ -4,6 +4,7 @@ package com.berry.oss.common;
 import com.alibaba.fastjson.JSON;
 import com.berry.oss.common.constant.IMessageEnum;
 import com.berry.oss.common.exceptions.BaseException;
+import com.berry.oss.common.exceptions.UploadException;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.commons.lang3.StringUtils;
 
@@ -40,6 +41,14 @@ public class Result<M> implements Serializable {
     }
 
     public Result(BaseException ex) {
+        String exCode = ex.getCode();
+        if (StringUtils.isBlank(exCode)) {
+            exCode = ERROR_UNKNOWN;
+        }
+        this.code = exCode;
+        this.msg = ex.getMessage();
+    }
+    public Result(UploadException ex) {
         String exCode = ex.getCode();
         if (StringUtils.isBlank(exCode)) {
             exCode = ERROR_UNKNOWN;

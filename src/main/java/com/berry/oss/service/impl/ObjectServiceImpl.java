@@ -46,6 +46,7 @@ public class ObjectServiceImpl implements IObjectService {
                 .setFilePath(filePath)
                 .setIsDir(false)
                 .setAcl(acl)
+                .setHash(hash)
                 .setUserId(currentUser.getId())
                 .setFormattedSize(StringUtils.getFormattedSize(contentLength));
         objectInfoDaoService.save(objectInfo);

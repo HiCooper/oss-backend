@@ -57,6 +57,10 @@ public class SHA256 {
         return strDes;
     }
 
+    public static void main(String[] args) {
+        System.out.println(hash("/Users/xueancao/Pictures/天空之城吉他.png"));
+    }
+
     private static String bytes2Hex(byte[] bts) {
         StringBuilder des = new StringBuilder();
         String tmp;

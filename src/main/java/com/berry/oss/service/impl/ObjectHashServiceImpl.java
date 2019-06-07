@@ -58,7 +58,10 @@ public class ObjectHashServiceImpl implements IObjectHashService {
         QueryWrapper<ObjectHash> queryWrapper = new QueryWrapper<ObjectHash>().eq("hash", hash);
         ObjectHash one = objectHashDaoService.getOne(queryWrapper);
         if (one == null) {
-            throw new BaseException(ResultCode.DATA_NOT_EXIST);
+            one = new ObjectHash();
+            // todo 完善新建
+            one.setHash(hash);
+            one.setReferenceCount(1);
         }
         one.setReferenceCount(one.getReferenceCount() + 1);
         return objectHashDaoService.save(one);

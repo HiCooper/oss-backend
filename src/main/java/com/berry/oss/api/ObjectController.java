@@ -18,17 +18,19 @@ import com.berry.oss.module.mo.UpdateObjectAclMo;
 import com.berry.oss.security.SecurityUtils;
 import com.berry.oss.security.vm.UserInfoDTO;
 import com.berry.oss.service.IBucketService;
+import com.berry.oss.service.IDataSaveService;
 import com.berry.oss.service.IObjectHashService;
 import com.berry.oss.service.IObjectService;
-import io.reactivex.netty.protocol.http.server.HttpRequestHeaders;
-import io.reactivex.netty.protocol.http.server.HttpServerRequest;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Title ObjectController
@@ -53,15 +55,19 @@ public class ObjectController {
 
     private final IObjectHashService objectHashService;
 
+    private final IDataSaveService dataSaveService;
+
     @Autowired
     public ObjectController(IBucketService bucketService,
                             IObjectInfoDaoService objectInfoDaoService,
                             IObjectService objectService,
-                            IObjectHashService objectHashService) {
+                            IObjectHashService objectHashService,
+                            IDataSaveService dataSaveService) {
         this.bucketService = bucketService;
         this.objectInfoDaoService = objectInfoDaoService;
         this.objectService = objectService;
         this.objectHashService = objectHashService;
+        this.dataSaveService = dataSaveService;
     }
 
     @GetMapping("list")
@@ -113,30 +119,31 @@ public class ObjectController {
     public Result create(@RequestParam("file") MultipartFile file,
                          @RequestParam("bucketId") String bucketId,
                          @RequestParam(value = "filePath", defaultValue = "/") String filePath,
-                         HttpServerRequest request) throws IOException {
+                         @RequestHeader("fileSize") Long fileSize,
+                         @RequestHeader("Digest") String digest) throws IOException {
         // 检查bucket
         BucketInfo bucketInfo = bucketService.checkBucketExist(bucketId);
 
         // 1. 获取请求头中，文件大小，文件hash
-        HttpRequestHeaders headers = request.getHeaders();
-        String length = headers.get("Content-Length");
-        String digest = headers.get("Digest");
+        if (fileSize > Integer.MAX_VALUE) {
+            throw new UploadException("403", "文件大小不能超过2G");
+        }
         // 计算文件 hash，获取文件大小
         String hash = SHA256.hash(file.getBytes());
         long size = file.getSize();
-        if (!String.valueOf(size).equals(length) || !digest.equals(hash)) {
+        if (!String.valueOf(size).equals(fileSize.toString()) || !digest.equals(hash)) {
             throw new UploadException("403", "文件校验失败");
         }
         // 校验通过，尝试快速上传
         String fileName = file.getOriginalFilename();
-        String fileId = objectHashService.checkExist(hash, Long.valueOf(length));
+        String fileId = objectHashService.checkExist(hash, fileSize);
         if (StringUtils.isBlank(fileId)) {
             // 快速上传失败，
-            // todo 调用存储数据服务，将文件按照 设定分块，分布式存储,目前定为 RS(4,2),返回文件id (32位)
-            fileId = "998876508...";
+            // 调用存储数据服务，保存对象，返回32位对象id
+            fileId = dataSaveService.saveObject(file.getInputStream(), fileName);
         }
         // 保存上传信息
-        Boolean result = objectService.saveObjectInfo(bucketId, bucketInfo.getAcl(), hash, Long.valueOf(length), fileName, filePath, fileId);
+        Boolean result = objectService.saveObjectInfo(bucketId, bucketInfo.getAcl(), hash, fileSize, fileName, filePath, fileId);
 
         return ResultFactory.wrapper(result);
     }
@@ -145,6 +152,16 @@ public class ObjectController {
     @ApiOperation("获取对象详情")
     public Result detail(@RequestParam String objectId) {
         return ResultFactory.wrapper(objectInfoDaoService.getById(objectId));
+    }
+
+    @GetMapping("getPic")
+    @ApiOperation("获取对象详情")
+    public Result getPic(@RequestParam String objectId) throws IOException {
+        InputStream object = dataSaveService.getObject(objectId);
+        FileOutputStream outputStream= new FileOutputStream("./1.png");
+        IOUtils.copy(object, outputStream);
+        IOUtils.closeQuietly(object);
+        return ResultFactory.wrapper();
     }
 
     @DeleteMapping("delete")

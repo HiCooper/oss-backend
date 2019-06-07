@@ -1,6 +1,7 @@
 package com.berry.oss.common;
 
 import com.berry.oss.common.exceptions.BaseException;
+import com.berry.oss.common.exceptions.UploadException;
 
 /**
  * @author HiCooper&seassoon
@@ -67,6 +68,10 @@ public class ResultFactory {
      * @return
      */
     public static Result wrapper(BaseException ex) {
+        return new Result(ex);
+    }
+
+    public static Result wrapper(UploadException ex) {
         return new Result(ex);
     }
 
