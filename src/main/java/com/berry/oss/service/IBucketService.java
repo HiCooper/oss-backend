@@ -1,5 +1,7 @@
 package com.berry.oss.service;
 
+import com.berry.oss.core.entity.BucketInfo;
+
 /**
  * Created with IntelliJ IDEA.
  *
@@ -12,7 +14,7 @@ public interface IBucketService {
     /**
      * 检查 bucket 是否存在
      * @param bucketId bucket id
-     * @return boolean
+     * @return BucketInfo
      */
-    boolean checkBucketExist(String bucketId);
+    BucketInfo checkBucketExist(String bucketId);
 }

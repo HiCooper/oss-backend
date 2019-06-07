@@ -28,8 +28,8 @@ public class CodeGenerator {
     private static final String db = "47.101.42.169:3306/db_oss_service";
     private static final String dbUsername = "berry";
     private static final String dbPassword = "okmnji123";
-    private static final String tableName = "object_info";
-    private static final String moduleName = "object";
+    private static final String tableName = "object_hash";
+    private static final String moduleName = "objectHash";
     private static final String author = "HiCooper";
 
     /**

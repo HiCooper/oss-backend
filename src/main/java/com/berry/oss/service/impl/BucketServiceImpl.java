@@ -1,5 +1,8 @@
 package com.berry.oss.service.impl;
 
+import com.berry.oss.common.ResultCode;
+import com.berry.oss.common.exceptions.BaseException;
+import com.berry.oss.core.entity.BucketInfo;
 import com.berry.oss.core.service.IBucketInfoDaoService;
 import com.berry.oss.service.IBucketService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +27,11 @@ public class BucketServiceImpl implements IBucketService {
     }
 
     @Override
-    public boolean checkBucketExist(String bucketId) {
-        return bucketInfoDaoService.getById(bucketId) != null;
+    public BucketInfo checkBucketExist(String bucketId) {
+        BucketInfo bucketInfo = bucketInfoDaoService.getById(bucketId);
+        if (null == bucketInfo) {
+            throw new BaseException(ResultCode.BUCKET_NOT_EXIST);
+        }
+        return bucketInfo;
     }
 }

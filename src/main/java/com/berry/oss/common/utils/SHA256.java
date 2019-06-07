@@ -11,11 +11,6 @@ public class SHA256 {
 
     private static final String ALGORITHMS_NAME = "SHA-256";
 
-    public static void main(String[] args) {
-        String sha256Hash = hash("/Users/xueancao/Downloads/program-pkg/googlechrome.dmg");
-        System.out.println(sha256Hash.toUpperCase());
-    }
-
     /**
      * 计算文件hash
      * @param filePath 文件路径
@@ -72,7 +67,7 @@ public class SHA256 {
             }
             des.append(tmp);
         }
-        return des.toString();
+        return des.toString().toUpperCase();
     }
 
 }

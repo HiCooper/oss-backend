@@ -53,6 +53,16 @@ public class ObjectInfo implements Serializable {
     private String fileId;
 
     /**
+     * hash值
+     */
+    private String hash;
+
+    /**
+     * 读写权限
+     */
+    private String acl;
+
+    /**
      * 文件类型
      */
     private String category;
@@ -65,7 +75,7 @@ public class ObjectInfo implements Serializable {
     /**
      * 格式化文件大小
      */
-    private Double formattedSize;
+    private String formattedSize;
 
     /**
      * 是否为文件夹

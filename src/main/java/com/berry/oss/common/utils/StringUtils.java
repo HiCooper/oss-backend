@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,6 +18,10 @@ import java.util.regex.PatternSyntaxException;
  * @author xueancao
  */
 public class StringUtils extends org.apache.commons.lang3.StringUtils {
+
+    private static final int MAGIC_NUM = 1024;
+
+    private static final String GUTTER = ".";
 
     /**
      * 按照长度获取字符串，如果超出截取最大长度，后面加...
@@ -259,13 +264,39 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
     }
 
     /**
-     * 获取后缀名
+     * 根据文件大小，获取格式化文件描述
      *
-     * @param fileName
+     * @param size
      * @return
      */
+    public static String getFormattedSize(long size) {
+        DecimalFormat df = new DecimalFormat("#.00");
+        double KB = (double) size / MAGIC_NUM;
+        if (KB <= MAGIC_NUM) {
+            return df.format(KB) + "KB";
+        }
+        double MB = KB / MAGIC_NUM;
+        if (MB <= MAGIC_NUM) {
+            return df.format(MB) + "MB";
+        }
+        double GB = MB / MAGIC_NUM;
+        if (GB <= MAGIC_NUM) {
+            return df.format(GB) + "GB";
+        }
+        throw new RuntimeException("File size too Big!!!");
+    }
+
+    /**
+     * 获取 文件拓展名
+     *
+     * @param fileName 文件名
+     * @return 拓展名
+     */
     public static String getExtName(String fileName) {
-        return fileName.substring(fileName.lastIndexOf(".") + 1);
+        if (!fileName.contains(GUTTER)) {
+            return null;
+        }
+        return fileName.substring(fileName.lastIndexOf(".") + 1).toUpperCase();
     }
 
     /**
