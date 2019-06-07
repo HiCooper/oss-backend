@@ -7,15 +7,22 @@ import com.berry.oss.common.Result;
 import com.berry.oss.common.ResultCode;
 import com.berry.oss.common.ResultFactory;
 import com.berry.oss.common.exceptions.BaseException;
+import com.berry.oss.common.exceptions.UploadException;
+import com.berry.oss.common.utils.SHA256;
 import com.berry.oss.core.entity.ObjectInfo;
 import com.berry.oss.core.service.IObjectInfoDaoService;
 import com.berry.oss.security.SecurityUtils;
 import com.berry.oss.security.vm.UserInfoDTO;
 import com.berry.oss.service.IBucketService;
+import io.reactivex.netty.protocol.http.server.HttpRequestHeaders;
+import io.reactivex.netty.protocol.http.server.HttpServerRequest;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 /**
  * Title ObjectController
@@ -62,7 +69,18 @@ public class ObjectController {
 
     @PostMapping("create")
     @ApiOperation("创建对象")
-    public Result create() {
+    public Result create(@RequestParam("file") MultipartFile file, String bucketName, HttpServerRequest request) throws IOException {
+        // 1. 获取请求头中，文件大小，文件hash
+        HttpRequestHeaders headers = request.getHeaders();
+        String length = headers.get("Content-Length");
+        String digest = headers.get("Digest");
+        // 计算文件 hash，获取文件大小
+        String hash = SHA256.hash(file.getBytes());
+        long size = file.getSize();
+        if (!String.valueOf(size).equals(length) || !digest.equals(hash)) {
+            throw new UploadException("403", "文件校验失败");
+        }
+        // 校验通过，调用存储数据服务，将文件按照 设定分块，分布式存储
         return ResultFactory.wrapper();
     }
 

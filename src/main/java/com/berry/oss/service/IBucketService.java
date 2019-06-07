@@ -9,5 +9,10 @@ package com.berry.oss.service;
  * Use：
  */
 public interface IBucketService {
+    /**
+     * 检查 bucket 是否存在
+     * @param bucketId bucket id
+     * @return boolean
+     */
     boolean checkBucketExist(String bucketId);
 }
