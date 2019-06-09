@@ -189,4 +189,5 @@ public class ObjectController {
         objectInfoDaoService.updateById(objectInfo);
         return ResultFactory.wrapper();
     }
+
 }

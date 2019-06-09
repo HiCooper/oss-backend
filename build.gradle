@@ -50,10 +50,10 @@ dependencies {
 
     // https://mvnrepository.com/artifact/com.google.guava/guava
     compile group: 'com.google.guava', name: 'guava', version: '23.0'
-    
+
     compile group: 'commons-beanutils', name: 'commons-beanutils', version: '1.9.3'
 
-//    mybatis-plus
+// mybatis-plus
     compile('com.baomidou:mybatis-plus-boot-starter:3.0.3')
 
     implementation 'org.springframework.cloud:spring-cloud-starter-consul-config'
@@ -64,11 +64,11 @@ dependencies {
     compile "org.springframework.boot:spring-boot-starter-security"
     compile('org.springframework.boot:spring-boot-starter-freemarker')
     compile('org.springframework.boot:spring-boot-starter-undertow')
-    compile('org.springframework.boot:spring-boot-starter-web'){
+    compile('org.springframework.boot:spring-boot-starter-web') {
         exclude module: 'spring-boot-starter-tomcat'
     }
     compile('org.springframework.boot:spring-boot-starter-data-redis')
-    
+
     runtime('mysql:mysql-connector-java')
 
     compileOnly('org.projectlombok:lombok')
