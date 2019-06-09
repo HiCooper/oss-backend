@@ -52,7 +52,7 @@ public class ReedSolomonEncoder {
         final int bufferSize = shardSize * DATA_SHARDS;
         final byte[] allBytes = new byte[bufferSize];
 
-        // buffer当前位置右移 4个字节（4B）
+        // buffer前4个字节（4B）写入数据长度
         ByteBuffer.wrap(allBytes).putInt(fileSize);
 
         // 读入文件到 字节数组（allBytes）

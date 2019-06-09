@@ -37,7 +37,6 @@ public class ObjectServiceImpl implements IObjectService {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
         // 极速上传，添加 该账号 该文件记录
         ObjectInfo objectInfo = new ObjectInfo()
-                .setId(StringUtils.getRandomStr(32))
                 .setBucketId(bucketId)
                 .setCategory(StringUtils.getExtName(fileName))
                 .setFileId(fileId)
@@ -52,6 +51,6 @@ public class ObjectServiceImpl implements IObjectService {
         objectInfoDaoService.save(objectInfo);
 
         // 引用+1
-        return objectHashService.increaseRefCountByHash(hash);
+        return objectHashService.increaseRefCountByHash(hash, fileId, contentLength);
     }
 }

@@ -64,7 +64,6 @@ public class BucketController {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
         BucketInfo bucketInfo = new BucketInfo();
         BeanUtils.copyProperties(mo, bucketInfo);
-        bucketInfo.setId(StringUtils.getRandomStr(32));
         bucketInfo.setUserId(currentUser.getId());
         bucketInfoDaoService.save(bucketInfo);
         return ResultFactory.wrapper();

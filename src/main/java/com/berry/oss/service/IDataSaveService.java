@@ -9,7 +9,7 @@ import java.io.InputStream;
  * @author Berry_Cooper.
  * @date 2019-06-07 23:25
  * fileName：IDataSaveService
- * Use：
+ * Use：数据存储服务，分布存储 RS（4，2）
  */
 public interface IDataSaveService {
 
@@ -18,6 +18,7 @@ public interface IDataSaveService {
      *
      * @param inputStream 输入流
      * @param fileName 文件名
+     * @throws IOException
      * @return
      */
     String saveObject(InputStream inputStream, String fileName) throws IOException;
@@ -26,6 +27,7 @@ public interface IDataSaveService {
      * 获取对象
      *
      * @param objectId 对象di
+     * @throws IOException
      * @return
      */
     InputStream getObject(String objectId) throws IOException;

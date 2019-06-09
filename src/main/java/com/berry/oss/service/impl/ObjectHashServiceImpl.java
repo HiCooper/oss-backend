@@ -54,14 +54,18 @@ public class ObjectHashServiceImpl implements IObjectHashService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public Boolean increaseRefCountByHash(String hash) {
-        QueryWrapper<ObjectHash> queryWrapper = new QueryWrapper<ObjectHash>().eq("hash", hash);
+    public Boolean increaseRefCountByHash(String hash, String fileId, Long size) {
+        QueryWrapper<ObjectHash> queryWrapper = new QueryWrapper<ObjectHash>()
+                .eq("hash", hash)
+                .eq("file_id", fileId)
+                .eq("size", size);
         ObjectHash one = objectHashDaoService.getOne(queryWrapper);
         if (one == null) {
-            one = new ObjectHash();
-            // todo 完善新建
-            one.setHash(hash);
-            one.setReferenceCount(1);
+            one = new ObjectHash()
+                    .setHash(hash)
+                    .setFileId(fileId)
+                    .setSize(size)
+                    .setReferenceCount(1);
         }
         one.setReferenceCount(one.getReferenceCount() + 1);
         return objectHashDaoService.save(one);
