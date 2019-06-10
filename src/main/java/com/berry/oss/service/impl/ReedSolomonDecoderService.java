@@ -1,4 +1,7 @@
-package com.berry.oss.erasure;
+package com.berry.oss.service.impl;
+
+import com.berry.oss.erasure.ReedSolomon;
+import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -11,14 +14,15 @@ import java.nio.ByteBuffer;
  * "foo.txt.5", with at most two missing.  It will then write
  * "foo.txt.decoded".
  */
-public class ReedSolomonDecoder {
+@Service
+public class ReedSolomonDecoderService {
 
     private static final int DATA_SHARDS = 4;
     private static final int PARITY_SHARDS = 2;
     private static final int TOTAL_SHARDS = 6;
     private static final int BYTES_IN_INT = 4;
 
-    public static InputStream readData(String objectId) throws IOException {
+    public InputStream readData(String shardId) throws IOException {
 
         // Read in any of the shards that are present.
         // (There should be checking here to make sure the input

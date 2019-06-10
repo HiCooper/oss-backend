@@ -61,6 +61,20 @@ mybatis-plus:
   global-config:
     sql-parser-cache: true
 
+dubbo:
+  application:
+    name: oss-consumer
+    id: oss-consumer
+    qos-port: 20181
+  protocol:
+    id: dubbo
+    name: dubbo
+    port: 3333
+    host: 192.168.2.207
+  registry:
+    id: oss-zk-registry
+    address: zookeeper://192.168.2.207:2181
+
 #log
 logging:
   level:

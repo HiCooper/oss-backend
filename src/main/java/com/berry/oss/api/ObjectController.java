@@ -119,8 +119,8 @@ public class ObjectController {
     public Result create(@RequestParam("file") MultipartFile file,
                          @RequestParam("bucketId") String bucketId,
                          @RequestParam(value = "filePath", defaultValue = "/") String filePath,
-                         @RequestHeader("fileSize") Long fileSize,
-                         @RequestHeader("Digest") String digest) throws IOException {
+                         @RequestHeader(value = "fileSize", defaultValue = "78557") Long fileSize,
+                         @RequestHeader(value = "Digest", defaultValue = "A08635506169F7AB8799779411D7D7B074DD70BC9F336DD56DEA9357515EF265") String digest) throws IOException {
         // 检查bucket
         BucketInfo bucketInfo = bucketService.checkBucketExist(bucketId);
 

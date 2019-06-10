@@ -1,4 +1,9 @@
-package com.berry.oss.erasure;
+package com.berry.oss.service.impl;
+
+import com.berry.oss.erasure.ReedSolomon;
+import com.berry.rpc.IShardSaveService;
+import org.apache.dubbo.config.annotation.Reference;
+import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -17,7 +22,8 @@ import java.nio.ByteBuffer;
  * with zeros.  The padding is because all four data shards must be
  * the same size.
  */
-public class ReedSolomonEncoder {
+@Service
+public class ReedSolomonEncoderService {
 
     /**
      * 数据分片数
@@ -38,7 +44,10 @@ public class ReedSolomonEncoder {
      */
     private static final int BYTES_IN_INT = DATA_SHARDS;
 
-    public static void writeData(InputStream inputStream) throws IOException {
+    @Reference
+    private IShardSaveService shardSaveService;
+
+    public void writeData(InputStream inputStream) throws IOException {
 
         // Get the size of the input file.  (Files bigger that
         // Integer.MAX_VALUE will fail here!) 最大 2G
@@ -76,11 +85,7 @@ public class ReedSolomonEncoder {
 
         // Write out the resulting files.
         for (int i = 0; i < TOTAL_SHARDS; i++) {
-            File outputFile = new File("./", "test.png" + "." + i);
-            OutputStream out = new FileOutputStream(outputFile);
-            out.write(shards[i]);
-            out.close();
-            System.out.println("wrote " + outputFile);
+            this.shardSaveService.writeShard(shards[i]);
         }
     }
 }

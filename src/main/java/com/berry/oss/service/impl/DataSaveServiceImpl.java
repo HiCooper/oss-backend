@@ -1,10 +1,9 @@
 package com.berry.oss.service.impl;
 
-import com.berry.oss.erasure.ReedSolomonDecoder;
-import com.berry.oss.erasure.ReedSolomonEncoder;
 import com.berry.oss.service.IDataSaveService;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -19,14 +18,20 @@ import java.io.InputStream;
 @Service
 public class DataSaveServiceImpl implements IDataSaveService {
 
+    @Resource
+    private ReedSolomonEncoderService reedSolomonEncoderService;
+
+    @Resource
+    private ReedSolomonDecoderService reedSolomonDecoderService;
+
     @Override
     public String saveObject(InputStream inputStream, String fileName) throws IOException {
-        ReedSolomonEncoder.writeData(inputStream);
+        reedSolomonEncoderService.writeData(inputStream);
         return null;
     }
 
     @Override
     public InputStream getObject(String objectId) throws IOException {
-        return ReedSolomonDecoder.readData(objectId);
+        return reedSolomonDecoderService.readData(objectId);
     }
 }

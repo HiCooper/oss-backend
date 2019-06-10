@@ -60,6 +60,13 @@ dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-consul-discovery'
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-hystrix'
 
+    // dubbo
+    compile group: 'org.apache.dubbo', name: 'dubbo', version: '2.7.1'
+    compile group: 'org.apache.curator', name: 'curator-recipes', version: '4.0.0'
+    compile group: 'org.apache.zookeeper', name: 'zookeeper', version: '3.4.9', ext: 'pom'
+    compile group: 'org.apache.dubbo', name: 'dubbo-spring-boot-starter', version: '2.7.1'
+    compile group: 'org.apache.dubbo', name: 'dubbo-spring-boot-actuator', version: '2.7.1'
+    
     compile "org.springframework.boot:spring-boot-starter-actuator"
     compile "org.springframework.boot:spring-boot-starter-security"
     compile('org.springframework.boot:spring-boot-starter-freemarker')
