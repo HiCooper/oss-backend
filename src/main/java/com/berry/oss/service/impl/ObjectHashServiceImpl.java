@@ -65,7 +65,7 @@ public class ObjectHashServiceImpl implements IObjectHashService {
                     .setHash(hash)
                     .setFileId(fileId)
                     .setSize(size)
-                    .setReferenceCount(1);
+                    .setReferenceCount(0);
         }
         one.setReferenceCount(one.getReferenceCount() + 1);
         return objectHashDaoService.save(one);
