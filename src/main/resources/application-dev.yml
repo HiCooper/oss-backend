@@ -70,10 +70,11 @@ dubbo:
     id: dubbo
     name: dubbo
     port: 3333
-    host: 192.168.2.207
+    status: server
+    host: 127.0.0.1
   registry:
-    id: oss-zk-registry
-    address: zookeeper://192.168.2.207:2181
+    id: oss-consul-registry
+    address: consul://127.0.0.1:8500
 
 #log
 logging:
