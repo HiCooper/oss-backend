@@ -1,11 +1,10 @@
 package com.berry.oss.service.impl;
 
 import com.berry.oss.erasure.ReedSolomon;
-import com.berry.rpc.IShardSaveService;
-import org.apache.dubbo.config.annotation.Reference;
 import org.springframework.stereotype.Service;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 /**
@@ -43,9 +42,6 @@ public class ReedSolomonEncoderService {
      * 每个数据分片增加 1B 信息头，一共 1 * 4 B
      */
     private static final int BYTES_IN_INT = DATA_SHARDS;
-
-    @Reference
-    private IShardSaveService shardSaveService;
 
     public void writeData(InputStream inputStream) throws IOException {
 
@@ -85,7 +81,7 @@ public class ReedSolomonEncoderService {
 
         // Write out the resulting files.
         for (int i = 0; i < TOTAL_SHARDS; i++) {
-            this.shardSaveService.writeShard(shards[i]);
+//            this.shardSaveService.writeShard(shards[i]);
         }
     }
 }

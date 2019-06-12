@@ -61,21 +61,6 @@ mybatis-plus:
   global-config:
     sql-parser-cache: true
 
-dubbo:
-  application:
-    name: oss-consumer
-    id: oss-consumer
-    qos-port: 20181
-  protocol:
-    id: dubbo
-    name: dubbo
-    port: 3333
-    status: server
-    host: 127.0.0.1
-  registry:
-    id: oss-consul-registry
-    address: consul://127.0.0.1:8500
-
 #log
 logging:
   level:
