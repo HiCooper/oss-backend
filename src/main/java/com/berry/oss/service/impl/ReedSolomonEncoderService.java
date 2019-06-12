@@ -1,6 +1,9 @@
 package com.berry.oss.service.impl;
 
 import com.berry.oss.erasure.ReedSolomon;
+import com.berry.oss.remote.IDataServiceClient;
+import com.berry.oss.remote.WriteShardMo;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -43,6 +46,9 @@ public class ReedSolomonEncoderService {
      */
     private static final int BYTES_IN_INT = DATA_SHARDS;
 
+    @Autowired
+    private IDataServiceClient dataServiceClient;
+
     public void writeData(InputStream inputStream) throws IOException {
 
         // Get the size of the input file.  (Files bigger that
@@ -81,7 +87,14 @@ public class ReedSolomonEncoderService {
 
         // Write out the resulting files.
         for (int i = 0; i < TOTAL_SHARDS; i++) {
-//            this.shardSaveService.writeShard(shards[i]);
+            WriteShardMo mo = new WriteShardMo();
+            mo.setUsername("hicooper");
+            mo.setBucketName("buck");
+            mo.setFileName("test.png");
+            mo.setShardIndex(String.valueOf(i));
+            mo.setData(shards[i]);
+            String shardId = dataServiceClient.writeShard(mo);
+            System.out.println(shardId);
         }
     }
 }

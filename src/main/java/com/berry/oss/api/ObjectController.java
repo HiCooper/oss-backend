@@ -117,7 +117,7 @@ public class ObjectController {
     @PostMapping("create")
     @ApiOperation("创建对象")
     public Result create(@RequestParam("file") MultipartFile file,
-                         @RequestParam("bucketId") String bucketId,
+                         @RequestParam(value = "bucketId", defaultValue = "6e5Jg3mtsmA9o5tFwLC2") String bucketId,
                          @RequestParam(value = "filePath", defaultValue = "/") String filePath,
                          @RequestHeader(value = "fileSize", defaultValue = "78557") Long fileSize,
                          @RequestHeader(value = "Digest", defaultValue = "A08635506169F7AB8799779411D7D7B074DD70BC9F336DD56DEA9357515EF265") String digest) throws IOException {

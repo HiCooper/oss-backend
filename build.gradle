@@ -59,7 +59,8 @@ dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-consul-config'
     implementation 'org.springframework.cloud:spring-cloud-starter-consul-discovery'
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-hystrix'
-    
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+
     compile "org.springframework.boot:spring-boot-starter-actuator"
     compile "org.springframework.boot:spring-boot-starter-security"
     compile('org.springframework.boot:spring-boot-starter-freemarker')
