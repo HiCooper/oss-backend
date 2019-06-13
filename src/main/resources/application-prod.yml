@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:mysql://47.101.42.169:3306/shiro-test?characterEncoding=utf8&useSSL=false&useUnicode=true&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://127.0.0.1:3306/db_oss_service?characterEncoding=utf8&useSSL=false&useUnicode=true&allowPublicKeyRetrieval=true
     username: berry
     password: okmnji123
     driver-class-name: com.mysql.cj.jdbc.Driver
