@@ -5,7 +5,7 @@ import com.berry.oss.core.entity.BucketInfo;
 
 /**
  * <p>
- *  Mapper 接口
+ * Mapper 接口
  * </p>
  *
  * @author HiCooper

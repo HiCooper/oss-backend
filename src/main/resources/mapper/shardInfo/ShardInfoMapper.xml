@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.berry.oss.core.mapper.ShardInfoMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.berry.oss.core.entity.ShardInfo">
+        <id column="id" property="id" />
+        <result column="file_id" property="fileId" />
+        <result column="file_name" property="fileName"/>
+        <result column="shard_json" property="shardJson" />
+        <result column="size" property="size"/>
+        <result column="hash" property="hash"/>
+        <result column="create_time" property="createTime"/>
+
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, file_id,file_name, shard_json, size, hash, create_time
+    </sql>
+
+</mapper>

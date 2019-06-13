@@ -14,7 +14,7 @@ public class BaseException extends RuntimeException {
     private final Logger logger = LoggerFactory.getLogger(BaseException.class);
 
     private String code;
-    private String msg ;
+    private String msg;
 
     public BaseException(String code, String msg) {
         super(msg);
@@ -38,7 +38,9 @@ public class BaseException extends RuntimeException {
         this.code = msg.getCode();
     }
 
-    public BaseException(Throwable exception) {super(exception); }
+    public BaseException(Throwable exception) {
+        super(exception);
+    }
 
     public String getCode() {
         return code;

@@ -21,17 +21,16 @@ import static com.berry.oss.common.assertions.Assertions.notNull;
  *
  * <p>Consists of 12 bytes, divided as follows:</p>
  * <table border="1">
- *     <caption>ObjectID layout</caption>
- *     <tr>
- *         <td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td><td>11</td>
- *     </tr>
- *     <tr>
- *         <td colspan="4">time</td><td colspan="3">machine</td> <td colspan="2">pid</td><td colspan="3">inc</td>
- *     </tr>
+ * <caption>ObjectID layout</caption>
+ * <tr>
+ * <td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td><td>11</td>
+ * </tr>
+ * <tr>
+ * <td colspan="4">time</td><td colspan="3">machine</td> <td colspan="2">pid</td><td colspan="3">inc</td>
+ * </tr>
  * </table>
  *
  * <p>Instances of this class are immutable.</p>
- *
  */
 public final class ObjectId implements Comparable<ObjectId>, Serializable {
 
@@ -59,9 +58,9 @@ public final class ObjectId implements Comparable<ObjectId>, Serializable {
      */
     private static final AtomicInteger NEXT_COUNTER = new AtomicInteger(new SecureRandom().nextInt());
 
-    private static final char[] HEX_CHARS = new char[] {
-      '0', '1', '2', '3', '4', '5', '6', '7',
-      '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+    private static final char[] HEX_CHARS = new char[]{
+            '0', '1', '2', '3', '4', '5', '6', '7',
+            '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
     private final int timestamp;
     private final int machineIdentifier;
@@ -196,13 +195,13 @@ public final class ObjectId implements Comparable<ObjectId>, Serializable {
     }
 
     /**
-      * Convert to bytes and put those bytes to the provided ByteBuffer.
-      * Note that the numbers are stored in big-endian order.
-      *
-      * @param buffer the ByteBuffer
-      * @throws IllegalArgumentException if the buffer is null or does not have at least 12 bytes remaining
-      * @since 3.4
-      */
+     * Convert to bytes and put those bytes to the provided ByteBuffer.
+     * Note that the numbers are stored in big-endian order.
+     *
+     * @param buffer the ByteBuffer
+     * @throws IllegalArgumentException if the buffer is null or does not have at least 12 bytes remaining
+     * @since 3.4
+     */
     public void putToByteBuffer(final ByteBuffer buffer) {
         notNull("buffer", buffer);
         isTrueArgument("buffer.remaining() >=12", buffer.remaining() >= 12);
@@ -219,7 +218,7 @@ public final class ObjectId implements Comparable<ObjectId>, Serializable {
         buffer.put(int2(counter));
         buffer.put(int1(counter));
         buffer.put(int0(counter));
-   }
+    }
 
     /**
      * Gets the timestamp (number of seconds since the Unix epoch).
@@ -272,13 +271,13 @@ public final class ObjectId implements Comparable<ObjectId>, Serializable {
      * @return a string representation of the ObjectId in hexadecimal format
      */
     private String toHexString() {
-      char[] chars = new char[24];
-      int i = 0;
-      for (byte b : toByteArray()) {
-        chars[i++] = HEX_CHARS[b >> 4 & 0xF];
-        chars[i++] = HEX_CHARS[b & 0xF];
-      }
-      return new String(chars);
+        char[] chars = new char[24];
+        int i = 0;
+        for (byte b : toByteArray()) {
+            chars[i++] = HEX_CHARS[b >> 4 & 0xF];
+            chars[i++] = HEX_CHARS[b & 0xF];
+        }
+        return new String(chars);
     }
 
     @Override

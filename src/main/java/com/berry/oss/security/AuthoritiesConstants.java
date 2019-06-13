@@ -2,6 +2,7 @@ package com.berry.oss.security;
 
 /**
  * Constants for Spring Security authorities.
+ *
  * @author HiCooper&seassoon
  */
 public final class AuthoritiesConstants {

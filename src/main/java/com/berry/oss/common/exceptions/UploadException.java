@@ -11,7 +11,7 @@ import com.berry.oss.common.constant.IMessageEnum;
 public class UploadException extends RuntimeException {
 
     private String code;
-    private String msg ;
+    private String msg;
 
     public UploadException(String code, String msg) {
         super(msg);
@@ -35,10 +35,12 @@ public class UploadException extends RuntimeException {
         this.code = msg.getCode();
     }
 
-    public UploadException(Throwable exception) {super(exception); }
+    public UploadException(Throwable exception) {
+        super(exception);
+    }
 
     public String getCode() {
         return code;
     }
-    
+
 }

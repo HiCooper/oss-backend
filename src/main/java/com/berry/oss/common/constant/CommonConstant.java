@@ -81,7 +81,7 @@ public final class CommonConstant {
 
         private String name;
 
-        AclType(String name){
+        AclType(String name) {
             this.name = name;
         }
 

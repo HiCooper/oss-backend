@@ -1,14 +1,17 @@
 package com.berry.oss.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.berry.oss.erasure.ReedSolomon;
 import com.berry.oss.remote.IDataServiceClient;
 import com.berry.oss.remote.WriteShardMo;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.berry.oss.remote.WriteShardResponse;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Command-line program encodes one file using Reed-Solomon 4+2.
@@ -42,14 +45,27 @@ public class ReedSolomonEncoderService {
     private static final int TOTAL_SHARDS = DATA_SHARDS + PARITY_SHARDS;
 
     /**
-     * 每个数据分片增加 1B 信息头，一共 1 * 4 B
+     * 数据分片增加 4B 信息头，存放数据长度信息
      */
     private static final int BYTES_IN_INT = DATA_SHARDS;
 
-    @Autowired
-    private IDataServiceClient dataServiceClient;
+    private final IDataServiceClient dataServiceClient;
 
-    public void writeData(InputStream inputStream) throws IOException {
+    public ReedSolomonEncoderService(IDataServiceClient dataServiceClient) {
+        this.dataServiceClient = dataServiceClient;
+    }
+
+    /**
+     * 将输入流，分片 4+2 保存
+     *
+     * @param inputStream 输入流
+     * @param fileName    文件名
+     * @param bucketName  存储空间名
+     * @param username    用户名
+     * @return 对象唯一标识id
+     * @throws IOException
+     */
+    public String writeData(InputStream inputStream, String fileName, String bucketName, String username) throws IOException {
 
         // Get the size of the input file.  (Files bigger that
         // Integer.MAX_VALUE will fail here!) 最大 2G
@@ -85,16 +101,19 @@ public class ReedSolomonEncoderService {
         ReedSolomon reedSolomon = ReedSolomon.create(DATA_SHARDS, PARITY_SHARDS);
         reedSolomon.encodeParity(shards, 0, shardSize);
 
-        // Write out the resulting files.
+        List<WriteShardResponse> result = new ArrayList<>(16);
+        // 数据分片分发
         for (int i = 0; i < TOTAL_SHARDS; i++) {
             WriteShardMo mo = new WriteShardMo();
-            mo.setUsername("hicooper");
-            mo.setBucketName("buck");
-            mo.setFileName("test.png");
-            mo.setShardIndex(String.valueOf(i));
+            mo.setUsername(username);
+            mo.setBucketName(bucketName);
+            mo.setFileName(fileName);
+            mo.setShardIndex(i);
             mo.setData(shards[i]);
-            String shardId = dataServiceClient.writeShard(mo);
-            System.out.println(shardId);
+            // map key [ip, path]
+            WriteShardResponse response = dataServiceClient.writeShard(mo);
+            result.add(response);
         }
+        return JSON.toJSONString(result);
     }
 }

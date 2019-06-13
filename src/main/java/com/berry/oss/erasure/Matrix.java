@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 /**
  * A matrix over the 8-bit Galois field.
- *
+ * <p>
  * This class is not performance-critical, so the implementations
  * are simple and straightforward.
  */
@@ -22,36 +22,36 @@ public class Matrix {
 
     /**
      * The data in the matrix, in row major form.
-     *
+     * <p>
      * To get element (r, c): data[r][c]
-     *
+     * <p>
      * Because this this is computer science, and not math,
      * the indices for both the row and column start at 0.
      */
-    private final byte [] [] data;
+    private final byte[][] data;
 
     /**
      * Initialize a matrix of zeros.
      *
-     * @param initRows The number of rows in the matrix.
+     * @param initRows    The number of rows in the matrix.
      * @param initColumns The number of columns in the matrix.
      */
     public Matrix(int initRows, int initColumns) {
         rows = initRows;
         columns = initColumns;
-        data = new byte [rows] [];
+        data = new byte[rows][];
         for (int r = 0; r < rows; r++) {
-            data[r] = new byte [columns];
+            data[r] = new byte[columns];
         }
     }
 
     /**
      * Initializes a matrix with the given row-major data.
      */
-    public Matrix(byte [] [] initData) {
+    public Matrix(byte[][] initData) {
         rows = initData.length;
         columns = initData[0].length;
-        data = new byte [rows] [];
+        data = new byte[rows][];
         for (int r = 0; r < rows; r++) {
             if (initData[r].length != columns) {
                 throw new IllegalArgumentException("Not all rows have the same number of columns");
@@ -76,7 +76,7 @@ public class Matrix {
 
     /**
      * Returns a human-readable string of the matrix contents.
-     *
+     * <p>
      * Example: [[1, 2], [3, 4]]
      */
     @Override
@@ -102,12 +102,12 @@ public class Matrix {
 
     /**
      * Returns a human-readable string of the matrix contents.
-     *
+     * <p>
      * Example:
-     *    00 01 02
-     *    03 04 05
-     *    06 07 08
-     *    09 0a 0b
+     * 00 01 02
+     * 03 04 05
+     * 06 07 08
+     * 09 0a 0b
      */
     public String toBigString() {
         StringBuilder result = new StringBuilder();
@@ -173,7 +173,7 @@ public class Matrix {
             return false;
         }
         for (int r = 0; r < rows; r++) {
-            if (!Arrays.equals(data[r], ((Matrix)other).data[r])) {
+            if (!Arrays.equals(data[r], ((Matrix) other).data[r])) {
                 return false;
             }
         }
@@ -187,8 +187,8 @@ public class Matrix {
     public Matrix times(Matrix right) {
         if (getColumns() != right.getRows()) {
             throw new IllegalArgumentException(
-                    "Columns on left (" + getColumns() +") " +
-                    "is different than rows on right (" + right.getRows() + ")");
+                    "Columns on left (" + getColumns() + ") " +
+                            "is different than rows on right (" + right.getRows() + ")");
         }
         Matrix result = new Matrix(getRows(), right.getColumns());
         for (int r = 0; r < getRows(); r++) {
@@ -238,8 +238,8 @@ public class Matrix {
     /**
      * Returns one row of the matrix as a byte array.
      */
-    byte [] getRow(int row) {
-        byte [] result = new byte [columns];
+    byte[] getRow(int row) {
+        byte[] result = new byte[columns];
         for (int c = 0; c < columns; c++) {
             result[c] = get(row, c);
         }
@@ -253,7 +253,7 @@ public class Matrix {
         if (r1 < 0 || rows <= r1 || r2 < 0 || rows <= r2) {
             throw new IllegalArgumentException("Row index out of range");
         }
-        byte [] tmp = data[r1];
+        byte[] tmp = data[r1];
         data[r1] = data[r2];
         data[r2] = tmp;
     }
@@ -263,7 +263,7 @@ public class Matrix {
      * 返回这个矩阵的逆矩阵
      *
      * @throws IllegalArgumentException when the matrix is singular and
-     * doesn't have an inverse.
+     *                                  doesn't have an inverse.
      */
     Matrix invert() {
         // Sanity check.
@@ -285,7 +285,7 @@ public class Matrix {
 
     /**
      * Does the work of matrix inversion.
-     *
+     * <p>
      * Assumes that this is an r by 2r matrix.
      */
     private void gaussianElimination() {

@@ -19,6 +19,7 @@ public interface IUserDaoService extends IService<User> {
 
     /**
      * 根据用户名获取用户
+     *
      * @param lowercaseLogin
      * @return
      */
@@ -26,6 +27,7 @@ public interface IUserDaoService extends IService<User> {
 
     /**
      * 根据用户id获取角色列表
+     *
      * @param userId
      * @return
      */

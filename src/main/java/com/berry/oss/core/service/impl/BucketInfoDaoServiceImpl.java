@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * <p>
- *  服务实现类
+ * 服务实现类
  * </p>
  *
  * @author HiCooper
@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 public class BucketInfoDaoServiceImpl extends ServiceImpl<BucketInfoMapper, BucketInfo> implements IBucketInfoDaoService {
 
     @Override
-    public boolean save(BucketInfo entity){
+    public boolean save(BucketInfo entity) {
         entity.setId(ObjectId.get());
         return super.save(entity);
     }

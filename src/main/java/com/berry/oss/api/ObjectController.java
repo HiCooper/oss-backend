@@ -8,11 +8,13 @@ import com.berry.oss.common.ResultCode;
 import com.berry.oss.common.ResultFactory;
 import com.berry.oss.common.exceptions.BaseException;
 import com.berry.oss.common.exceptions.UploadException;
+import com.berry.oss.common.utils.DateUtils;
 import com.berry.oss.common.utils.SHA256;
 import com.berry.oss.common.utils.StringUtils;
 import com.berry.oss.core.entity.BucketInfo;
 import com.berry.oss.core.entity.ObjectInfo;
 import com.berry.oss.core.service.IObjectInfoDaoService;
+import com.berry.oss.module.dto.ObjectResource;
 import com.berry.oss.module.mo.FastUploadCheck;
 import com.berry.oss.module.mo.UpdateObjectAclMo;
 import com.berry.oss.security.SecurityUtils;
@@ -23,14 +25,19 @@ import com.berry.oss.service.IObjectHashService;
 import com.berry.oss.service.IObjectService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.FileOutputStream;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.InputStream;
+import java.time.LocalTime;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Title ObjectController
@@ -119,8 +126,10 @@ public class ObjectController {
     public Result create(@RequestParam("file") MultipartFile file,
                          @RequestParam(value = "bucketId", defaultValue = "6e5Jg3mtsmA9o5tFwLC2") String bucketId,
                          @RequestParam(value = "filePath", defaultValue = "/") String filePath,
-                         @RequestHeader(value = "fileSize", defaultValue = "78557") Long fileSize,
-                         @RequestHeader(value = "Digest", defaultValue = "A08635506169F7AB8799779411D7D7B074DD70BC9F336DD56DEA9357515EF265") String digest) throws IOException {
+                         @RequestHeader(value = "fileSize", defaultValue = "1680949") Long fileSize,
+                         @RequestHeader(value = "Digest", defaultValue = "A7E197B6A0F37A77F448F6D05EA812FE9CCFDE1CA05A5A5FEB8D40427E4038F7") String digest) throws IOException {
+        UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
+
         // 检查bucket
         BucketInfo bucketInfo = bucketService.checkBucketExist(bucketId);
 
@@ -139,29 +148,35 @@ public class ObjectController {
         String fileId = objectHashService.checkExist(hash, fileSize);
         if (StringUtils.isBlank(fileId)) {
             // 快速上传失败，
-            // 调用存储数据服务，保存对象，返回32位对象id
-            fileId = dataSaveService.saveObject(file.getInputStream(), fileName);
+            // 调用存储数据服务，保存对象，返回24位对象id,
+            fileId = dataSaveService.saveObject(file.getInputStream(), hash, fileName, bucketInfo.getName(), currentUser.getUsername());
         }
         // 保存上传信息
         Boolean result = objectService.saveObjectInfo(bucketId, bucketInfo.getAcl(), hash, fileSize, fileName, filePath, fileId);
-
         return ResultFactory.wrapper(result);
     }
 
     @GetMapping("detail")
-    @ApiOperation("获取对象详情")
+    @ApiOperation("获取对象描述")
     public Result detail(@RequestParam String objectId) {
-        return ResultFactory.wrapper(objectInfoDaoService.getById(objectId));
+        return ResultFactory.wrapper(objectInfoDaoService.getOne(new QueryWrapper<ObjectInfo>().eq("file_id",objectId)));
     }
 
-    @GetMapping("getPic")
-    @ApiOperation("获取对象详情")
-    public Result getPic(@RequestParam String objectId) throws IOException {
-        InputStream object = dataSaveService.getObject(objectId);
-        FileOutputStream outputStream= new FileOutputStream("./1.png");
-        IOUtils.copy(object, outputStream);
-        IOUtils.closeQuietly(object);
-        return ResultFactory.wrapper();
+    @GetMapping(value = "getPic")
+    @ApiOperation("获取对象")
+    public void getPic(@RequestParam("objectId") String objectId, HttpServletResponse response, WebRequest request) throws IOException {
+        long modificationDate = DateUtils.getYesterdayBegin().toInstant().toEpochMilli();
+        if (request.checkNotModified(modificationDate)) {
+            response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
+        } else {
+            response.setContentType(MediaType.IMAGE_JPEG_VALUE);
+            ObjectResource object = dataSaveService.getObject(objectId);
+            ZonedDateTime expiresDate = ZonedDateTime.now().with(LocalTime.MAX);
+            String expires = expiresDate.format(DateTimeFormatter.RFC_1123_DATE_TIME);
+            response.setHeader(HttpHeaders.EXPIRES, expires);
+            StreamUtils.copy(object.getInputStream(), response.getOutputStream());
+            response.flushBuffer();
+        }
     }
 
     @DeleteMapping("delete")

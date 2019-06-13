@@ -1,5 +1,10 @@
 package com.berry.oss.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.berry.oss.common.utils.ObjectId;
+import com.berry.oss.core.entity.ShardInfo;
+import com.berry.oss.core.service.IShardInfoDaoService;
+import com.berry.oss.module.dto.ObjectResource;
 import com.berry.oss.service.IDataSaveService;
 import org.springframework.stereotype.Service;
 
@@ -24,14 +29,42 @@ public class DataSaveServiceImpl implements IDataSaveService {
     @Resource
     private ReedSolomonDecoderService reedSolomonDecoderService;
 
-    @Override
-    public String saveObject(InputStream inputStream, String fileName) throws IOException {
-        reedSolomonEncoderService.writeData(inputStream);
-        return null;
+    private final IShardInfoDaoService shardInfoDaoService;
+
+    public DataSaveServiceImpl(IShardInfoDaoService shardInfoDaoService) {
+        this.shardInfoDaoService = shardInfoDaoService;
     }
 
     @Override
-    public InputStream getObject(String objectId) throws IOException {
-        return reedSolomonDecoderService.readData(objectId);
+    public String saveObject(InputStream inputStream, String hash, String fileName, String bucketName, String username) throws IOException {
+        String json = reedSolomonEncoderService.writeData(inputStream, fileName, bucketName, username);
+        String fileId = ObjectId.get();
+        // 保存对象信息
+        ShardInfo shardInfo = new ShardInfo();
+        shardInfo.setFileId(fileId);
+        shardInfo.setHash(hash);
+        shardInfo.setFileName(fileName);
+        shardInfo.setShardJson(json);
+        shardInfo.setSize((long) inputStream.available());
+        shardInfoDaoService.save(shardInfo);
+        return fileId;
+
+    }
+
+    @Override
+    public ObjectResource getObject(String objectId) throws IOException {
+        ShardInfo shardInfo = shardInfoDaoService.getOne(new QueryWrapper<ShardInfo>().eq("file_id", objectId));
+        if (shardInfo == null) {
+            throw new RuntimeException("资源不存在");
+        }
+        String shardJson = shardInfo.getShardJson();
+        InputStream inputStream = reedSolomonDecoderService.readData(shardJson);
+        return new ObjectResource()
+                .setCreateTime(shardInfo.getCreateTime())
+                .setFileId(shardInfo.getFileId())
+                .setFileName(shardInfo.getFileName())
+                .setFileSize(shardInfo.getSize())
+                .setHash(shardInfo.getHash())
+                .setInputStream(inputStream);
     }
 }

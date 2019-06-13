@@ -49,6 +49,7 @@ public class JwtFilter extends GenericFilterBean {
 
     /**
      * 获取token，如果请求头中没有，则在cookie中获取
+     *
      * @param request
      * @return
      */
@@ -56,7 +57,7 @@ public class JwtFilter extends GenericFilterBean {
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
         if (StringUtils.isNotBlank(bearerToken)) {
             return bearerToken;
-        } else  {
+        } else {
             Cookie cookie = getCookie(request, AUTHORIZATION_HEADER);
             if (cookie != null) {
                 // Validate that the cookie is used at the correct place.
@@ -64,7 +65,7 @@ public class JwtFilter extends GenericFilterBean {
                 if (path != null && !pathMatches(path, request.getRequestURI())) {
                     log.warn("Found '{}' cookie at path '{}', but should be only used for '{}'", AUTHORIZATION_HEADER, request.getRequestURI(), path);
                 } else {
-                    bearerToken =  cookie.getValue();
+                    bearerToken = cookie.getValue();
                     log.debug("Found '{}' cookie value [{}]", AUTHORIZATION_HEADER, bearerToken);
                     return bearerToken;
                 }
@@ -78,6 +79,7 @@ public class JwtFilter extends GenericFilterBean {
 
     /**
      * 获取cookie
+     *
      * @param request
      * @param cookieName
      * @return
@@ -93,10 +95,11 @@ public class JwtFilter extends GenericFilterBean {
         }
         return null;
     }
+
     /**
      * Check whether the given {@code cookiePath} matches the {@code requestPath}
      *
-     * @param cookiePath cookie路径
+     * @param cookiePath  cookie路径
      * @param requestPath 请求路径
      * @return
      * @see <a href="https://tools.ietf.org/html/rfc6265#section-5.1.4">RFC 6265, Section 5.1.4 "Paths and Path-Match"</a>

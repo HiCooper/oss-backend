@@ -13,6 +13,7 @@ public class SHA256 {
 
     /**
      * 计算文件hash
+     *
      * @param filePath 文件路径
      * @return 16进制hash
      */
@@ -58,7 +59,7 @@ public class SHA256 {
     }
 
     public static void main(String[] args) {
-        System.out.println(hash("/Users/xueancao/Pictures/天空之城吉他.png"));
+        System.out.println(hash("D://admin/Pictures/bg.png"));
     }
 
     private static String bytes2Hex(byte[] bts) {

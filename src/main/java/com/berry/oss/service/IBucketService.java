@@ -13,6 +13,7 @@ import com.berry.oss.core.entity.BucketInfo;
 public interface IBucketService {
     /**
      * 检查 bucket 是否存在
+     *
      * @param bucketId bucket id
      * @return BucketInfo
      */

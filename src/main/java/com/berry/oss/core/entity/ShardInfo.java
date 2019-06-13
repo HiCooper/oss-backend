@@ -11,16 +11,16 @@ import java.time.LocalDateTime;
 
 /**
  * <p>
- *
+ * 
  * </p>
  *
  * @author HiCooper
- * @since 2019-06-07
+ * @since 2019-06-13
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-public class ObjectHash implements Serializable {
+public class ShardInfo implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -31,24 +31,29 @@ public class ObjectHash implements Serializable {
     private Integer id;
 
     /**
-     * hash值
+     * 对象id
+     */
+    private String fileId;
+
+    /**
+     * hash
      */
     private String hash;
 
     /**
-     * 文件对象id
+     * 文件名
      */
-    private String fileId;
+    private String fileName;
+
+    /**
+     * 分片json
+     */
+    private String shardJson;
 
     /**
      * 文件大小
      */
     private Long size;
-
-    /**
-     * 被引用次数
-     */
-    private Integer referenceCount;
 
     /**
      * 创建时间

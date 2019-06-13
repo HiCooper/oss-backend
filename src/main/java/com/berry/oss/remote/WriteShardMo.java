@@ -15,6 +15,6 @@ public class WriteShardMo {
     String username;
     String bucketName;
     String fileName;
-    String shardIndex;
+    Integer shardIndex;
     byte[] data;
 }

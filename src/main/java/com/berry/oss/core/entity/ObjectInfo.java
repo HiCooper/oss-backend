@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author HiCooper
@@ -33,7 +33,7 @@ public class ObjectInfo implements Serializable {
     private Integer userId;
 
     /**
-     *  Bucket id
+     * Bucket id
      */
     private String bucketId;
 

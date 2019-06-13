@@ -4,12 +4,12 @@
 
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.berry.oss.core.entity.ObjectHash">
-        <id column="id" property="id" />
-        <result column="hash" property="hash" />
-        <result column="file_id" property="fileId" />
-        <result column="size" property="size" />
-        <result column="create_time" property="createTime" />
-        <result column="reference_count" property="referenceCount" />
+        <id column="id" property="id"/>
+        <result column="hash" property="hash"/>
+        <result column="file_id" property="fileId"/>
+        <result column="size" property="size"/>
+        <result column="create_time" property="createTime"/>
+        <result column="reference_count" property="referenceCount"/>
     </resultMap>
 
     <!-- 通用查询结果列 -->

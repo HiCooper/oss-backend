@@ -48,6 +48,7 @@ public class Result<M> implements Serializable {
         this.code = exCode;
         this.msg = ex.getMessage();
     }
+
     public Result(UploadException ex) {
         String exCode = ex.getCode();
         if (StringUtils.isBlank(exCode)) {

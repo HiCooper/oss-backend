@@ -1,9 +1,15 @@
 package com.berry.oss.service.impl;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.berry.oss.erasure.ReedSolomon;
+import com.berry.oss.remote.IDataServiceClient;
 import org.springframework.stereotype.Service;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 /**
@@ -22,27 +28,29 @@ public class ReedSolomonDecoderService {
     private static final int TOTAL_SHARDS = 6;
     private static final int BYTES_IN_INT = 4;
 
-    public InputStream readData(String shardId) throws IOException {
+    private final IDataServiceClient dataServiceClient;
 
-        // Read in any of the shards that are present.
-        // (There should be checking here to make sure the input
-        // shards are the same size, but there isn't.)
+    public ReedSolomonDecoderService(IDataServiceClient dataServiceClient) {
+        this.dataServiceClient = dataServiceClient;
+    }
+
+    public InputStream readData(String shardJson) throws IOException {
+
+        JSONArray jsonArray = JSONArray.parseArray(shardJson);
+
         final byte[][] shards = new byte[TOTAL_SHARDS][];
         final boolean[] shardPresent = new boolean[TOTAL_SHARDS];
         int shardSize = 0;
         int shardCount = 0;
         for (int i = 0; i < TOTAL_SHARDS; i++) {
-            File shardFile = new File("./", "test.png" + "." + i);
-            if (shardFile.exists()) {
-                shardSize = (int) shardFile.length();
-                shards[i] = new byte[shardSize];
-                shardPresent[i] = true;
-                shardCount += 1;
-                InputStream in = new FileInputStream(shardFile);
-                in.read(shards[i], 0, shardSize);
-                in.close();
-                System.out.println("Read " + shardFile);
-            }
+            JSONObject shard = jsonArray.getJSONObject(i);
+            String path = shard.getString("path");
+            String ip = shard.getString("ip");
+            byte[] bytes = dataServiceClient.readShard(path);
+            shardSize= bytes.length;
+            shards[i] = bytes;
+            shardPresent[i] = true;
+            shardCount += 1;
         }
 
         // We need at least DATA_SHARDS to be able to reconstruct the file.
@@ -68,11 +76,7 @@ public class ReedSolomonDecoderService {
         for (int i = 0; i < DATA_SHARDS; i++) {
             System.arraycopy(shards[i], 0, allBytes, shardSize * i, shardSize);
         }
-
-        // Extract the file length
         int fileSize = ByteBuffer.wrap(allBytes).getInt();
-
-        // Write the decoded file
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         outputStream.write(allBytes, BYTES_IN_INT, fileSize);
         return new ByteArrayInputStream(outputStream.toByteArray());

@@ -1,4 +1,5 @@
 package com.berry.oss.common.assertions;
+
 /**
  * <p>Design by contract assertions.</p> <p>This class is not part of the public API and may be removed or changed at any time.</p>
  */

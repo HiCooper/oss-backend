@@ -6,6 +6,10 @@ spring:
     name: OSS_SERVICE
   profiles:
     active: dev
+  servlet:
+    multipart:
+      maxFileSize: "4096MB"
+      maxRequestSize: "4096MB"
   mvc:
     favicon:
       enabled: false

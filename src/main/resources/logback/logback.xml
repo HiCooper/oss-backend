@@ -4,7 +4,7 @@
 
     <springProperty scope="context" name="logPath" source="log.path" defaultValue="logs"/>
 
-    <property name="LOG_BASE_PATH" value="${logPath}" />
+    <property name="LOG_BASE_PATH" value="${logPath}"/>
 
     <!--日志文件配置，20MB将自动压缩打包-->
     <!--ERROR级别日志-->

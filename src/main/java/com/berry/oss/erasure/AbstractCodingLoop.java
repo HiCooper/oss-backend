@@ -2,7 +2,7 @@ package com.berry.oss.erasure;
 
 /**
  * Common implementations for coding loops.
- *
+ * <p>
  * Many of the coding loops do not have custom checkSomeShards() methods.
  * The benchmark doesn't measure that method.
  */

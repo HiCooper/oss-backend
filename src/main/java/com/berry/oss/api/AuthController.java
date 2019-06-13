@@ -51,7 +51,7 @@ public class AuthController {
     @PreAuthorize("hasRole(\"" + AuthoritiesConstants.ADMIN + "\")")
     @GetMapping("getCurrentUserLogin")
     public Object getCurrentUser() {
-        return  SecurityContextHolder.getContext().getAuthentication();
+        return SecurityContextHolder.getContext().getAuthentication();
     }
 
     @PostMapping("/login")
@@ -69,7 +69,7 @@ public class AuthController {
             Authentication authentication = this.authenticationManager.authenticate(authenticationToken);
             SecurityContextHolder.getContext().setAuthentication(authentication);
             boolean rememberMe = (loginVM.getRememberMe() == null) ? false : loginVM.getRememberMe();
-            String jwt = this.tokenProvider.createAndSignToken(authentication, user.getId(),rememberMe);
+            String jwt = this.tokenProvider.createAndSignToken(authentication, user.getId(), rememberMe);
             HttpHeaders httpHeaders = new HttpHeaders();
             httpHeaders.add(JwtFilter.AUTHORIZATION_HEADER, jwt);
             Cookie cookie = new Cookie(JwtFilter.AUTHORIZATION_HEADER, jwt);

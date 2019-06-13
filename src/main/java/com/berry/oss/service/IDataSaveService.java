@@ -1,5 +1,7 @@
 package com.berry.oss.service;
 
+import com.berry.oss.module.dto.ObjectResource;
+
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -9,7 +11,7 @@ import java.io.InputStream;
  * @author Berry_Cooper.
  * @date 2019-06-07 23:25
  * fileName：IDataSaveService
- * Use：数据存储服务，分布存储 RS（4，2）
+ * Use：数据存储服务，该接口整存整取
  */
 public interface IDataSaveService {
 
@@ -17,18 +19,21 @@ public interface IDataSaveService {
      * 保存对象
      *
      * @param inputStream 输入流
-     * @param fileName 文件名
+     * @param hash    hash
+     * @param fileName    文件名
+     * @param bucketName  存储空间名
+     * @param username    用户名
+     * @return fileId 对象唯一id
      * @throws IOException
-     * @return
      */
-    String saveObject(InputStream inputStream, String fileName) throws IOException;
+    String saveObject(InputStream inputStream, String hash, String fileName, String bucketName, String username) throws IOException;
 
     /**
      * 获取对象
      *
-     * @param objectId 对象di
+     * @param objectId 对象id
+     * @return 资源对象
      * @throws IOException
-     * @return
      */
-    InputStream getObject(String objectId) throws IOException;
+    ObjectResource getObject(String objectId) throws IOException;
 }

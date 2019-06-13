@@ -22,9 +22,9 @@ public interface IObjectHashService {
     /**
      * 增加 哈希引用计算
      *
-     * @param hash hash值
+     * @param hash   hash值
      * @param fileId fileId
-     * @param size size
+     * @param size   size
      * @return
      */
     Boolean increaseRefCountByHash(String hash, String fileId, Long size);
