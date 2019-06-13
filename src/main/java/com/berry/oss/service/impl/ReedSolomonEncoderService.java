@@ -102,12 +102,13 @@ public class ReedSolomonEncoderService {
         reedSolomon.encodeParity(shards, 0, shardSize);
 
         List<WriteShardResponse> result = new ArrayList<>(16);
-        // 数据分片分发
+
+        WriteShardMo mo = new WriteShardMo();
+        mo.setUsername(username);
+        mo.setBucketName(bucketName);
+        mo.setFileName(fileName);
+        // 数据分片分发，todo 未实现分发，可考虑使用Http 根据在线注册可用服务器IP和端口 指定ip发送
         for (int i = 0; i < TOTAL_SHARDS; i++) {
-            WriteShardMo mo = new WriteShardMo();
-            mo.setUsername(username);
-            mo.setBucketName(bucketName);
-            mo.setFileName(fileName);
             mo.setShardIndex(i);
             mo.setData(shards[i]);
             // map key [ip, path]
