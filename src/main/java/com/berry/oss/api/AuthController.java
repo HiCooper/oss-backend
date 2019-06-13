@@ -48,12 +48,6 @@ public class AuthController {
     @Autowired
     private TokenProvider tokenProvider;
 
-    @PreAuthorize("hasRole(\"" + AuthoritiesConstants.ADMIN + "\")")
-    @GetMapping("getCurrentUserLogin")
-    public Object getCurrentUser() {
-        return SecurityContextHolder.getContext().getAuthentication();
-    }
-
     @PostMapping("/login")
     @ApiOperation("登录")
     public ResponseEntity<JwtToken> authorize(@Valid @RequestBody LoginVM loginVM, HttpServletResponse response) {

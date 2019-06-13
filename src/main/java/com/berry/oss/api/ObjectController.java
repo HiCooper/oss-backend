@@ -100,7 +100,7 @@ public class ObjectController {
      * @return
      */
     @PostMapping("tryFastUpload")
-    @ApiOperation("检查文件是否已在系统中")
+    @ApiOperation("极速上传")
     public Result tryFastUpload(@RequestBody FastUploadCheck fastUploadCheck) {
         // 检查bucket
         String bucketId = fastUploadCheck.getBucketId();
