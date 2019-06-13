@@ -30,10 +30,6 @@ public class ReedSolomonBenchmark {
 
     private int nextBuffer = 0;
 
-    public static void main(String[] args) {
-        (new ReedSolomonBenchmark()).run();
-    }
-
     public void run() {
 
         System.out.println("preparing...");

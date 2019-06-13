@@ -58,10 +58,6 @@ public class SHA256 {
         return strDes;
     }
 
-    public static void main(String[] args) {
-        System.out.println(hash("D://admin/Pictures/bg.png"));
-    }
-
     private static String bytes2Hex(byte[] bts) {
         StringBuilder des = new StringBuilder();
         String tmp;
