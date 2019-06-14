@@ -17,4 +17,14 @@
         id, name, userId, acl, create_time, update_time
     </sql>
 
+    <select id="listBucket" resultType="com.berry.oss.module.vo.BucketListVo">
+        select id, name, acl, create_time, update_time from bucket_info
+        <where>
+            AND user_id = #{userId}
+            <if test="name != null and name !=''">
+                AND name like concat(#{name}, "%")
+            </if>
+        </where>
+    </select>
+
 </mapper>

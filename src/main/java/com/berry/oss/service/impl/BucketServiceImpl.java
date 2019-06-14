@@ -1,5 +1,6 @@
 package com.berry.oss.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.berry.oss.common.ResultCode;
 import com.berry.oss.common.exceptions.BaseException;
 import com.berry.oss.core.entity.BucketInfo;
@@ -29,6 +30,15 @@ public class BucketServiceImpl implements IBucketService {
     @Override
     public BucketInfo checkBucketExist(String bucketId) {
         BucketInfo bucketInfo = bucketInfoDaoService.getById(bucketId);
+        if (null == bucketInfo) {
+            throw new BaseException(ResultCode.BUCKET_NOT_EXIST);
+        }
+        return bucketInfo;
+    }
+
+    @Override
+    public BucketInfo checkBucketExist(Integer userId, String bucketName) {
+        BucketInfo bucketInfo = bucketInfoDaoService.getOne(new QueryWrapper<BucketInfo>().eq("user_id", userId).eq("name", bucketName));
         if (null == bucketInfo) {
             throw new BaseException(ResultCode.BUCKET_NOT_EXIST);
         }

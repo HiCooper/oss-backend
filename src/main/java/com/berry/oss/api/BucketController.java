@@ -21,6 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 /**
  * Title BucketController
  * Description
@@ -50,12 +52,7 @@ public class BucketController {
     @ApiOperation("获取 Bucket 列表")
     public Result list(@RequestParam(required = false) String name) {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
-        QueryWrapper<BucketInfo> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_id", currentUser.getId());
-        if (StringUtils.isNotBlank(name)) {
-            queryWrapper.like("name", name);
-        }
-        return ResultFactory.wrapper(bucketInfoDaoService.list(queryWrapper));
+        return ResultFactory.wrapper(bucketInfoDaoService.listBucket(currentUser.getId(), name));
     }
 
     @PostMapping("create")
@@ -71,8 +68,9 @@ public class BucketController {
 
     @GetMapping("detail")
     @ApiOperation("获取 Bucket 详情")
-    public Result detail(@RequestParam String id) {
-        return ResultFactory.wrapper(bucketInfoDaoService.getById(id));
+    public Result detail(@RequestParam("name") String name) {
+        UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
+        return ResultFactory.wrapper(bucketInfoDaoService.getOne(new QueryWrapper<BucketInfo>().eq("user_id", currentUser.getId()).eq("name", name)));
     }
 
     @DeleteMapping("delete")

@@ -79,15 +79,15 @@ public class ObjectController {
 
     @GetMapping("list")
     @ApiOperation("获取 Object 列表")
-    public Result list(@RequestParam String bucketId,
+    public Result list(@RequestParam("bucketName") String bucketName,
                        @RequestParam(defaultValue = "/") String path,
                        @RequestParam(defaultValue = "1") Integer pageNum,
                        @RequestParam(defaultValue = "10") Integer pageSize) {
-        bucketService.checkBucketExist(bucketId);
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
+        BucketInfo bucketInfo = bucketService.checkBucketExist(currentUser.getId(), bucketName);
         QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_id", currentUser.getId());
-        queryWrapper.eq("bucket_id", bucketId);
+        queryWrapper.eq("bucket_id", bucketInfo.getId());
         queryWrapper.eq("file_path", path);
         IPage<ObjectInfo> page = new Page<>(pageNum, pageSize);
         return ResultFactory.wrapper(objectInfoDaoService.page(page, queryWrapper));

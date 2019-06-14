@@ -18,4 +18,12 @@ public interface IBucketService {
      * @return BucketInfo
      */
     BucketInfo checkBucketExist(String bucketId);
+
+    /**
+     *  检查 bucket 是否存在
+     * @param userId 用户id
+     * @param bucketName bucket name
+     * @return
+     */
+    BucketInfo checkBucketExist(Integer userId, String bucketName);
 }
