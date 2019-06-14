@@ -124,10 +124,10 @@ public class ObjectController {
     @PostMapping("create")
     @ApiOperation("创建对象")
     public Result create(@RequestParam("file") MultipartFile file,
-                         @RequestParam(value = "bucketId", defaultValue = "6e5Jg3mtsmA9o5tFwLC2") String bucketId,
+                         @RequestParam(value = "bucketId") String bucketId,
                          @RequestParam(value = "filePath", defaultValue = "/") String filePath,
-                         @RequestHeader(value = "fileSize", defaultValue = "1680949") Long fileSize,
-                         @RequestHeader(value = "Digest", defaultValue = "A7E197B6A0F37A77F448F6D05EA812FE9CCFDE1CA05A5A5FEB8D40427E4038F7") String digest) throws IOException {
+                         @RequestHeader(value = "fileSize") Long fileSize,
+                         @RequestHeader(value = "Digest") String digest) throws IOException {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
 
         // 检查bucket
