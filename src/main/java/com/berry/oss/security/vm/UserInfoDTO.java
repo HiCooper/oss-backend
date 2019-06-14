@@ -1,6 +1,7 @@
 package com.berry.oss.security.vm;
 
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 /**
  * Created with IntelliJ IDEA.
@@ -11,9 +12,19 @@ import lombok.Data;
  * Use：
  */
 @Data
+@Accessors(chain = true)
 public class UserInfoDTO {
 
     private Integer id;
 
     private String username;
+
+    public UserInfoDTO() {
+
+    }
+    public UserInfoDTO(Integer id, String username) {
+        this.id = id;
+        this.username = username;
+    }
+
 }

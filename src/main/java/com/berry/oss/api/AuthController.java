@@ -3,12 +3,12 @@ package com.berry.oss.api;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.berry.oss.common.ResultCode;
 import com.berry.oss.common.exceptions.BaseException;
-import com.berry.oss.security.AuthoritiesConstants;
 import com.berry.oss.security.core.entity.User;
 import com.berry.oss.security.core.service.IUserDaoService;
 import com.berry.oss.security.jwt.JwtFilter;
 import com.berry.oss.security.jwt.TokenProvider;
 import com.berry.oss.security.vm.LoginVM;
+import com.berry.oss.security.vm.UserInfoDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.Data;
@@ -16,12 +16,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.servlet.http.Cookie;
@@ -50,7 +52,7 @@ public class AuthController {
 
     @PostMapping("/login")
     @ApiOperation("登录")
-    public ResponseEntity<JwtToken> authorize(@Valid @RequestBody LoginVM loginVM, HttpServletResponse response) {
+    public ResponseEntity<LoginSuccessVo> authorize(@Valid @RequestBody LoginVM loginVM, HttpServletResponse response) {
         // 用户是否存在
         User user = userDaoService.getOne(new QueryWrapper<User>().eq("username", loginVM.getUsername()));
         if (user == null) {
@@ -74,7 +76,7 @@ public class AuthController {
                 expires = TokenProvider.TOKEN_VALIDITY_IN_MILLISECONDS_FOR_REMEMBER_ME / 1000;
             }
             httpHeaders.add("expires", String.valueOf(expires));
-            return new ResponseEntity<>(new JwtToken(jwt, expires), httpHeaders, HttpStatus.OK);
+            return new ResponseEntity<>(new LoginSuccessVo(jwt, expires, new UserInfoDTO(user.getId(), user.getUsername())), httpHeaders, HttpStatus.OK);
         } catch (AuthenticationException e) {
             if (e instanceof DisabledException) {
                 throw new BaseException(ResultCode.ACCOUNT_DISABLE);
@@ -98,15 +100,18 @@ public class AuthController {
      * Object to return as body in JWT Authentication.
      */
     @Data
-    static class JwtToken {
+    static class LoginSuccessVo {
 
-        private String idToken;
+        private String token;
 
         private long expires;
 
-        JwtToken(String idToken, long expires) {
-            this.idToken = idToken;
+        private UserInfoDTO userInfo;
+
+        LoginSuccessVo(String token, long expires, UserInfoDTO userInfo) {
+            this.token = token;
             this.expires = expires;
+            this.userInfo = userInfo;
         }
     }
 }
