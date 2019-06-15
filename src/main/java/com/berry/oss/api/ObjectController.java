@@ -8,8 +8,6 @@ import com.berry.oss.common.ResultCode;
 import com.berry.oss.common.ResultFactory;
 import com.berry.oss.common.exceptions.BaseException;
 import com.berry.oss.common.exceptions.UploadException;
-import com.berry.oss.common.utils.MD5;
-import com.berry.oss.common.utils.RSAUtil;
 import com.berry.oss.common.utils.SHA256;
 import com.berry.oss.common.utils.StringUtils;
 import com.berry.oss.core.entity.BucketInfo;
@@ -37,13 +35,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 
 /**
  * Title ObjectController
@@ -180,19 +175,6 @@ public class ObjectController {
     @PostMapping("generate_url_with_signed")
     public Result generateUrlWithSigned() {
         return ResultFactory.wrapper();
-    }
-
-    public static void main(String[] args) {
-        String os = "Expires=1560602914&OSSAccessKeyId=TMP.AgF8SPD8sHeEw9MyLBKKysDBZ-_Wsp8vwSyUrsyDsx1dMzJece0FuFn03hDIADAtAhUAwyTiGFDL5SgdVgzCnrbxdVSG1KACFCYhhPpG-6C_w27NDNqXqJp4dINI&Signature=mzaj04f%2BQK8i5tqitL5tykTW6vs%3D";
-        try {
-            String deCode = URLDecoder.decode(os, "UTF-8");
-            String[] split = deCode.split("&");
-            System.out.println(Arrays.toString(split));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     @GetMapping(value = "{fileName}")

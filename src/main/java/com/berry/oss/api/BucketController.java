@@ -5,7 +5,6 @@ import com.berry.oss.common.Result;
 import com.berry.oss.common.ResultCode;
 import com.berry.oss.common.ResultFactory;
 import com.berry.oss.common.exceptions.BaseException;
-import com.berry.oss.common.utils.StringUtils;
 import com.berry.oss.core.entity.BucketInfo;
 import com.berry.oss.core.entity.ObjectInfo;
 import com.berry.oss.core.service.IBucketInfoDaoService;
@@ -20,8 +19,6 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * Title BucketController
