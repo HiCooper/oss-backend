@@ -19,6 +19,7 @@ public interface IDataSaveService {
      * 保存对象
      *
      * @param inputStream 输入流
+     * @param size    size
      * @param hash    hash
      * @param fileName    文件名
      * @param bucketName  存储空间名
@@ -26,7 +27,7 @@ public interface IDataSaveService {
      * @return fileId 对象唯一id
      * @throws IOException
      */
-    String saveObject(InputStream inputStream, String hash, String fileName, String bucketName, String username) throws IOException;
+    String saveObject(InputStream inputStream, long size, String hash, String fileName, String bucketName, String username) throws IOException;
 
     /**
      * 获取对象

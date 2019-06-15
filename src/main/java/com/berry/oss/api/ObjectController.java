@@ -8,7 +8,8 @@ import com.berry.oss.common.ResultCode;
 import com.berry.oss.common.ResultFactory;
 import com.berry.oss.common.exceptions.BaseException;
 import com.berry.oss.common.exceptions.UploadException;
-import com.berry.oss.common.utils.DateUtils;
+import com.berry.oss.common.utils.MD5;
+import com.berry.oss.common.utils.RSAUtil;
 import com.berry.oss.common.utils.SHA256;
 import com.berry.oss.common.utils.StringUtils;
 import com.berry.oss.core.entity.BucketInfo;
@@ -28,6 +29,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.util.DigestUtils;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.WebRequest;
@@ -35,9 +37,13 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 
 /**
  * Title ObjectController
@@ -149,7 +155,7 @@ public class ObjectController {
         if (StringUtils.isBlank(fileId)) {
             // 快速上传失败，
             // 调用存储数据服务，保存对象，返回24位对象id,
-            fileId = dataSaveService.saveObject(file.getInputStream(), hash, fileName, bucketInfo.getName(), currentUser.getUsername());
+            fileId = dataSaveService.saveObject(file.getInputStream(), size, hash, fileName, bucketInfo.getName(), currentUser.getUsername());
         }
         // 保存上传信息
         Boolean result = objectService.saveObjectInfo(bucketId, bucketInfo.getAcl(), hash, fileSize, fileName, filePath, fileId);
@@ -159,24 +165,66 @@ public class ObjectController {
     @GetMapping("detail")
     @ApiOperation("获取对象描述")
     public Result detail(@RequestParam String objectId) {
-        return ResultFactory.wrapper(objectInfoDaoService.getOne(new QueryWrapper<ObjectInfo>().eq("file_id",objectId)));
+        return ResultFactory.wrapper(objectInfoDaoService.getOne(new QueryWrapper<ObjectInfo>().eq("file_id", objectId)));
     }
 
-    @GetMapping(value = "getPic")
+    @GetMapping("headObject")
+    public Result getObjectHead(@RequestParam("objectId") String objectId) {
+//        contentLength: 6059
+//        contentType: "image/png"
+//        eTag: "2B20908F33C257C1819665CA8D908E32"
+//        lastModified: 1559091197000
+        return ResultFactory.wrapper();
+    }
+
+    @PostMapping("generate_url_with_signed")
+    public Result generateUrlWithSigned() {
+        return ResultFactory.wrapper();
+    }
+
+    public static void main(String[] args) {
+        String os = "Expires=1560602914&OSSAccessKeyId=TMP.AgF8SPD8sHeEw9MyLBKKysDBZ-_Wsp8vwSyUrsyDsx1dMzJece0FuFn03hDIADAtAhUAwyTiGFDL5SgdVgzCnrbxdVSG1KACFCYhhPpG-6C_w27NDNqXqJp4dINI&Signature=mzaj04f%2BQK8i5tqitL5tykTW6vs%3D";
+        try {
+            String deCode = URLDecoder.decode(os, "UTF-8");
+            String[] split = deCode.split("&");
+            System.out.println(Arrays.toString(split));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @GetMapping(value = "{fileName}")
     @ApiOperation("获取对象")
-    public void getPic(@RequestParam("objectId") String objectId, HttpServletResponse response, WebRequest request) throws IOException {
-        long modificationDate = DateUtils.getYesterdayBegin().toInstant().toEpochMilli();
-        if (request.checkNotModified(modificationDate)) {
+    public String getPic(@PathVariable("fileName") String fileName,
+                         @RequestParam("Expires") String expiresTime,
+                         @RequestParam("OSSAccessKeyId") String ossAccessKeyId,
+                         @RequestParam("Signature") String signature,
+                         HttpServletResponse response, WebRequest request) throws IOException {
+        UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
+        ObjectInfo objectInfo = objectInfoDaoService.getOne(new QueryWrapper<ObjectInfo>()
+                .eq("user_id", currentUser.getId())
+                .eq("file_name", fileName)
+        );
+        if (objectInfo == null) {
+            return "资源不存在";
+        }
+        long lastModified = objectInfo.getUpdateTime().toEpochSecond(OffsetDateTime.now().getOffset()) * 1000;
+        String eTag = "\"" + DigestUtils.md5DigestAsHex(fileName.getBytes()) + "\"";
+        if (request.checkNotModified(eTag, lastModified)) {
             response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
         } else {
+            ObjectResource object = dataSaveService.getObject(objectInfo.getFileId());
             response.setContentType(MediaType.IMAGE_JPEG_VALUE);
-            ObjectResource object = dataSaveService.getObject(objectId);
+            response.setHeader(HttpHeaders.ETAG, eTag);
             ZonedDateTime expiresDate = ZonedDateTime.now().with(LocalTime.MAX);
             String expires = expiresDate.format(DateTimeFormatter.RFC_1123_DATE_TIME);
             response.setHeader(HttpHeaders.EXPIRES, expires);
             StreamUtils.copy(object.getInputStream(), response.getOutputStream());
             response.flushBuffer();
         }
+        return null;
     }
 
     @DeleteMapping("delete")

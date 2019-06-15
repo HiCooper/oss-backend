@@ -36,7 +36,7 @@ public class DataSaveServiceImpl implements IDataSaveService {
     }
 
     @Override
-    public String saveObject(InputStream inputStream, String hash, String fileName, String bucketName, String username) throws IOException {
+    public String saveObject(InputStream inputStream, long size, String hash, String fileName, String bucketName, String username) throws IOException {
         String json = reedSolomonEncoderService.writeData(inputStream, fileName, bucketName, username);
         String fileId = ObjectId.get();
         // 保存对象信息
@@ -45,7 +45,7 @@ public class DataSaveServiceImpl implements IDataSaveService {
         shardInfo.setHash(hash);
         shardInfo.setFileName(fileName);
         shardInfo.setShardJson(json);
-        shardInfo.setSize((long) inputStream.available());
+        shardInfo.setSize(size);
         shardInfoDaoService.save(shardInfo);
         return fileId;
 
