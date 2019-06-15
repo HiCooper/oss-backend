@@ -14,5 +14,6 @@ import lombok.Data;
 public class GenerateUrlWithSignedMo {
 
     private String bucket;
+    private String objectName;
     private Integer timeout;
 }

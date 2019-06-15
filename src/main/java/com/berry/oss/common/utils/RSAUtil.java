@@ -1,8 +1,5 @@
 package com.berry.oss.common.utils;
 
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import sun.misc.BASE64Decoder;
 import sun.misc.BASE64Encoder;
@@ -28,8 +25,6 @@ import java.security.spec.X509EncodedKeySpec;
 
 public class RSAUtil {
 
-    private static final Logger logger = LoggerFactory.getLogger(RSAUtil.class);
-
     private static final String KEY_ALGORITHM = "RSA";
 
     private static final String SIGNATURE_ALGORITHM = "MD5withRSA";
@@ -37,13 +32,12 @@ public class RSAUtil {
     /**
      * 默认公钥的持久化文件存放位置
      */
-    private static String PUBLIC_KEY_FILE = "publicKey_rsa_2048.pub";
+    private static String PUBLIC_KEY_FILE = "publicKey_rsa_1024.pub";
 
     /**
      * 默认私钥的持久化文件存放位置
      */
-    private static String PRIVATE_KEY_FILE = "privateKey_rsa_2048";
-
+    private static String PRIVATE_KEY_FILE = "privateKey_rsa_1024";
 
     /**
      * 初始化密钥
@@ -53,7 +47,7 @@ public class RSAUtil {
      */
     public static void initKey() throws Exception {
         KeyPairGenerator keyPairGen = KeyPairGenerator.getInstance(KEY_ALGORITHM);
-        keyPairGen.initialize(2048);
+        keyPairGen.initialize(1024);
         KeyPair keyPair = keyPairGen.generateKeyPair();
 
         // 公钥
@@ -79,26 +73,26 @@ public class RSAUtil {
         }
     }
 
-
     /**
      * base64 加密
      *
-     * @param key
+     * @param data
      * @return
-     * @throws Exception
      */
-    private static byte[] decryptBASE64(String key) throws Exception {
-        return (new BASE64Decoder()).decodeBuffer(key);
+    private static String encryptBASE64(byte[] data) {
+        return (new BASE64Encoder()).encodeBuffer(data);
     }
+
 
     /**
      * base64 解密
      *
-     * @param key
+     * @param encodeStr
      * @return
+     * @throws Exception
      */
-    private static String encryptBASE64(byte[] key) {
-        return (new BASE64Encoder()).encodeBuffer(key);
+    private static byte[] decryptBASE64(String encodeStr) throws Exception {
+        return (new BASE64Decoder()).decodeBuffer(encodeStr);
     }
 
     /**
@@ -134,13 +128,13 @@ public class RSAUtil {
      * 用公钥加密
      *
      * @param data
-     * @param key
      * @return
      * @throws Exception
      */
-    public static String encryptByPublicKey(String data, String key)
+    public static String encryptByPublicKey(String data)
             throws Exception {
         // 对公钥解密
+        String key = getPublicKey();
         byte[] keyBytes = decryptBASE64(key);
 
         // 取得公钥
@@ -162,13 +156,13 @@ public class RSAUtil {
      * 用私钥解密
      *
      * @param secret
-     * @param key
      * @return
      * @throws Exception
      */
-    public static String decryptByPrivateKey(String secret, String key)
+    public static String decryptByPrivateKey(String secret)
             throws Exception {
         // 对密钥解密
+        String key = getPrivateKey();
         byte[] keyBytes = decryptBASE64(key);
 
         // 取得私钥
@@ -184,13 +178,13 @@ public class RSAUtil {
         return new String(proclaimed);
     }
 
-    //------------ 私钥生成签名， 公钥认证 （常用） ------------
+    //------------ 私钥签名， 公钥认证 （常用） ------------
 
     /**
      * 生成数字签名
      * (私钥签名)
      *
-     * @param data       加密数据
+     * @param data 加密数据
      * @return
      * @throws Exception
      */
@@ -216,8 +210,8 @@ public class RSAUtil {
      * 校验数字签名
      * (公钥认证)
      *
-     * @param secret    加密数据
-     * @param sign      数字签名
+     * @param secret 加密数据
+     * @param sign   数字签名
      * @return 校验成功返回true 失败返回false
      * @throws Exception
      */
@@ -242,19 +236,19 @@ public class RSAUtil {
         return signature.verify(decryptBASE64(sign));
     }
 
-    // 私钥加密，公钥解密 （不常用,用私钥加密的内容通常是无意义的，一般使用一串随机字符串作为明文附带，用于验证明文来源）
+    // ------------ 私钥加密，公钥解密 ------------
 
     /**
      * 私钥加密<br>
      *
      * @param data
-     * @param key
      * @return
      * @throws Exception
      */
-    public static String encryptByPrivateKey(String data, String key)
+    public static String encryptByPrivateKey(String data)
             throws Exception {
         // 对密钥解密
+        String key = getPrivateKey();
         byte[] keyBytes = decryptBASE64(key);
 
         // 取得私钥
@@ -274,13 +268,13 @@ public class RSAUtil {
      * 公钥解密<br>
      *
      * @param secret
-     * @param key
      * @return
      * @throws Exception
      */
-    public static String decryptByPublicKey(String secret, String key)
+    public static String decryptByPublicKey(String secret)
             throws Exception {
         // 对密钥解密
+        String key = getPublicKey();
         byte[] keyBytes = decryptBASE64(key);
 
         // 取得公钥

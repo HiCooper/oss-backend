@@ -8,14 +8,15 @@ import com.berry.oss.common.ResultCode;
 import com.berry.oss.common.ResultFactory;
 import com.berry.oss.common.exceptions.BaseException;
 import com.berry.oss.common.exceptions.UploadException;
-import com.berry.oss.common.utils.SHA256;
-import com.berry.oss.common.utils.StringUtils;
+import com.berry.oss.common.utils.*;
 import com.berry.oss.core.entity.BucketInfo;
 import com.berry.oss.core.entity.ObjectInfo;
 import com.berry.oss.core.service.IObjectInfoDaoService;
 import com.berry.oss.module.dto.ObjectResource;
 import com.berry.oss.module.mo.FastUploadCheck;
+import com.berry.oss.module.mo.GenerateUrlWithSignedMo;
 import com.berry.oss.module.mo.UpdateObjectAclMo;
+import com.berry.oss.module.vo.GenerateUrlWithSignedVo;
 import com.berry.oss.security.SecurityUtils;
 import com.berry.oss.security.vm.UserInfoDTO;
 import com.berry.oss.service.IBucketService;
@@ -32,13 +33,16 @@ import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MultipartFile;
+import sun.misc.BASE64Encoder;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 
 /**
  * Title ObjectController
@@ -172,9 +176,40 @@ public class ObjectController {
         return ResultFactory.wrapper();
     }
 
+    /**
+     * 生成附带签名的临时访问资源的url
+     * 前半部分包含过期时间进行签名，保证有效时间不被篡改，且保证签名由服务器签发，不被假冒
+     * 最后对前部分包含临时访问 accessKeyId 进行 base64(md5(str)) 签名，保证不被篡改,
+     * <p>
+     * 请求url时，先验证签名，后验证 accessKeyId 由服务器签发，再验证过期时间是否有效，有效则返回对象数据
+     *
+     * @param mo
+     * @return
+     * @throws Exception
+     */
     @PostMapping("generate_url_with_signed")
-    public Result generateUrlWithSigned() {
-        return ResultFactory.wrapper();
+    public Result generateUrlWithSigned(@RequestBody GenerateUrlWithSignedMo mo) throws Exception {
+        UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
+
+        // todo 将用户id 计算如签名，解密时获取用户id
+        String url = NetworkUtils.getIpAddress() + ":8077/api/object/" + mo.getObjectName();
+
+        // 对 'urlExpires' 进行签名计算,作为临时 ossAccessKeyId
+        String ossAccessKeyId = "TMP." + RSAUtil.encryptByPrivateKey(currentUser.getId().toString());
+
+        String urlExpiresAccessKeyId = "Expires=" + mo.getTimeout() + "&OSSAccessKeyId=" + ossAccessKeyId;
+
+        // 对 'urlExpiresAccessKeyId' 进行签名计算
+        String sign = new BASE64Encoder().encodeBuffer(MD5.md5Encode(urlExpiresAccessKeyId).getBytes());
+
+        // 拼接签名到url
+        String signature = urlExpiresAccessKeyId + "&Signature=" + sign;
+
+        // 没有域名地址表，这里手动配置ip和端口
+        GenerateUrlWithSignedVo vo = new GenerateUrlWithSignedVo()
+                .setUrl(url)
+                .setSignature(signature);
+        return ResultFactory.wrapper(vo);
     }
 
     @GetMapping(value = "{fileName}")
@@ -183,10 +218,35 @@ public class ObjectController {
                          @RequestParam("Expires") String expiresTime,
                          @RequestParam("OSSAccessKeyId") String ossAccessKeyId,
                          @RequestParam("Signature") String signature,
-                         HttpServletResponse response, WebRequest request) throws IOException {
-        UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
+                         HttpServletResponse response, HttpServletRequest servletRequest, WebRequest request) throws Exception {
+        String url = servletRequest.getRequestURI();
+
+        String partUrl = url.substring(0, url.indexOf("&Signature="));
+        // 1. 签名验证
+        String sign = new BASE64Encoder().encodeBuffer(MD5.md5Encode(partUrl).getBytes());
+        if (!signature.equals(sign)) {
+            throw new Exception("签名校验错误");
+        }
+
+        // 2. 过期验证
+        if (StringUtils.isNumeric(expiresTime)) {
+            // 时间戳字符串转时间
+            Date date = DateUtils.stampToDate(expiresTime);
+            if (date.before(new Date())) {
+                throw new Exception("链接已过期");
+            }
+        }
+
+        // 3. 身份验证
+        String userId;
+        try {
+            userId = RSAUtil.decryptByPublicKey(ossAccessKeyId.substring(3));
+        } catch (Exception e) {
+            throw new Exception("身份校验错误");
+        }
+
         ObjectInfo objectInfo = objectInfoDaoService.getOne(new QueryWrapper<ObjectInfo>()
-                .eq("user_id", currentUser.getId())
+                .eq("user_id", userId)
                 .eq("file_name", fileName)
         );
         if (objectInfo == null) {

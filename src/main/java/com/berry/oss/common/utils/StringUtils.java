@@ -224,12 +224,12 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
     /**
      * 对所有传入参数按照字段名的 ASCII 码从小到大排序（字典序）&拼接成字符
      *
-     * @param paraMap
+     * @param paramsMap
      * @return
      */
-    public static String sortMap(Map<String, String> paraMap) {
+    public static String sortMap(Map<String, String> paramsMap) {
 
-        List<Map.Entry<String, String>> infoIds = new ArrayList<>(paraMap.entrySet());
+        List<Map.Entry<String, String>> infoIds = new ArrayList<>(paramsMap.entrySet());
         infoIds.sort(Comparator.comparing(Map.Entry::getKey));
         // 构造URL 键值对的格式
         StringBuilder buf = new StringBuilder();
