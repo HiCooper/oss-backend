@@ -35,9 +35,9 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MultipartFile;
 import sun.misc.BASE64Encoder;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
@@ -189,21 +189,20 @@ public class ObjectController {
      */
     @PostMapping("generate_url_with_signed")
     public Result generateUrlWithSigned(@RequestBody GenerateUrlWithSignedMo mo) throws Exception {
+
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
-
-        // todo 将用户id 计算如签名，解密时获取用户id
-        String url = NetworkUtils.getIpAddress() + ":8077/api/object/" + mo.getObjectName();
-
-        // 对 'urlExpires' 进行签名计算,作为临时 ossAccessKeyId
+        // 将用户id 计算如签名，作为临时 ossAccessKeyId,解密时获取用户id
         String ossAccessKeyId = "TMP." + RSAUtil.encryptByPrivateKey(currentUser.getId().toString());
 
-        String urlExpiresAccessKeyId = "Expires=" + mo.getTimeout() + "&OSSAccessKeyId=" + ossAccessKeyId;
+        String url = NetworkUtils.getIpAddress() + ":8077/api/object/" + mo.getObjectName();
 
-        // 对 'urlExpiresAccessKeyId' 进行签名计算
+        String urlExpiresAccessKeyId = "Expires=" + (System.currentTimeMillis() + mo.getTimeout() * 1000) + "&OSSAccessKeyId=" + URLEncoder.encode(ossAccessKeyId, "UTF-8");
+
+        // 对 'urlExpiresAccessKeyId' 进行md5签名计算,并 base64编码
         String sign = new BASE64Encoder().encodeBuffer(MD5.md5Encode(urlExpiresAccessKeyId).getBytes());
 
         // 拼接签名到url
-        String signature = urlExpiresAccessKeyId + "&Signature=" + sign;
+        String signature = urlExpiresAccessKeyId + "&Signature=" + URLEncoder.encode(sign, "UTF-8");
 
         // 没有域名地址表，这里手动配置ip和端口
         GenerateUrlWithSignedVo vo = new GenerateUrlWithSignedVo()
@@ -218,14 +217,13 @@ public class ObjectController {
                          @RequestParam("Expires") String expiresTime,
                          @RequestParam("OSSAccessKeyId") String ossAccessKeyId,
                          @RequestParam("Signature") String signature,
-                         HttpServletResponse response, HttpServletRequest servletRequest, WebRequest request) throws Exception {
-        String url = servletRequest.getRequestURI();
+                         HttpServletResponse response, WebRequest request) throws Exception {
+        String url = "Expires="+ expiresTime + "&OSSAccessKeyId=" + URLEncoder.encode(ossAccessKeyId, "UTF-8");
 
-        String partUrl = url.substring(0, url.indexOf("&Signature="));
         // 1. 签名验证
-        String sign = new BASE64Encoder().encodeBuffer(MD5.md5Encode(partUrl).getBytes());
+        String sign = new BASE64Encoder().encodeBuffer(MD5.md5Encode(url).getBytes());
         if (!signature.equals(sign)) {
-            throw new Exception("签名校验错误");
+            return "签名校验错误";
         }
 
         // 2. 过期验证
@@ -233,16 +231,18 @@ public class ObjectController {
             // 时间戳字符串转时间
             Date date = DateUtils.stampToDate(expiresTime);
             if (date.before(new Date())) {
-                throw new Exception("链接已过期");
+                return "链接已过期";
             }
         }
 
         // 3. 身份验证
         String userId;
         try {
-            userId = RSAUtil.decryptByPublicKey(ossAccessKeyId.substring(3));
+            String userIdEncodePart = ossAccessKeyId.substring(4);
+            System.out.println(userIdEncodePart);
+            userId = RSAUtil.decryptByPublicKey(userIdEncodePart);
         } catch (Exception e) {
-            throw new Exception("身份校验错误");
+            return "身份校验错误";
         }
 
         ObjectInfo objectInfo = objectInfoDaoService.getOne(new QueryWrapper<ObjectInfo>()
