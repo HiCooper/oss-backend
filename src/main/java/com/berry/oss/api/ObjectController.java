@@ -63,7 +63,7 @@ public class ObjectController {
 
     private static final Pattern FILE_PATH_PATTERN = Pattern.compile("(\\w+\\/?)+$");
 
-    private static final String defaultFilePath = "/";
+    private static final String DEFAULT_FILE_PATH = "/";
 
     private final IBucketService bucketService;
 
@@ -137,12 +137,12 @@ public class ObjectController {
     public Result create(@RequestParam("file") MultipartFile file,
                          @RequestParam(value = "bucketId") String bucketId,
                          @RequestParam(value = "acl") String acl,
-                         @RequestParam(value = "filePath", defaultValue = defaultFilePath) String filePath,
+                         @RequestParam(value = "filePath", defaultValue = DEFAULT_FILE_PATH) String filePath,
                          @RequestHeader(value = "fileSize") Long fileSize,
                          @RequestHeader(value = "Digest") String digest) throws IOException {
 
         Matcher matcher = FILE_PATH_PATTERN.matcher(filePath);
-        if (!defaultFilePath.equals(filePath) && !matcher.find()) {
+        if (!DEFAULT_FILE_PATH.equals(filePath) && !matcher.find()) {
             throw new UploadException("403", "当前上传文件目录不正确！");
         }
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
@@ -179,25 +179,25 @@ public class ObjectController {
         }
 
         // 检查文件路径，非 / 则需要创建目录
-        if (!defaultFilePath.equals(filePath)) {
+        if (!DEFAULT_FILE_PATH.equals(filePath)) {
             List<ObjectInfo> dirs = new ArrayList<>(16);
             String[] split = filePath.split("/");
-            String path = "/";
+            StringBuilder path = new StringBuilder("/");
             ObjectInfo objectInfo;
             for (String dirName : split) {
                 objectInfo = new ObjectInfo();
                 objectInfo.setId(ObjectId.get());
                 objectInfo.setIsDir(true);
                 objectInfo.setFileName(dirName);
-                objectInfo.setFilePath(path);
+                objectInfo.setFilePath(path.toString());
                 objectInfo.setAcl(acl);
                 objectInfo.setUserId(currentUser.getId());
                 objectInfo.setBucketId(bucketId);
                 dirs.add(objectInfo);
-                if ("/".equals(path)) {
-                    path = path + dirName;
+                if ("/".equals(path.toString())) {
+                    path.append(dirName);
                 } else {
-                    path = path + "/" + dirName;
+                    path.append("/").append(dirName);
                 }
             }
             objectInfoDaoService.saveBatch(dirs);
@@ -213,7 +213,9 @@ public class ObjectController {
             fileId = dataSaveService.saveObject(file.getInputStream(), size, hash, fileName, bucketInfo.getName(), currentUser.getUsername());
         }
         // 保存上传信息
-        objectService.saveObjectInfo(bucketId, acl, hash, fileSize, fileName, "/" + filePath, fileId);
+
+        String fileObjectPath = filePath.equals(DEFAULT_FILE_PATH) ? DEFAULT_FILE_PATH : "/" + filePath;
+        objectService.saveObjectInfo(bucketId, acl, hash, fileSize, fileName, fileObjectPath, fileId);
         return ResultFactory.wrapper(msg);
     }
 
@@ -264,7 +266,7 @@ public class ObjectController {
      * <p>
      * 请求url时，先验证签名，后验证 accessKeyId 由服务器签发，再验证过期时间是否有效，有效则返回对象数据
      *
-     * @param mo
+     * @param mo 请求参数
      * @return
      * @throws Exception
      */
@@ -275,7 +277,7 @@ public class ObjectController {
         // 将用户id 计算如签名，作为临时 ossAccessKeyId,解密时获取用户id
         String ossAccessKeyId = "TMP." + RSAUtil.encryptByPrivateKey(currentUser.getId().toString());
 
-        String url = "http://" + NetworkUtils.getIpAddress() + ":8077/api/object/" + mo.getObjectName();
+        String url = "http://" + NetworkUtils.INTERNET_IP + ":8077/api/object/" + mo.getObjectName();
 
         String urlExpiresAccessKeyId = "Expires=" + (System.currentTimeMillis() + mo.getTimeout() * 1000) / 1000 + "&OSSAccessKeyId=" + URLEncoder.encode(ossAccessKeyId, "UTF-8");
 

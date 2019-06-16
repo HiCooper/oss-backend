@@ -1,6 +1,7 @@
 package com.berry.oss.common.utils;
 
 import javax.servlet.http.HttpServletRequest;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.Enumeration;
@@ -11,43 +12,56 @@ import java.util.Enumeration;
  */
 public class NetworkUtils {
 
+    /**
+     * 内网IP
+     */
+    public static String INTRANET_IP = getIntranetIp();
 
     /**
-     * 获取本机ip
-     *
-     * @return ip 字符串
+     * 外网IP
      */
-    public static String getIpAddress() {
-        try {
-            InetAddress candidateAddress = null;
-            // 遍历所有的网络接口
-            for (Enumeration interfaces = NetworkInterface.getNetworkInterfaces(); interfaces.hasMoreElements(); ) {
-                NetworkInterface anInterface = (NetworkInterface) interfaces.nextElement();
-                // 在所有的接口下再遍历IP
-                for (Enumeration inetAddresses = anInterface.getInetAddresses(); inetAddresses.hasMoreElements(); ) {
-                    InetAddress inetAddr = (InetAddress) inetAddresses.nextElement();
-                    //排除loopback类型地址
-                    if (!inetAddr.isLoopbackAddress()) {
-                        if (inetAddr.isSiteLocalAddress()) {
-                            // 如果是site-local地址，就是它了
-                            return inetAddr.getHostAddress();
-                        } else if (candidateAddress == null) {
-                            // site-local类型的地址未被发现，先记录候选地址
-                            candidateAddress = inetAddr;
-                        }
+    public static String INTERNET_IP = getInternetIp();
+
+    /**
+     * 获得内网IP
+     * @return 内网IP
+     */
+    private static String getIntranetIp(){
+        try{
+            return InetAddress.getLocalHost().getHostAddress();
+        } catch(Exception e){
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * 获得外网IP
+     * @return 外网IP
+     */
+    private static String getInternetIp(){
+        try{
+            Enumeration<NetworkInterface> networks = NetworkInterface.getNetworkInterfaces();
+            InetAddress ip;
+            Enumeration<InetAddress> addrs;
+            while (networks.hasMoreElements())
+            {
+                addrs = networks.nextElement().getInetAddresses();
+                while (addrs.hasMoreElements())
+                {
+                    ip = addrs.nextElement();
+                    if (ip instanceof Inet4Address
+                            && ip.isSiteLocalAddress()
+                            && !ip.getHostAddress().equals(INTRANET_IP))
+                    {
+                        return ip.getHostAddress();
                     }
                 }
             }
-            if (candidateAddress != null) {
-                return candidateAddress.getHostAddress();
-            }
-            // 如果没有发现 non-loopback地址.只能用最次选的方案
-            InetAddress jdkSuppliedAddress = InetAddress.getLocalHost();
-            return jdkSuppliedAddress.getHostAddress();
-        } catch (Exception e) {
-            e.printStackTrace();
+            // 如果没有外网IP，就返回内网IP
+            return INTRANET_IP;
+        } catch(Exception e){
+            throw new RuntimeException(e);
         }
-        return null;
     }
 
     /**
@@ -59,10 +73,10 @@ public class NetworkUtils {
     public static String getRequestIpAddress(HttpServletRequest request) {
         String ip = request.getHeader("x-forwarded-for");
         if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("Proxy-Client-IP");
+            ip = request.getHeader("Proxy-Client-INNERT_IP");
         }
         if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("WL-Proxy-Client-IP");
+            ip = request.getHeader("WL-Proxy-Client-INNERT_IP");
         }
         if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
             ip = request.getHeader("HTTP_CLIENT_IP");
