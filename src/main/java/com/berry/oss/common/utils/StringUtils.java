@@ -3,6 +3,7 @@ package com.berry.oss.common.utils;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.springframework.http.MediaType;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -380,6 +381,37 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
         Pattern p = Pattern.compile(regEx);
         Matcher m = p.matcher(str);
         return m.replaceAll("").trim();
+    }
+
+    /**
+     * 获取文件媒体类型
+     *
+     * @param fileName 文件名
+     * @return
+     */
+    public static String getContentType(String fileName) {
+        if (fileName.toLowerCase().endsWith(".jpg") || fileName.toLowerCase().endsWith(".jpeg")) {
+            return MediaType.IMAGE_JPEG_VALUE;
+        }
+        if (fileName.endsWith(".gif")) {
+            return MediaType.IMAGE_GIF_VALUE;
+        }
+        if (fileName.endsWith(".png")) {
+            return MediaType.IMAGE_PNG_VALUE;
+        }
+        if (fileName.endsWith(".pdf")) {
+            return MediaType.APPLICATION_PDF_VALUE;
+        }
+        if (fileName.endsWith(".json")) {
+            return MediaType.APPLICATION_JSON_VALUE;
+        }
+        if (fileName.endsWith(".xml")) {
+            return MediaType.APPLICATION_XML_VALUE;
+        }
+        if (fileName.endsWith(".md")) {
+            return MediaType.TEXT_MARKDOWN_VALUE;
+        }
+        return MediaType.ALL_VALUE;
     }
 
 }

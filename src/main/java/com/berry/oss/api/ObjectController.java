@@ -313,7 +313,8 @@ public class ObjectController {
             response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
         } else {
             ObjectResource object = dataSaveService.getObject(objectInfo.getFileId());
-            response.setContentType(MediaType.IMAGE_JPEG_VALUE);
+            String contentType = StringUtils.getContentType(object.getFileName());
+            response.setContentType(contentType);
             response.setHeader(HttpHeaders.ETAG, eTag);
             ZonedDateTime expiresDate = ZonedDateTime.now().with(LocalTime.MAX);
             String expires = expiresDate.format(DateTimeFormatter.RFC_1123_DATE_TIME);
