@@ -1,14 +1,13 @@
 package com.berry.oss.common.utils;
 
 import org.springframework.core.io.ClassPathResource;
-import sun.misc.BASE64Decoder;
-import sun.misc.BASE64Encoder;
 
 import javax.crypto.Cipher;
 import java.io.*;
 import java.security.*;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 
 /**
  * Created with IntelliJ IDEA.
@@ -39,13 +38,24 @@ public class RSAUtil {
      */
     private static String PRIVATE_KEY_FILE = "privateKey_rsa_1024";
 
+    static {
+        // 检查密钥是否初始化
+        ClassPathResource publicFile = new ClassPathResource(PUBLIC_KEY_FILE);
+        if (!publicFile.exists()) {
+            try {
+                initKey();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     /**
      * 初始化密钥
      *
-     * @return
      * @throws Exception
      */
-    public static void initKey() throws Exception {
+    private static void initKey() throws Exception {
         KeyPairGenerator keyPairGen = KeyPairGenerator.getInstance(KEY_ALGORITHM);
         keyPairGen.initialize(1024);
         KeyPair keyPair = keyPairGen.generateKeyPair();
@@ -76,106 +86,49 @@ public class RSAUtil {
     /**
      * base64 加密
      *
-     * @param data
-     * @return
+     * @param data 待加密数据字节数组
+     * @return 加密字符串
      */
-    private static String encryptBASE64(byte[] data) {
-        return (new BASE64Encoder()).encodeBuffer(data);
+    private static String encryptBase64(byte[] data) {
+        return new String(Base64.getEncoder().encode(data));
     }
 
 
     /**
      * base64 解密
      *
-     * @param encodeStr
-     * @return
+     * @param encodeStr encodeStr
+     * @return 解密后字节数组
      * @throws Exception
      */
-    private static byte[] decryptBASE64(String encodeStr) throws Exception {
-        return (new BASE64Decoder()).decodeBuffer(encodeStr);
+    private static byte[] decryptBase64(String encodeStr) {
+        return Base64.getDecoder().decode(encodeStr.getBytes());
     }
 
     /**
      * 获取公钥
      *
-     * @return
+     * @return 字符串公钥
      * @throws Exception
      */
     private static String getPublicKey() throws Exception {
         ClassPathResource publicFile = new ClassPathResource(PUBLIC_KEY_FILE);
         ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(publicFile.getPath()));
         PublicKey publicKey = (PublicKey) inputStream.readObject();
-        return encryptBASE64(publicKey.getEncoded());
+        return encryptBase64(publicKey.getEncoded());
     }
 
     /**
      * 获取密钥
      *
-     * @return
+     * @return 字符串密钥
      * @throws Exception
      */
     private static String getPrivateKey() throws Exception {
         ClassPathResource privateFile = new ClassPathResource(PRIVATE_KEY_FILE);
         ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(privateFile.getPath()));
         PrivateKey privateKey = (PrivateKey) inputStream.readObject();
-        return encryptBASE64(privateKey.getEncoded());
-    }
-
-    //------------ 公钥加密， 私钥解密 （常用） ------------
-
-    /**
-     * 加密<br>
-     * 用公钥加密
-     *
-     * @param data
-     * @return
-     * @throws Exception
-     */
-    public static String encryptByPublicKey(String data)
-            throws Exception {
-        // 对公钥解密
-        String key = getPublicKey();
-        byte[] keyBytes = decryptBASE64(key);
-
-        // 取得公钥
-        X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(keyBytes);
-        KeyFactory keyFactory = KeyFactory.getInstance(KEY_ALGORITHM);
-        PublicKey publicKey = keyFactory.generatePublic(x509KeySpec);
-
-        // 对数据加密
-        Cipher cipher = Cipher.getInstance(keyFactory.getAlgorithm());
-        cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-
-        byte[] secret = cipher.doFinal(data.getBytes());
-        //进行Base64编码
-        return encryptBASE64(secret);
-    }
-
-    /**
-     * 解密<br>
-     * 用私钥解密
-     *
-     * @param secret
-     * @return
-     * @throws Exception
-     */
-    public static String decryptByPrivateKey(String secret)
-            throws Exception {
-        // 对密钥解密
-        String key = getPrivateKey();
-        byte[] keyBytes = decryptBASE64(key);
-
-        // 取得私钥
-        PKCS8EncodedKeySpec pkcs8KeySpec = new PKCS8EncodedKeySpec(keyBytes);
-        KeyFactory keyFactory = KeyFactory.getInstance(KEY_ALGORITHM);
-        PrivateKey privateKey = keyFactory.generatePrivate(pkcs8KeySpec);
-
-        // 对数据解密
-        Cipher cipher = Cipher.getInstance(keyFactory.getAlgorithm());
-        cipher.init(Cipher.DECRYPT_MODE, privateKey);
-
-        byte[] proclaimed = cipher.doFinal(decryptBASE64(secret));
-        return new String(proclaimed);
+        return encryptBase64(privateKey.getEncoded());
     }
 
     //------------ 私钥签名， 公钥认证 （常用） ------------
@@ -185,13 +138,13 @@ public class RSAUtil {
      * (私钥签名)
      *
      * @param data 加密数据
-     * @return
+     * @return 签名
      * @throws Exception
      */
     public static String sign(String data) throws Exception {
         String privateKey = getPrivateKey();
         // 解密由base64编码的私钥
-        byte[] keyBytes = decryptBASE64(privateKey);
+        byte[] keyBytes = decryptBase64(privateKey);
 
         // 取得私钥
         PKCS8EncodedKeySpec pkcs8KeySpec = new PKCS8EncodedKeySpec(keyBytes);
@@ -203,7 +156,7 @@ public class RSAUtil {
         signature.initSign(priKey);
         signature.update(data.getBytes());
 
-        return encryptBASE64(signature.sign());
+        return encryptBase64(signature.sign());
     }
 
     /**
@@ -220,7 +173,7 @@ public class RSAUtil {
 
         // 解密由base64编码的公钥
         String publicKey = getPublicKey();
-        byte[] keyBytes = decryptBASE64(publicKey);
+        byte[] keyBytes = decryptBase64(publicKey);
 
         // 取得公钥
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(keyBytes);
@@ -233,7 +186,7 @@ public class RSAUtil {
         signature.update(secret.getBytes());
 
         // 验证签名是否正常
-        return signature.verify(decryptBASE64(sign));
+        return signature.verify(decryptBase64(sign));
     }
 
     // ------------ 私钥加密，公钥解密 ------------
@@ -241,15 +194,15 @@ public class RSAUtil {
     /**
      * 私钥加密<br>
      *
-     * @param data
-     * @return
+     * @param data 待加密信息
+     * @return 密文
      * @throws Exception
      */
     public static String encryptByPrivateKey(String data)
             throws Exception {
         // 对密钥解密
         String key = getPrivateKey();
-        byte[] keyBytes = decryptBASE64(key);
+        byte[] keyBytes = decryptBase64(key);
 
         // 取得私钥
         PKCS8EncodedKeySpec pkcs8KeySpec = new PKCS8EncodedKeySpec(keyBytes);
@@ -261,21 +214,21 @@ public class RSAUtil {
         cipher.init(Cipher.ENCRYPT_MODE, privateKey);
 
         byte[] secret = cipher.doFinal(data.getBytes());
-        return encryptBASE64(secret);
+        return encryptBase64(secret);
     }
 
     /**
      * 公钥解密<br>
      *
-     * @param secret
-     * @return
+     * @param secret 密文
+     * @return 解密后信息
      * @throws Exception
      */
     public static String decryptByPublicKey(String secret)
             throws Exception {
         // 对密钥解密
         String key = getPublicKey();
-        byte[] keyBytes = decryptBASE64(key);
+        byte[] keyBytes = decryptBase64(key);
 
         // 取得公钥
         X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(keyBytes);
@@ -286,7 +239,7 @@ public class RSAUtil {
         Cipher cipher = Cipher.getInstance(keyFactory.getAlgorithm());
         cipher.init(Cipher.DECRYPT_MODE, publicKey);
 
-        byte[] proclaimed = cipher.doFinal(decryptBASE64(secret));
+        byte[] proclaimed = cipher.doFinal(decryptBase64(secret));
         return new String(proclaimed);
     }
 

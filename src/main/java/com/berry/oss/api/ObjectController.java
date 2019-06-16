@@ -33,7 +33,6 @@ import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MultipartFile;
-import sun.misc.BASE64Encoder;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -102,34 +101,6 @@ public class ObjectController {
         queryWrapper.eq("file_path", path);
         IPage<ObjectInfo> page = new Page<>(pageNum, pageSize);
         return ResultFactory.wrapper(objectInfoDaoService.page(page, queryWrapper));
-    }
-
-    /**
-     * 相信接口传输的 hash 和 contentLength 是正确的
-     *
-     * @param fastUploadCheck 请求体
-     * @return
-     */
-    @PostMapping("tryFastUpload")
-    @ApiOperation("极速上传")
-    public Result tryFastUpload(@RequestBody FastUploadCheck fastUploadCheck) {
-        // 检查bucket
-        String bucketId = fastUploadCheck.getBucketId();
-        BucketInfo bucketInfo = bucketService.checkBucketExist(bucketId);
-
-        String fileId = objectHashService.checkExist(fastUploadCheck.getHash(), fastUploadCheck.getContentLength());
-        if (StringUtils.isBlank(fileId)) {
-            return ResultFactory.wrapper(false);
-        }
-        Boolean result = objectService.saveObjectInfo(
-                bucketId,
-                bucketInfo.getAcl(),
-                fastUploadCheck.getHash(),
-                fastUploadCheck.getContentLength(),
-                fastUploadCheck.getFileName(),
-                fastUploadCheck.getFilePath(),
-                fileId);
-        return ResultFactory.wrapper(result);
     }
 
     @PostMapping("create")
@@ -282,7 +253,7 @@ public class ObjectController {
         String urlExpiresAccessKeyId = "Expires=" + (System.currentTimeMillis() + mo.getTimeout() * 1000) / 1000 + "&OSSAccessKeyId=" + URLEncoder.encode(ossAccessKeyId, "UTF-8");
 
         // 对 参数部分 进行md5签名计算,并 base64编码
-        String sign = new BASE64Encoder().encodeBuffer(MD5.md5Encode(urlExpiresAccessKeyId).getBytes());
+        String sign = new String(Base64.getEncoder().encode(MD5.md5Encode(urlExpiresAccessKeyId).getBytes()));
 
         // 拼接签名到url
         String signature = urlExpiresAccessKeyId + "&Signature=" + URLEncoder.encode(sign, "UTF-8");
@@ -294,6 +265,7 @@ public class ObjectController {
         return ResultFactory.wrapper(vo);
     }
 
+
     @GetMapping(value = "{fileName}")
     @ApiOperation("获取对象")
     public String getPic(@PathVariable("fileName") String fileName,
@@ -304,7 +276,7 @@ public class ObjectController {
         String url = "Expires=" + expiresTime + "&OSSAccessKeyId=" + URLEncoder.encode(ossAccessKeyId, "UTF-8");
 
         // 1. 签名验证
-        String sign = new BASE64Encoder().encodeBuffer(MD5.md5Encode(url).getBytes());
+        String sign = new String(Base64.getEncoder().encode(MD5.md5Encode(url).getBytes()));
         if (!signature.equals(sign)) {
             return "签名校验错误";
         }
