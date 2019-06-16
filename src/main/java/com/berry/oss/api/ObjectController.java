@@ -194,7 +194,11 @@ public class ObjectController {
                 objectInfo.setUserId(currentUser.getId());
                 objectInfo.setBucketId(bucketId);
                 dirs.add(objectInfo);
-                path = path + "/" + dirName;
+                if ("/".equals(path)) {
+                    path = path + dirName;
+                } else {
+                    path = path + "/" + dirName;
+                }
             }
             objectInfoDaoService.saveBatch(dirs);
         }
