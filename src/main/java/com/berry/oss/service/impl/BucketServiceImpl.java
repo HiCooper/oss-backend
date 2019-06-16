@@ -38,7 +38,9 @@ public class BucketServiceImpl implements IBucketService {
 
     @Override
     public BucketInfo checkBucketExist(Integer userId, String bucketName) {
-        BucketInfo bucketInfo = bucketInfoDaoService.getOne(new QueryWrapper<BucketInfo>().eq("user_id", userId).eq("name", bucketName));
+        BucketInfo bucketInfo = bucketInfoDaoService.getOne(new QueryWrapper<BucketInfo>()
+                .eq("user_id", userId)
+                .eq("name", bucketName));
         if (null == bucketInfo) {
             throw new BaseException(ResultCode.BUCKET_NOT_EXIST);
         }

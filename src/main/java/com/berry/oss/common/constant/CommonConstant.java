@@ -75,6 +75,7 @@ public final class CommonConstant {
         /**
          * 权限
          */
+        EXTEND_BUCKET("继承 Bucket"),
         PRIVATE("私有"),
         PUBLIC_READ("公共读"),
         PUBLIC("公开");

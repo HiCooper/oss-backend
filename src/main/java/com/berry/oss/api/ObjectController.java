@@ -42,7 +42,9 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Title ObjectController
@@ -58,6 +60,10 @@ import java.util.Date;
 @RequestMapping("api/object")
 @Api(tags = "对象管理")
 public class ObjectController {
+
+    private static final Pattern FILE_PATH_PATTERN = Pattern.compile("(\\w+\\/?)+$");
+
+    private static final String defaultFilePath = "/";
 
     private final IBucketService bucketService;
 
@@ -85,7 +91,7 @@ public class ObjectController {
     @GetMapping("list")
     @ApiOperation("获取 Object 列表")
     public Result list(@RequestParam("bucketName") String bucketName,
-                       @RequestParam(defaultValue = "/") String path,
+                       @RequestParam(value = "path", defaultValue = "/") String path,
                        @RequestParam(defaultValue = "1") Integer pageNum,
                        @RequestParam(defaultValue = "10") Integer pageSize) {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
@@ -130,9 +136,15 @@ public class ObjectController {
     @ApiOperation("创建对象")
     public Result create(@RequestParam("file") MultipartFile file,
                          @RequestParam(value = "bucketId") String bucketId,
-                         @RequestParam(value = "filePath", defaultValue = "/") String filePath,
+                         @RequestParam(value = "acl") String acl,
+                         @RequestParam(value = "filePath", defaultValue = defaultFilePath) String filePath,
                          @RequestHeader(value = "fileSize") Long fileSize,
                          @RequestHeader(value = "Digest") String digest) throws IOException {
+
+        Matcher matcher = FILE_PATH_PATTERN.matcher(filePath);
+        if (!defaultFilePath.equals(filePath) && !matcher.find()) {
+            throw new UploadException("403", "当前上传文件目录不正确！");
+        }
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
 
         // 检查bucket
@@ -148,17 +160,57 @@ public class ObjectController {
         if (!String.valueOf(size).equals(fileSize.toString()) || !digest.equals(hash)) {
             throw new UploadException("403", "文件校验失败");
         }
-        // 校验通过，尝试快速上传
+
+        // 校验通过
         String fileName = file.getOriginalFilename();
+
+        // 检查该 bucket 及 path 下 同名文件是否存在
+        QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_id", currentUser.getId());
+        queryWrapper.eq("bucket_id", bucketInfo.getId());
+        queryWrapper.eq("file_path", "/" + filePath);
+        queryWrapper.eq("file_name", fileName);
+        ObjectInfo one = objectInfoDaoService.getOne(queryWrapper);
+        if (one != null) {
+            // 同名文件存在，覆盖旧的（旧记录删除）
+            objectInfoDaoService.removeById(one.getId());
+            // 相关数据文件引用 -1
+            objectHashService.decreaseRefCountByHash(one.getHash());
+        }
+
+        // 检查文件路径，非 / 则需要创建目录
+        if (!defaultFilePath.equals(filePath)) {
+            List<ObjectInfo> dirs = new ArrayList<>(16);
+            String[] split = filePath.split("/");
+            String path = "/";
+            ObjectInfo objectInfo;
+            for (String dirName : split) {
+                objectInfo = new ObjectInfo();
+                objectInfo.setId(ObjectId.get());
+                objectInfo.setIsDir(true);
+                objectInfo.setFileName(dirName);
+                objectInfo.setFilePath(path);
+                objectInfo.setAcl(acl);
+                objectInfo.setUserId(currentUser.getId());
+                objectInfo.setBucketId(bucketId);
+                dirs.add(objectInfo);
+                path = path + "/" + dirName;
+            }
+            objectInfoDaoService.saveBatch(dirs);
+        }
+
+        String msg = "极速上传成功!";
+        // 尝试快速上传
         String fileId = objectHashService.checkExist(hash, fileSize);
         if (StringUtils.isBlank(fileId)) {
+            msg = "上传成功";
             // 快速上传失败，
             // 调用存储数据服务，保存对象，返回24位对象id,
             fileId = dataSaveService.saveObject(file.getInputStream(), size, hash, fileName, bucketInfo.getName(), currentUser.getUsername());
         }
         // 保存上传信息
-        Boolean result = objectService.saveObjectInfo(bucketId, bucketInfo.getAcl(), hash, fileSize, fileName, filePath, fileId);
-        return ResultFactory.wrapper(result);
+        objectService.saveObjectInfo(bucketId, acl, hash, fileSize, fileName, "/" + filePath, fileId);
+        return ResultFactory.wrapper(msg);
     }
 
     @GetMapping("detail")
@@ -167,13 +219,38 @@ public class ObjectController {
         return ResultFactory.wrapper(objectInfoDaoService.getOne(new QueryWrapper<ObjectInfo>().eq("file_id", objectId)));
     }
 
-    @GetMapping("headObject")
-    public Result getObjectHead(@RequestParam("objectId") String objectId) {
-//        contentLength: 6059
-//        contentType: "image/png"
-//        eTag: "2B20908F33C257C1819665CA8D908E32"
-//        lastModified: 1559091197000
-        return ResultFactory.wrapper();
+    /**
+     * 获取文件头部信息
+     *
+     * @param path       文件路径 可选
+     * @param bucket     存储空间名称
+     * @param objectName 文件名 必填
+     * @return
+     */
+    @GetMapping("head_object")
+    public Result getObjectHead(@RequestParam(value = "path", required = false) String path,
+                                @RequestParam(value = "bucket") String bucket,
+                                @RequestParam(value = "objectName") String objectName) {
+        UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
+        BucketInfo bucketInfo = bucketService.checkBucketExist(currentUser.getId(), bucket);
+        String eTag = DigestUtils.md5DigestAsHex(objectName.getBytes());
+        QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<ObjectInfo>()
+                .eq("bucket_id", bucketInfo.getId())
+                .eq("user_id", currentUser.getId())
+                .eq("file_name", objectName);
+        if (StringUtils.isNotBlank(path)) {
+            queryWrapper.eq("file_path", path);
+        }
+        ObjectInfo objectInfo = objectInfoDaoService.getOne(queryWrapper);
+        if (objectInfo == null) {
+            throw new BaseException(ResultCode.DATA_NOT_EXIST);
+        }
+        Map<String, Object> response = new HashMap<>(4);
+        response.put("contentLength", objectInfo.getSize());
+        response.put("contentType", objectInfo.getCategory());
+        response.put("eTag", eTag);
+        response.put("lastModified", objectInfo.getUpdateTime());
+        return ResultFactory.wrapper(response);
     }
 
     /**
@@ -194,11 +271,11 @@ public class ObjectController {
         // 将用户id 计算如签名，作为临时 ossAccessKeyId,解密时获取用户id
         String ossAccessKeyId = "TMP." + RSAUtil.encryptByPrivateKey(currentUser.getId().toString());
 
-        String url = NetworkUtils.getIpAddress() + ":8077/api/object/" + mo.getObjectName();
+        String url = "http://" + NetworkUtils.getIpAddress() + ":8077/api/object/" + mo.getObjectName();
 
-        String urlExpiresAccessKeyId = "Expires=" + (System.currentTimeMillis() + mo.getTimeout() * 1000) + "&OSSAccessKeyId=" + URLEncoder.encode(ossAccessKeyId, "UTF-8");
+        String urlExpiresAccessKeyId = "Expires=" + (System.currentTimeMillis() + mo.getTimeout() * 1000) / 1000 + "&OSSAccessKeyId=" + URLEncoder.encode(ossAccessKeyId, "UTF-8");
 
-        // 对 'urlExpiresAccessKeyId' 进行md5签名计算,并 base64编码
+        // 对 参数部分 进行md5签名计算,并 base64编码
         String sign = new BASE64Encoder().encodeBuffer(MD5.md5Encode(urlExpiresAccessKeyId).getBytes());
 
         // 拼接签名到url
@@ -218,7 +295,7 @@ public class ObjectController {
                          @RequestParam("OSSAccessKeyId") String ossAccessKeyId,
                          @RequestParam("Signature") String signature,
                          HttpServletResponse response, WebRequest request) throws Exception {
-        String url = "Expires="+ expiresTime + "&OSSAccessKeyId=" + URLEncoder.encode(ossAccessKeyId, "UTF-8");
+        String url = "Expires=" + expiresTime + "&OSSAccessKeyId=" + URLEncoder.encode(ossAccessKeyId, "UTF-8");
 
         // 1. 签名验证
         String sign = new BASE64Encoder().encodeBuffer(MD5.md5Encode(url).getBytes());
@@ -228,8 +305,8 @@ public class ObjectController {
 
         // 2. 过期验证
         if (StringUtils.isNumeric(expiresTime)) {
-            // 时间戳字符串转时间
-            Date date = DateUtils.stampToDate(expiresTime);
+            // 时间戳字符串转时间,expiresTime 是秒单位
+            Date date = new Date(Long.valueOf(expiresTime) * 1000);
             if (date.before(new Date())) {
                 return "链接已过期";
             }

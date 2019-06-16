@@ -236,14 +236,6 @@ public class DateUtils {
     }
 
     /**
-     * 将时间戳转换为时间
-     */
-    public static Date stampToDate(String s){
-        return new Date(new Long(s));
-    }
-
-
-    /**
      * 获取本周周日时间，返回格式 yyyy-MM-dd 23:59:59
      *
      * @return

@@ -68,7 +68,7 @@ public class ObjectHashServiceImpl implements IObjectHashService {
                     .setReferenceCount(0);
         }
         one.setReferenceCount(one.getReferenceCount() + 1);
-        return objectHashDaoService.save(one);
+        return objectHashDaoService.saveOrUpdate(one);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -81,6 +81,6 @@ public class ObjectHashServiceImpl implements IObjectHashService {
         }
         one.setReferenceCount(one.getReferenceCount() - 1);
         // 引用为 0  的索引，由定时任务程序去扫描整理删除 对应的数据和引用
-        return objectHashDaoService.save(one);
+        return objectHashDaoService.updateById(one);
     }
 }
