@@ -232,8 +232,8 @@ public class ObjectController {
 
     /**
      * 生成附带签名的临时访问资源的url
-     * 前半部分包含过期时间进行签名，保证有效时间不被篡改，且保证签名由服务器签发，不被假冒
-     * 最后对前部分包含临时访问 accessKeyId 进行 base64(md5(str)) 签名，保证不被篡改,
+     * ossAccessKeyId： 私钥加密的用户id，保证由服务器签发，不被假冒
+     * Signature：Expires 和 OSSAccessKeyId 参数进行 base64(md5(str)) 签名，保证不被篡改,
      * <p>
      * 请求url时，先验证签名，后验证 accessKeyId 由服务器签发，再验证过期时间是否有效，有效则返回对象数据
      *
@@ -248,7 +248,7 @@ public class ObjectController {
         // 将用户id 计算如签名，作为临时 ossAccessKeyId,解密时获取用户id
         String ossAccessKeyId = "TMP." + RSAUtil.encryptByPrivateKey(currentUser.getId().toString());
 
-        String url = "http://" + NetworkUtils.INTERNET_IP + ":8077/api/object/" + mo.getObjectName();
+        String url = "http://"+ NetworkUtils.INTERNET_IP +":8077/api/object/" + mo.getObjectName();
 
         String urlExpiresAccessKeyId = "Expires=" + (System.currentTimeMillis() + mo.getTimeout() * 1000) / 1000 + "&OSSAccessKeyId=" + URLEncoder.encode(ossAccessKeyId, "UTF-8");
 

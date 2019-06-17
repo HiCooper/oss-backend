@@ -411,7 +411,10 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
         if (fileName.endsWith(".md")) {
             return MediaType.TEXT_MARKDOWN_VALUE;
         }
-        return MediaType.ALL_VALUE;
+        if (fileName.endsWith(".svg")) {
+            return "image/svg+xml";
+        }
+        return MediaType.APPLICATION_OCTET_STREAM_VALUE;
     }
 
 }

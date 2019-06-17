@@ -52,13 +52,16 @@ public class DataSaveServiceImpl implements IDataSaveService {
     }
 
     @Override
-    public ObjectResource getObject(String objectId) throws IOException {
+    public ObjectResource getObject(String objectId) {
         ShardInfo shardInfo = shardInfoDaoService.getOne(new QueryWrapper<ShardInfo>().eq("file_id", objectId));
         if (shardInfo == null) {
             throw new RuntimeException("资源不存在");
         }
         String shardJson = shardInfo.getShardJson();
         InputStream inputStream = reedSolomonDecoderService.readData(shardJson);
+        if (inputStream == null) {
+            throw new RuntimeException("文件损坏或丢失");
+        }
         return new ObjectResource()
                 .setCreateTime(shardInfo.getCreateTime())
                 .setFileId(shardInfo.getFileId())

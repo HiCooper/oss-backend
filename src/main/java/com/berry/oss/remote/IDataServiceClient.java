@@ -24,18 +24,16 @@ public interface IDataServiceClient {
      *
      * @param mo
      * @return
-     * @throws IOException
      */
     @RequestMapping(value = "/data/write", method = RequestMethod.POST)
-    WriteShardResponse writeShard(@RequestBody WriteShardMo mo) throws IOException;
+    WriteShardResponse writeShard(@RequestBody WriteShardMo mo);
 
     /**
      * 读分片
      *
      * @param path
      * @return
-     * @throws IOException
      */
     @RequestMapping(value = "/data/read", method = RequestMethod.GET)
-    byte[] readShard(@RequestParam("path") String path) throws IOException;
+    byte[] readShard(@RequestParam("path") String path);
 }
