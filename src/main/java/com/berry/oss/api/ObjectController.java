@@ -265,10 +265,16 @@ public class ObjectController {
         return ResultFactory.wrapper(vo);
     }
 
+    @GetMapping(value = "{bucketName}/{objectName}")
+    @ApiOperation("获取对象")
+    public String getObject(@PathVariable("bucketName") String bucketName, @PathVariable("objectName") String objectName){
+        return null;
+    }
+
 
     @GetMapping(value = "{fileName}")
     @ApiOperation("获取对象")
-    public String getPic(@PathVariable("fileName") String fileName,
+    public String getObject(@PathVariable("fileName") String fileName,
                          @RequestParam("Expires") String expiresTime,
                          @RequestParam("OSSAccessKeyId") String ossAccessKeyId,
                          @RequestParam("Signature") String signature,

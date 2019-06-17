@@ -13,6 +13,8 @@ import com.berry.oss.module.mo.CreateBucketMo;
 import com.berry.oss.module.mo.UpdateBucketAclMo;
 import com.berry.oss.security.SecurityUtils;
 import com.berry.oss.security.vm.UserInfoDTO;
+import com.berry.oss.service.IBucketService;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.BeanUtils;
@@ -39,10 +41,13 @@ public class BucketController {
 
     private final IObjectInfoDaoService objectInfoDaoService;
 
+    private final IBucketService bucketService;
+
     @Autowired
-    public BucketController(IBucketInfoDaoService bucketInfoDaoService, IObjectInfoDaoService objectInfoDaoService) {
+    public BucketController(IBucketInfoDaoService bucketInfoDaoService, IObjectInfoDaoService objectInfoDaoService, IBucketService bucketService) {
         this.bucketInfoDaoService = bucketInfoDaoService;
         this.objectInfoDaoService = objectInfoDaoService;
+        this.bucketService = bucketService;
     }
 
     @GetMapping("list")
@@ -56,6 +61,11 @@ public class BucketController {
     @ApiOperation("创建 Bucket")
     public Result create(@Validated @RequestBody CreateBucketMo mo) {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
+        // 检查该 bucket 名称是否被占用, 全局 bucket 命名唯一，还是同账户下唯一？ todo 值得思考。。。
+        Boolean result = bucketService.checkBucketNotExist(mo.getName());
+        if (result){
+            throw new BaseException("403", "该Bucket名字已被占用");
+        }
         BucketInfo bucketInfo = new BucketInfo();
         BeanUtils.copyProperties(mo, bucketInfo);
         bucketInfo.setUserId(currentUser.getId());

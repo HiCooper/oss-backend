@@ -26,4 +26,11 @@ public interface IBucketService {
      * @return
      */
     BucketInfo checkBucketExist(Integer userId, String bucketName);
+
+    /**
+     * 检查该 bucket 不存在
+     * @param bucketName bucketName
+     * @return
+     */
+    Boolean checkBucketNotExist(String bucketName);
 }

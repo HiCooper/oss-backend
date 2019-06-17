@@ -46,4 +46,11 @@ public class BucketServiceImpl implements IBucketService {
         }
         return bucketInfo;
     }
+
+    @Override
+    public Boolean checkBucketNotExist(String bucketName) {
+        int count = bucketInfoDaoService.count(new QueryWrapper<BucketInfo>()
+                .eq("name", bucketName));
+        return 0 == count;
+    }
 }
