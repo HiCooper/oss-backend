@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Random;
 
 /**
+ *  Reed-Solomon Test
  * Benchmark of Reed-Solomon encoding.
  * <p>
  * Counts the number of bytes of input data that can be processed per

@@ -2,7 +2,6 @@ package com.berry.oss.service.impl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.berry.oss.common.exceptions.BaseException;
 import com.berry.oss.erasure.ReedSolomon;
 import com.berry.oss.remote.IDataServiceClient;
 import org.slf4j.Logger;
@@ -11,24 +10,22 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 /**
- * Command-line program that decodes a file using Reed-Solomon 4+2.
+ * Reed-Solomon 4+2
  * <p>
- * The file name given should be the name of the file to decode, say
- * "foo.txt".  This program will expected to find "foo.txt.0" through
- * "foo.txt.5", with at most two missing.  It will then write
- * "foo.txt.decoded".
+ * foo.txt 分片为 foo.txt.0, foo.txt.1, foo.txt.2, foo.txt.2, foo.txt.4, foo.txt.5
+ * 从数据服务读取数据，4 个数据块，2 个校验块
+ * 注意: 如果前4个数据块，顺序且正确读出，将跳过剩下校验块的读取和RS纠错算法
+ * @author berry_cooper
  */
 @Service
 public class ReedSolomonDecoderService {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
 
     private static final int DATA_SHARDS = 4;
     private static final int PARITY_SHARDS = 2;
@@ -53,7 +50,7 @@ public class ReedSolomonDecoderService {
         boolean skipRs = false;
         final boolean[] check = new boolean[DATA_SHARDS];
         for (int i = 0; i < TOTAL_SHARDS; i++) {
-            if (i == DATA_SHARDS && checkAllTrue(check))  {
+            if (i == DATA_SHARDS && checkAllTrue(check)) {
                 // 如果前 DATA_SHARDS 个数据块顺序读出，可以不再读取后两个校验块，并跳过 RS 纠错算法
                 skipRs = true;
                 break;
@@ -69,7 +66,7 @@ public class ReedSolomonDecoderService {
                 if (path.substring(path.lastIndexOf(".") + 1).equals(String.valueOf(i))) {
                     check[i] = true;
                 }
-                shardSize= bytes.length;
+                shardSize = bytes.length;
                 shards[i] = bytes;
                 shardPresent[i] = true;
                 shardCount += 1;
@@ -81,20 +78,20 @@ public class ReedSolomonDecoderService {
         if (!skipRs) {
             // 不能跳过，出现了数据非顺序读出或者部分数据丢失
             logger.debug("启用RS纠错数据恢复...");
-            // We need at least DATA_SHARDS to be able to reconstruct the file.
+            // 至少需要 DATA_SHARDS 个用来重构数据
             if (shardCount < DATA_SHARDS) {
                 System.out.println("Not enough shards present");
                 return null;
             }
 
-            // Make empty buffers for the missing shards.
+            // 用空的 buffers 填充 丢失的分片
             for (int i = 0; i < TOTAL_SHARDS; i++) {
                 if (!shardPresent[i]) {
                     shards[i] = new byte[shardSize];
                 }
             }
 
-            // Use Reed-Solomon to fill in the missing shards
+            // 使用 Reed-Solomon 算法恢复丢失的分片
             ReedSolomon reedSolomon = ReedSolomon.create(DATA_SHARDS, PARITY_SHARDS);
             reedSolomon.decodeMissing(shards, shardPresent, 0, shardSize);
             logger.debug("RS纠错数据恢复完成!");
@@ -114,16 +111,17 @@ public class ReedSolomonDecoderService {
 
     /**
      * 检查全为 true
+     *
      * @param check 待检查数组
      * @return boolean
      */
-     private boolean checkAllTrue(boolean[] check) {
-         System.out.println(Arrays.toString(check));
-         for (boolean b : check) {
-             if (!b) {
-                 return false;
-             }
-         }
-         return true;
-     }
+    private boolean checkAllTrue(boolean[] check) {
+        System.out.println(Arrays.toString(check));
+        for (boolean b : check) {
+            if (!b) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
