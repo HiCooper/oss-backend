@@ -22,7 +22,7 @@ import java.util.Base64;
  * 私钥： 解密和签名
  */
 
-public class RSAUtil {
+public final class RSAUtil {
 
     private static final String KEY_ALGORITHM = "RSA";
 
@@ -31,12 +31,12 @@ public class RSAUtil {
     /**
      * 默认公钥的持久化文件存放位置
      */
-    private static String PUBLIC_KEY_FILE = "publicKey_rsa_1024.pub";
+    private static String PUBLIC_KEY_FILE = "rsa/publicKey_rsa_1024.pub";
 
     /**
      * 默认私钥的持久化文件存放位置
      */
-    private static String PRIVATE_KEY_FILE = "privateKey_rsa_1024";
+    private static String PRIVATE_KEY_FILE = "rsa/privateKey_rsa_1024";
 
     static {
         // 检查密钥是否初始化

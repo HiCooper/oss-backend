@@ -63,7 +63,7 @@ public class BucketController {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
         // 检查该 bucket 名称是否被占用, 全局 bucket 命名唯一，还是同账户下唯一？ todo 值得思考。。。
         Boolean result = bucketService.checkBucketNotExist(mo.getName());
-        if (result){
+        if (!result){
             throw new BaseException("403", "该Bucket名字已被占用");
         }
         BucketInfo bucketInfo = new BucketInfo();
