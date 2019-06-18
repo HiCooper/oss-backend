@@ -24,31 +24,23 @@ import java.util.Base64;
 
 public final class RSAUtil {
 
-    private static final String KEY_ALGORITHM = "RSA";
-
-    private static final String SIGNATURE_ALGORITHM = "MD5withRSA";
-
     /**
      * 默认公钥的持久化文件存放位置
      */
-    private static String PUBLIC_KEY_FILE = "rsa/publicKey_rsa_1024.pub";
+    private static final String PUBLIC_KEY_FILE = "rsa/publicKey_rsa_1024.pub";
 
     /**
      * 默认私钥的持久化文件存放位置
      */
-    private static String PRIVATE_KEY_FILE = "rsa/privateKey_rsa_1024";
+    private static final String PRIVATE_KEY_FILE = "rsa/privateKey_rsa_1024";
 
-    static {
-        // 检查密钥是否初始化
-        ClassPathResource publicFile = new ClassPathResource(PUBLIC_KEY_FILE);
-        if (!publicFile.exists()) {
-            try {
-                initKey();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
+    private static final String KEY_ALGORITHM = "RSA";
+
+    private static final String SIGNATURE_ALGORITHM = "MD5withRSA";
+
+    private static final String PUBLIC_KEY = getPublicKey();
+    private static final String PRIVATE_KEY = getPrivateKey();
+
 
     /**
      * 初始化密钥
@@ -78,8 +70,10 @@ public final class RSAUtil {
         } catch (IOException e) {
             throw new RuntimeException(e);
         } finally {
-            oos1.close();
-            oos2.close();
+            if (oos1 != null && oos2 != null) {
+                oos1.close();
+                oos2.close();
+            }
         }
     }
 
@@ -99,7 +93,6 @@ public final class RSAUtil {
      *
      * @param encodeStr encodeStr
      * @return 解密后字节数组
-     * @throws Exception
      */
     private static byte[] decryptBase64(String encodeStr) {
         return Base64.getDecoder().decode(encodeStr.getBytes());
@@ -109,26 +102,34 @@ public final class RSAUtil {
      * 获取公钥
      *
      * @return 字符串公钥
-     * @throws Exception
      */
-    private static String getPublicKey() throws Exception {
-        ClassPathResource publicFile = new ClassPathResource(PUBLIC_KEY_FILE);
-        ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(publicFile.getPath()));
-        PublicKey publicKey = (PublicKey) inputStream.readObject();
-        return encryptBase64(publicKey.getEncoded());
+    private static String getPublicKey() {
+        try {
+            ClassPathResource publicFile = new ClassPathResource(PUBLIC_KEY_FILE);
+            ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(publicFile.getPath()));
+            PublicKey publicKey = (PublicKey) inputStream.readObject();
+            return encryptBase64(publicKey.getEncoded());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        throw new RuntimeException("获取公钥文件失败");
     }
 
     /**
      * 获取密钥
      *
      * @return 字符串密钥
-     * @throws Exception
      */
-    private static String getPrivateKey() throws Exception {
-        ClassPathResource privateFile = new ClassPathResource(PRIVATE_KEY_FILE);
-        ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(privateFile.getPath()));
-        PrivateKey privateKey = (PrivateKey) inputStream.readObject();
-        return encryptBase64(privateKey.getEncoded());
+    private static String getPrivateKey() {
+        try {
+            ClassPathResource privateFile = new ClassPathResource(PRIVATE_KEY_FILE);
+            ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(privateFile.getPath()));
+            PrivateKey privateKey = (PrivateKey) inputStream.readObject();
+            return encryptBase64(privateKey.getEncoded());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        throw new RuntimeException("获取密钥文件失败");
     }
 
     //------------ 私钥签名， 公钥认证 （常用） ------------
@@ -142,9 +143,8 @@ public final class RSAUtil {
      * @throws Exception
      */
     public static String sign(String data) throws Exception {
-        String privateKey = getPrivateKey();
         // 解密由base64编码的私钥
-        byte[] keyBytes = decryptBase64(privateKey);
+        byte[] keyBytes = decryptBase64(PRIVATE_KEY);
 
         // 取得私钥
         PKCS8EncodedKeySpec pkcs8KeySpec = new PKCS8EncodedKeySpec(keyBytes);
@@ -172,8 +172,7 @@ public final class RSAUtil {
             throws Exception {
 
         // 解密由base64编码的公钥
-        String publicKey = getPublicKey();
-        byte[] keyBytes = decryptBase64(publicKey);
+        byte[] keyBytes = decryptBase64(PUBLIC_KEY);
 
         // 取得公钥
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(keyBytes);
@@ -201,8 +200,7 @@ public final class RSAUtil {
     public static String encryptByPrivateKey(String data)
             throws Exception {
         // 对密钥解密
-        String key = getPrivateKey();
-        byte[] keyBytes = decryptBase64(key);
+        byte[] keyBytes = decryptBase64(PRIVATE_KEY);
 
         // 取得私钥
         PKCS8EncodedKeySpec pkcs8KeySpec = new PKCS8EncodedKeySpec(keyBytes);
@@ -227,8 +225,7 @@ public final class RSAUtil {
     public static String decryptByPublicKey(String secret)
             throws Exception {
         // 对密钥解密
-        String key = getPublicKey();
-        byte[] keyBytes = decryptBase64(key);
+        byte[] keyBytes = decryptBase64(PUBLIC_KEY);
 
         // 取得公钥
         X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(keyBytes);
