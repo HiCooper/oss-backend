@@ -248,7 +248,7 @@ public class ObjectController {
         // 将用户id 计算如签名，作为临时 ossAccessKeyId,解密时获取用户id
         String ossAccessKeyId = "TMP." + RSAUtil.encryptByPrivateKey(currentUser.getId().toString());
 
-        String url = "http://"+ NetworkUtils.INTERNET_IP +":8077/api/object/" + mo.getObjectName();
+        String url = "http://" + NetworkUtils.INTERNET_IP + ":8077/api/object/" + mo.getObjectName();
 
         String urlExpiresAccessKeyId = "Expires=" + (System.currentTimeMillis() + mo.getTimeout() * 1000) / 1000 + "&OSSAccessKeyId=" + URLEncoder.encode(ossAccessKeyId, "UTF-8");
 
@@ -266,19 +266,21 @@ public class ObjectController {
     }
 
     @GetMapping(value = "{bucketName}/{objectName}")
-    @ApiOperation("获取对象")
-    public String getObject(@PathVariable("bucketName") String bucketName, @PathVariable("objectName") String objectName){
+    @ApiOperation("获取对象(公开对象)")
+    public String getObject(
+            @PathVariable("bucketName") String bucketName,
+            @PathVariable("objectName") String objectName) {
         return null;
     }
 
 
     @GetMapping(value = "{fileName}")
-    @ApiOperation("获取对象")
+    @ApiOperation("获取对象(私有对象，临时口令，限时访问)")
     public String getObject(@PathVariable("fileName") String fileName,
-                         @RequestParam("Expires") String expiresTime,
-                         @RequestParam("OSSAccessKeyId") String ossAccessKeyId,
-                         @RequestParam("Signature") String signature,
-                         HttpServletResponse response, WebRequest request) throws Exception {
+                            @RequestParam("Expires") String expiresTime,
+                            @RequestParam("OSSAccessKeyId") String ossAccessKeyId,
+                            @RequestParam("Signature") String signature,
+                            HttpServletResponse response, WebRequest request) throws Exception {
         String url = "Expires=" + expiresTime + "&OSSAccessKeyId=" + URLEncoder.encode(ossAccessKeyId, "UTF-8");
 
         // 1. 签名验证
