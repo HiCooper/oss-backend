@@ -11,9 +11,11 @@ import com.berry.oss.common.exceptions.UploadException;
 import com.berry.oss.common.utils.*;
 import com.berry.oss.core.entity.BucketInfo;
 import com.berry.oss.core.entity.ObjectInfo;
+import com.berry.oss.core.mapper.ObjectInfoMapper;
 import com.berry.oss.core.service.IBucketInfoDaoService;
 import com.berry.oss.core.service.IObjectInfoDaoService;
 import com.berry.oss.module.dto.ObjectResource;
+import com.berry.oss.module.mo.DeleteObjectsMo;
 import com.berry.oss.module.mo.GenerateUrlWithSignedMo;
 import com.berry.oss.module.mo.UpdateObjectAclMo;
 import com.berry.oss.module.vo.GenerateUrlWithSignedVo;
@@ -25,6 +27,9 @@ import com.berry.oss.service.IObjectHashService;
 import com.berry.oss.service.IObjectService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.apache.ibatis.session.ExecutorType;
+import org.apache.ibatis.session.SqlSession;
+import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.DigestUtils;
@@ -33,6 +38,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -55,7 +61,7 @@ import java.util.regex.Pattern;
  * @date 2019/6/4 15:34
  */
 @RestController
-@RequestMapping("api/{bucket}")
+@RequestMapping("ajax/bucket/file")
 @Api(tags = "对象管理")
 public class ObjectController {
 
@@ -92,7 +98,7 @@ public class ObjectController {
 
     @GetMapping("list_objects.json")
     @ApiOperation("获取 Object 列表")
-    public Result list(@PathVariable("bucket") String bucket,
+    public Result list(@RequestParam("bucket") String bucket,
                        @RequestParam(value = "path", defaultValue = "/") String path,
                        @RequestParam(defaultValue = "1") Integer pageNum,
                        @RequestParam(defaultValue = "10") Integer pageSize) {
@@ -109,7 +115,7 @@ public class ObjectController {
     @PostMapping("create")
     @ApiOperation("创建对象")
     public Result create(
-            @PathVariable("bucket") String bucket,
+            @RequestParam("bucket") String bucket,
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "acl") String acl,
             @RequestParam(value = "filePath", defaultValue = DEFAULT_FILE_PATH) String filePath,
@@ -213,7 +219,7 @@ public class ObjectController {
      */
     @GetMapping("head_object.json")
     public Result getObjectHead(
-            @PathVariable(value = "bucket") String bucket,
+            @RequestParam(value = "bucket") String bucket,
             @RequestParam(value = "path", required = false) String path,
             @RequestParam(value = "objectName") String objectName) {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
@@ -250,13 +256,13 @@ public class ObjectController {
      * @throws Exception
      */
     @PostMapping("generate_url_with_signed.json")
-    public Result generateUrlWithSigned(@PathVariable("bucket") String bucket, @RequestBody GenerateUrlWithSignedMo mo) throws Exception {
+    public Result generateUrlWithSigned(@RequestBody GenerateUrlWithSignedMo mo) throws Exception {
 
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
         // 将用户id 计算如签名，作为临时 ossAccessKeyId,解密时获取用户id
         String ossAccessKeyId = "TMP." + RSAUtil.encryptByPrivateKey(currentUser.getId().toString());
 
-        String url = "http://" + NetworkUtils.INTERNET_IP + ":8077/api/" + bucket + "/" + mo.getObjectPath();
+        String url = "http://" + NetworkUtils.INTERNET_IP + ":8077/api/" + mo.getBucket() + "/" + mo.getObjectPath();
 
         String urlExpiresAccessKeyId = "Expires=" + (System.currentTimeMillis() + mo.getTimeout() * 1000) / 1000 + "&OSSAccessKeyId=" + URLEncoder.encode(ossAccessKeyId, "UTF-8");
 
@@ -276,8 +282,8 @@ public class ObjectController {
     @GetMapping(value = "{objectPath}")
     @ApiOperation("获取对象(私有对象，需要临时口令，且限时访问；公开对象，直接访问)")
     public String getObject(
-            @PathVariable("bucket") String bucket,
             @PathVariable("objectPath") String objectPath,
+            @RequestParam("bucket") String bucket,
             @RequestParam(value = "Expires", required = false) String expiresTime,
             @RequestParam(value = "OSSAccessKeyId", required = false) String ossAccessKeyId,
             @RequestParam(value = "Signature", required = false) String signature,
@@ -334,29 +340,56 @@ public class ObjectController {
         return null;
     }
 
-    @DeleteMapping("delete_objects.json")
-    @ApiOperation("删除对象")
-    public Result delete(
-            @PathVariable("bucket") String bucket,
-            @RequestParam String objectId) {
-        // 检查bucket
-        BucketInfo bucketInfo = bucketService.checkBucketExist(bucket);
+    @Resource
+    private SqlSessionTemplate sqlSessionTemplate;
 
-        // 检查该对象是否存在
-        ObjectInfo objectInfo = objectInfoDaoService.getOne(new QueryWrapper<ObjectInfo>().eq("bucket_id", bucketInfo.getId()));
-        if (objectInfo == null) {
-            throw new BaseException(ResultCode.DATA_NOT_EXIST);
+    @PostMapping("delete_objects.json")
+    @ApiOperation("删除对象")
+    public Result delete(@RequestBody DeleteObjectsMo mo) {
+        UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
+
+        // 检查bucket
+        BucketInfo bucketInfo = bucketService.checkBucketExist(mo.getBucket());
+
+        String objects = mo.getObjects();
+        String[] objectArray = objects.split(",");
+
+        QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("bucket_id", bucketInfo.getId());
+        queryWrapper.eq("user_id", currentUser.getId());
+        try (SqlSession session = sqlSessionTemplate.getSqlSessionFactory().openSession(ExecutorType.BATCH, false)) {
+            ObjectInfoMapper mapper = session.getMapper(ObjectInfoMapper.class);
+            for (String item : objectArray) {
+                String fileName = item;
+                String path = DEFAULT_FILE_PATH;
+                if (item.contains("/")) {
+                    path = item.substring(0, item.lastIndexOf("/"));
+                    fileName = item.substring(item.lastIndexOf("/") + 1);
+                }
+                queryWrapper.eq("file_path", path);
+                queryWrapper.eq("file_name", fileName);
+                ObjectInfo objectInfo = mapper.selectOne(queryWrapper);
+                if (objectInfo != null) {
+                    // 删除该对象引用关系，减少哈希引用
+                    mapper.deleteById(objectInfo.getId());
+                    System.out.println();
+                    if (!objectInfo.getIsDir()) {
+                        objectHashService.decreaseRefCountByHash(objectInfo.getHash());
+                    }
+                }
+            }
+            session.commit();
+            // 清理缓存，防止溢出
+            session.clearCache();
         }
-        // 删除该对象引用关系，减少哈希引用
-        objectInfoDaoService.removeById(objectId);
-        return ResultFactory.wrapper(objectHashService.decreaseRefCountByHash(objectInfo.getHash()));
+        return ResultFactory.wrapper();
     }
 
-    @PutMapping("set_object_acl.json")
+    @PostMapping("set_object_acl.json")
     @ApiOperation("更新对象读写权限")
-    public Result updateObjectAcl(@PathVariable("bucket") String bucket, @RequestBody UpdateObjectAclMo mo) {
+    public Result updateObjectAcl(@RequestBody UpdateObjectAclMo mo) {
         // 检查bucket
-        BucketInfo bucketInfo = bucketService.checkBucketExist(bucket);
+        BucketInfo bucketInfo = bucketService.checkBucketExist(mo.getBucket());
 
         // 检查该对象是否存在
         ObjectInfo objectInfo = objectInfoDaoService.getOne(new QueryWrapper<ObjectInfo>()

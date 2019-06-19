@@ -2,6 +2,8 @@ package com.berry.oss.module.mo;
 
 import lombok.Data;
 
+import javax.validation.constraints.NotBlank;
+
 /**
  * Title DeleteObjectsMo
  * Description
@@ -14,7 +16,11 @@ import lombok.Data;
  */
 @Data
 public class DeleteObjectsMo {
-
+    @NotBlank
     String bucket;
+    /**
+     * 对象全路径
+     */
+    @NotBlank
     String objects;
 }
