@@ -11,24 +11,18 @@ import com.berry.oss.core.entity.BucketInfo;
  * Use：
  */
 public interface IBucketService {
-    /**
-     * 检查 bucket 是否存在
-     *
-     * @param bucketId bucket id
-     * @return BucketInfo
-     */
-    BucketInfo checkBucketExist(String bucketId);
 
     /**
-     *  检查 bucket 是否存在
-     * @param userId 用户id
+     * 检查 bucket name 是否存在
+     *
      * @param bucketName bucket name
      * @return
      */
-    BucketInfo checkBucketExist(Integer userId, String bucketName);
+    BucketInfo checkBucketExist(String bucketName);
 
     /**
      * 检查该 bucket 不存在
+     *
      * @param bucketName bucketName
      * @return
      */

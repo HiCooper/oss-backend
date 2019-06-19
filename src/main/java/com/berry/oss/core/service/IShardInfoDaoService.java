@@ -5,7 +5,7 @@ import com.berry.oss.core.entity.ShardInfo;
 
 /**
  * <p>
- *  服务类
+ * 服务类
  * </p>
  *
  * @author HiCooper

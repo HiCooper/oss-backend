@@ -19,8 +19,8 @@ public interface IDataSaveService {
      * 保存对象
      *
      * @param inputStream 输入流
-     * @param size    size
-     * @param hash    hash
+     * @param size        size
+     * @param hash        hash
      * @param fileName    文件名
      * @param bucketName  存储空间名
      * @param username    用户名

@@ -4,10 +4,10 @@
 
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.berry.oss.core.entity.ShardInfo">
-        <id column="id" property="id" />
-        <result column="file_id" property="fileId" />
+        <id column="id" property="id"/>
+        <result column="file_id" property="fileId"/>
         <result column="file_name" property="fileName"/>
-        <result column="shard_json" property="shardJson" />
+        <result column="shard_json" property="shardJson"/>
         <result column="size" property="size"/>
         <result column="hash" property="hash"/>
         <result column="create_time" property="createTime"/>

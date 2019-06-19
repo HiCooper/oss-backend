@@ -16,8 +16,8 @@ import javax.validation.constraints.NotBlank;
 public class UpdateObjectAclMo {
 
     @NotBlank
-    private String objectId;
+    private String objectName;
 
     @NotBlank
-    private String newAcl;
+    private String acl;
 }

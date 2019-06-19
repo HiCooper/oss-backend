@@ -28,19 +28,8 @@ public class BucketServiceImpl implements IBucketService {
     }
 
     @Override
-    public BucketInfo checkBucketExist(String bucketId) {
-        BucketInfo bucketInfo = bucketInfoDaoService.getById(bucketId);
-        if (null == bucketInfo) {
-            throw new BaseException(ResultCode.BUCKET_NOT_EXIST);
-        }
-        return bucketInfo;
-    }
-
-    @Override
-    public BucketInfo checkBucketExist(Integer userId, String bucketName) {
-        BucketInfo bucketInfo = bucketInfoDaoService.getOne(new QueryWrapper<BucketInfo>()
-                .eq("user_id", userId)
-                .eq("name", bucketName));
+    public BucketInfo checkBucketExist(String bucketName) {
+        BucketInfo bucketInfo = bucketInfoDaoService.getOne(new QueryWrapper<BucketInfo>().eq("name", bucketName));
         if (null == bucketInfo) {
             throw new BaseException(ResultCode.BUCKET_NOT_EXIST);
         }
@@ -49,8 +38,7 @@ public class BucketServiceImpl implements IBucketService {
 
     @Override
     public Boolean checkBucketNotExist(String bucketName) {
-        int count = bucketInfoDaoService.count(new QueryWrapper<BucketInfo>()
-                .eq("name", bucketName));
+        int count = bucketInfoDaoService.count(new QueryWrapper<BucketInfo>().eq("name", bucketName));
         return 0 == count;
     }
 }

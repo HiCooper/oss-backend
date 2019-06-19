@@ -11,9 +11,9 @@ import com.berry.oss.common.exceptions.UploadException;
 import com.berry.oss.common.utils.*;
 import com.berry.oss.core.entity.BucketInfo;
 import com.berry.oss.core.entity.ObjectInfo;
+import com.berry.oss.core.service.IBucketInfoDaoService;
 import com.berry.oss.core.service.IObjectInfoDaoService;
 import com.berry.oss.module.dto.ObjectResource;
-import com.berry.oss.module.mo.FastUploadCheck;
 import com.berry.oss.module.mo.GenerateUrlWithSignedMo;
 import com.berry.oss.module.mo.UpdateObjectAclMo;
 import com.berry.oss.module.vo.GenerateUrlWithSignedVo;
@@ -27,7 +27,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.util.DigestUtils;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.*;
@@ -56,7 +55,7 @@ import java.util.regex.Pattern;
  * @date 2019/6/4 15:34
  */
 @RestController
-@RequestMapping("api/object")
+@RequestMapping("api/{bucket}")
 @Api(tags = "对象管理")
 public class ObjectController {
 
@@ -74,27 +73,31 @@ public class ObjectController {
 
     private final IDataSaveService dataSaveService;
 
+    private final IBucketInfoDaoService bucketInfoDaoService;
+
     @Autowired
     public ObjectController(IBucketService bucketService,
                             IObjectInfoDaoService objectInfoDaoService,
                             IObjectService objectService,
                             IObjectHashService objectHashService,
-                            IDataSaveService dataSaveService) {
+                            IDataSaveService dataSaveService,
+                            IBucketInfoDaoService bucketInfoDaoService) {
         this.bucketService = bucketService;
         this.objectInfoDaoService = objectInfoDaoService;
         this.objectService = objectService;
         this.objectHashService = objectHashService;
         this.dataSaveService = dataSaveService;
+        this.bucketInfoDaoService = bucketInfoDaoService;
     }
 
-    @GetMapping("list")
+    @GetMapping("list_objects.json")
     @ApiOperation("获取 Object 列表")
-    public Result list(@RequestParam("bucketName") String bucketName,
+    public Result list(@PathVariable("bucket") String bucket,
                        @RequestParam(value = "path", defaultValue = "/") String path,
                        @RequestParam(defaultValue = "1") Integer pageNum,
                        @RequestParam(defaultValue = "10") Integer pageSize) {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
-        BucketInfo bucketInfo = bucketService.checkBucketExist(currentUser.getId(), bucketName);
+        BucketInfo bucketInfo = bucketService.checkBucketExist(bucket);
         QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_id", currentUser.getId());
         queryWrapper.eq("bucket_id", bucketInfo.getId());
@@ -105,12 +108,13 @@ public class ObjectController {
 
     @PostMapping("create")
     @ApiOperation("创建对象")
-    public Result create(@RequestParam("file") MultipartFile file,
-                         @RequestParam(value = "bucketId") String bucketId,
-                         @RequestParam(value = "acl") String acl,
-                         @RequestParam(value = "filePath", defaultValue = DEFAULT_FILE_PATH) String filePath,
-                         @RequestHeader(value = "fileSize") Long fileSize,
-                         @RequestHeader(value = "Digest") String digest) throws IOException {
+    public Result create(
+            @PathVariable("bucket") String bucket,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "acl") String acl,
+            @RequestParam(value = "filePath", defaultValue = DEFAULT_FILE_PATH) String filePath,
+            @RequestHeader(value = "fileSize") Long fileSize,
+            @RequestHeader(value = "Digest") String digest) throws IOException {
 
         Matcher matcher = FILE_PATH_PATTERN.matcher(filePath);
         if (!DEFAULT_FILE_PATH.equals(filePath) && !matcher.find()) {
@@ -119,7 +123,10 @@ public class ObjectController {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
 
         // 检查bucket
-        BucketInfo bucketInfo = bucketService.checkBucketExist(bucketId);
+        BucketInfo bucketInfo = bucketInfoDaoService.getOne(new QueryWrapper<BucketInfo>().eq("name", bucket));
+        if (bucketInfo == null) {
+            throw new UploadException("404", "bucket not exist");
+        }
 
         // 1. 获取请求头中，文件大小，文件hash
         if (fileSize > Integer.MAX_VALUE) {
@@ -163,7 +170,7 @@ public class ObjectController {
                 objectInfo.setFilePath(path.toString());
                 objectInfo.setAcl(acl);
                 objectInfo.setUserId(currentUser.getId());
-                objectInfo.setBucketId(bucketId);
+                objectInfo.setBucketId(bucketInfo.getId());
                 dirs.add(objectInfo);
                 if ("/".equals(path.toString())) {
                     path.append(dirName);
@@ -186,11 +193,11 @@ public class ObjectController {
         // 保存上传信息
 
         String fileObjectPath = filePath.equals(DEFAULT_FILE_PATH) ? DEFAULT_FILE_PATH : "/" + filePath;
-        objectService.saveObjectInfo(bucketId, acl, hash, fileSize, fileName, fileObjectPath, fileId);
+        objectService.saveObjectInfo(bucketInfo.getId(), acl, hash, fileSize, fileName, fileObjectPath, fileId);
         return ResultFactory.wrapper(msg);
     }
 
-    @GetMapping("detail")
+    @GetMapping("detail.json")
     @ApiOperation("获取对象描述")
     public Result detail(@RequestParam String objectId) {
         return ResultFactory.wrapper(objectInfoDaoService.getOne(new QueryWrapper<ObjectInfo>().eq("file_id", objectId)));
@@ -204,12 +211,13 @@ public class ObjectController {
      * @param objectName 文件名 必填
      * @return
      */
-    @GetMapping("head_object")
-    public Result getObjectHead(@RequestParam(value = "path", required = false) String path,
-                                @RequestParam(value = "bucket") String bucket,
-                                @RequestParam(value = "objectName") String objectName) {
+    @GetMapping("head_object.json")
+    public Result getObjectHead(
+            @PathVariable(value = "bucket") String bucket,
+            @RequestParam(value = "path", required = false) String path,
+            @RequestParam(value = "objectName") String objectName) {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
-        BucketInfo bucketInfo = bucketService.checkBucketExist(currentUser.getId(), bucket);
+        BucketInfo bucketInfo = bucketService.checkBucketExist(bucket);
         String eTag = DigestUtils.md5DigestAsHex(objectName.getBytes());
         QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<ObjectInfo>()
                 .eq("bucket_id", bucketInfo.getId())
@@ -241,14 +249,14 @@ public class ObjectController {
      * @return
      * @throws Exception
      */
-    @PostMapping("generate_url_with_signed")
-    public Result generateUrlWithSigned(@RequestBody GenerateUrlWithSignedMo mo) throws Exception {
+    @PostMapping("generate_url_with_signed.json")
+    public Result generateUrlWithSigned(@PathVariable("bucket") String bucket, @RequestBody GenerateUrlWithSignedMo mo) throws Exception {
 
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
         // 将用户id 计算如签名，作为临时 ossAccessKeyId,解密时获取用户id
         String ossAccessKeyId = "TMP." + RSAUtil.encryptByPrivateKey(currentUser.getId().toString());
 
-        String url = "http://" + NetworkUtils.INTERNET_IP + ":8077/api/object/" + mo.getObjectName();
+        String url = "http://" + NetworkUtils.INTERNET_IP + ":8077/api/" + bucket + "/" + mo.getObjectPath();
 
         String urlExpiresAccessKeyId = "Expires=" + (System.currentTimeMillis() + mo.getTimeout() * 1000) / 1000 + "&OSSAccessKeyId=" + URLEncoder.encode(ossAccessKeyId, "UTF-8");
 
@@ -265,58 +273,116 @@ public class ObjectController {
         return ResultFactory.wrapper(vo);
     }
 
-    @GetMapping(value = "{bucketName}/{objectName}")
-    @ApiOperation("获取对象(公开对象)")
+    @GetMapping(value = "{objectPath}")
+    @ApiOperation("获取对象(私有对象，需要临时口令，且限时访问；公开对象，直接访问)")
     public String getObject(
-            @PathVariable("bucketName") String bucketName,
-            @PathVariable("objectName") String objectName) {
-        return null;
-    }
+            @PathVariable("bucket") String bucket,
+            @PathVariable("objectPath") String objectPath,
+            @RequestParam(value = "Expires", required = false) String expiresTime,
+            @RequestParam(value = "OSSAccessKeyId", required = false) String ossAccessKeyId,
+            @RequestParam(value = "Signature", required = false) String signature,
+            HttpServletResponse response, WebRequest request) throws Exception {
 
+        // 检查bucket
+        BucketInfo bucketInfo = bucketService.checkBucketExist(bucket);
 
-    @GetMapping(value = "{fileName}")
-    @ApiOperation("获取对象(私有对象，临时口令，限时访问)")
-    public String getObject(@PathVariable("fileName") String fileName,
-                            @RequestParam("Expires") String expiresTime,
-                            @RequestParam("OSSAccessKeyId") String ossAccessKeyId,
-                            @RequestParam("Signature") String signature,
-                            HttpServletResponse response, WebRequest request) throws Exception {
-        String url = "Expires=" + expiresTime + "&OSSAccessKeyId=" + URLEncoder.encode(ossAccessKeyId, "UTF-8");
-
-        // 1. 签名验证
-        String sign = new String(Base64.getEncoder().encode(MD5.md5Encode(url).getBytes()));
-        if (!signature.equals(sign)) {
-            return "签名校验错误";
+        String fileName = objectPath;
+        String filePath = DEFAULT_FILE_PATH;
+        if (objectPath.contains(DEFAULT_FILE_PATH)) {
+            fileName = objectPath.substring(objectPath.lastIndexOf("/") + 1);
+            filePath = objectPath.substring(0, objectPath.lastIndexOf("/"));
         }
-
-        // 2. 过期验证
-        if (StringUtils.isNumeric(expiresTime)) {
-            // 时间戳字符串转时间,expiresTime 是秒单位
-            Date date = new Date(Long.valueOf(expiresTime) * 1000);
-            if (date.before(new Date())) {
-                return "链接已过期";
-            }
-        }
-
-        // 3. 身份验证
-        String userId;
-        try {
-            String userIdEncodePart = ossAccessKeyId.substring(4);
-            System.out.println(userIdEncodePart);
-            userId = RSAUtil.decryptByPublicKey(userIdEncodePart);
-        } catch (Exception e) {
-            return "身份校验错误";
-        }
-
         ObjectInfo objectInfo = objectInfoDaoService.getOne(new QueryWrapper<ObjectInfo>()
-                .eq("user_id", userId)
                 .eq("file_name", fileName)
+                .eq("file_path", filePath)
+                .eq("bucket_id", bucketInfo.getId())
         );
         if (objectInfo == null) {
             return "资源不存在";
         }
+
+        if (!objectInfo.getAcl().startsWith("PUBLIC")) {
+            // 非公开资源，需要验证身份及签名
+            String url = "Expires=" + expiresTime + "&OSSAccessKeyId=" + URLEncoder.encode(ossAccessKeyId, "UTF-8");
+
+            // 1. 签名验证
+            String sign = new String(Base64.getEncoder().encode(MD5.md5Encode(url).getBytes()));
+            if (!signature.equals(sign)) {
+                return "签名校验错误";
+            }
+
+            // 2. 过期验证
+            if (StringUtils.isNumeric(expiresTime)) {
+                // 时间戳字符串转时间,expiresTime 是秒单位
+                Date date = new Date(Long.valueOf(expiresTime) * 1000);
+                if (date.before(new Date())) {
+                    return "链接已过期";
+                }
+            }
+
+            // 3. 身份验证
+            try {
+                String userIdEncodePart = ossAccessKeyId.substring(4);
+                System.out.println(userIdEncodePart);
+                RSAUtil.decryptByPublicKey(userIdEncodePart);
+            } catch (Exception e) {
+                return "身份校验错误";
+            }
+        }
+
+        handlerResponse(objectPath, response, request, objectInfo);
+        return null;
+    }
+
+    @DeleteMapping("delete_objects.json")
+    @ApiOperation("删除对象")
+    public Result delete(
+            @PathVariable("bucket") String bucket,
+            @RequestParam String objectId) {
+        // 检查bucket
+        BucketInfo bucketInfo = bucketService.checkBucketExist(bucket);
+
+        // 检查该对象是否存在
+        ObjectInfo objectInfo = objectInfoDaoService.getOne(new QueryWrapper<ObjectInfo>().eq("bucket_id", bucketInfo.getId()));
+        if (objectInfo == null) {
+            throw new BaseException(ResultCode.DATA_NOT_EXIST);
+        }
+        // 删除该对象引用关系，减少哈希引用
+        objectInfoDaoService.removeById(objectId);
+        return ResultFactory.wrapper(objectHashService.decreaseRefCountByHash(objectInfo.getHash()));
+    }
+
+    @PutMapping("set_object_acl.json")
+    @ApiOperation("更新对象读写权限")
+    public Result updateObjectAcl(@PathVariable("bucket") String bucket, @RequestBody UpdateObjectAclMo mo) {
+        // 检查bucket
+        BucketInfo bucketInfo = bucketService.checkBucketExist(bucket);
+
+        // 检查该对象是否存在
+        ObjectInfo objectInfo = objectInfoDaoService.getOne(new QueryWrapper<ObjectInfo>()
+                .eq("file_name", mo.getObjectName())
+                .eq("bucket_id", bucketInfo.getId())
+        );
+        if (objectInfo == null) {
+            throw new BaseException(ResultCode.DATA_NOT_EXIST);
+        }
+        objectInfo.setAcl(mo.getAcl());
+        objectInfoDaoService.updateById(objectInfo);
+        return ResultFactory.wrapper();
+    }
+
+    /**
+     * 处理对象读取响应
+     *
+     * @param objectName
+     * @param response
+     * @param request
+     * @param objectInfo
+     * @throws IOException
+     */
+    private void handlerResponse(String objectName, HttpServletResponse response, WebRequest request, ObjectInfo objectInfo) throws IOException {
         long lastModified = objectInfo.getUpdateTime().toEpochSecond(OffsetDateTime.now().getOffset()) * 1000;
-        String eTag = "\"" + DigestUtils.md5DigestAsHex(fileName.getBytes()) + "\"";
+        String eTag = "\"" + DigestUtils.md5DigestAsHex(objectName.getBytes()) + "\"";
         if (request.checkNotModified(eTag, lastModified)) {
             response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
         } else {
@@ -330,33 +396,6 @@ public class ObjectController {
             StreamUtils.copy(object.getInputStream(), response.getOutputStream());
             response.flushBuffer();
         }
-        return null;
-    }
-
-    @DeleteMapping("delete")
-    @ApiOperation("删除对象")
-    public Result delete(@RequestParam String objectId) {
-        // 检查该对象是否存在
-        ObjectInfo objectInfo = objectInfoDaoService.getById(objectId);
-        if (objectInfo == null) {
-            throw new BaseException(ResultCode.DATA_NOT_EXIST);
-        }
-        // 删除该对象引用关系，减少哈希引用
-        objectInfoDaoService.removeById(objectId);
-        return ResultFactory.wrapper(objectHashService.decreaseRefCountByHash(objectInfo.getHash()));
-    }
-
-    @PutMapping("updateObjectAcl")
-    @ApiOperation("更新对象读写权限")
-    public Result updateObjectAcl(@RequestBody UpdateObjectAclMo mo) {
-        // 检查该对象是否存在
-        ObjectInfo objectInfo = objectInfoDaoService.getById(mo.getObjectId());
-        if (objectInfo == null) {
-            throw new BaseException(ResultCode.DATA_NOT_EXIST);
-        }
-        objectInfo.setAcl(mo.getNewAcl());
-        objectInfoDaoService.updateById(objectInfo);
-        return ResultFactory.wrapper();
     }
 
 }

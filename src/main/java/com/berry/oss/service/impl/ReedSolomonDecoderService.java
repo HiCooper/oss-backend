@@ -20,6 +20,7 @@ import java.util.Arrays;
  * foo.txt 分片为 foo.txt.0, foo.txt.1, foo.txt.2, foo.txt.2, foo.txt.4, foo.txt.5
  * 从数据服务读取数据，4 个数据块，2 个校验块
  * 注意: 如果前4个数据块，顺序且正确读出，将跳过剩下校验块的读取和RS纠错算法
+ *
  * @author berry_cooper
  */
 @Service

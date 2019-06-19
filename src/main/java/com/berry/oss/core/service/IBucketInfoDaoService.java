@@ -18,8 +18,9 @@ public interface IBucketInfoDaoService extends IService<BucketInfo> {
 
     /**
      * 获取bucket 列表
+     *
      * @param userId 用户id
-     * @param name 名称（非必填）
+     * @param name   名称（非必填）
      * @return
      */
     List<BucketListVo> listBucket(Integer userId, String name);
