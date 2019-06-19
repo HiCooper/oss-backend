@@ -15,6 +15,7 @@ import com.berry.oss.core.mapper.ObjectInfoMapper;
 import com.berry.oss.core.service.IBucketInfoDaoService;
 import com.berry.oss.core.service.IObjectInfoDaoService;
 import com.berry.oss.module.dto.ObjectResource;
+import com.berry.oss.module.mo.CreateFolderMo;
 import com.berry.oss.module.mo.DeleteObjectsMo;
 import com.berry.oss.module.mo.GenerateUrlWithSignedMo;
 import com.berry.oss.module.mo.UpdateObjectAclMo;
@@ -34,6 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.DigestUtils;
 import org.springframework.util.StreamUtils;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MultipartFile;
@@ -174,7 +176,6 @@ public class ObjectController {
                 objectInfo.setIsDir(true);
                 objectInfo.setFileName(dirName);
                 objectInfo.setFilePath(path.toString());
-                objectInfo.setAcl(acl);
                 objectInfo.setUserId(currentUser.getId());
                 objectInfo.setBucketId(bucketInfo.getId());
                 dirs.add(objectInfo);
@@ -184,6 +185,7 @@ public class ObjectController {
                     path.append("/").append(dirName);
                 }
             }
+            // todo 检查目录是否已经存在
             objectInfoDaoService.saveBatch(dirs);
         }
 
@@ -343,9 +345,41 @@ public class ObjectController {
     @Resource
     private SqlSessionTemplate sqlSessionTemplate;
 
+    @PostMapping("create_folder.json")
+    public Result createFolder(@Validated @RequestBody CreateFolderMo mo){
+        UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
+
+        // 检查bucket
+        BucketInfo bucketInfo = bucketService.checkBucketExist(mo.getBucket());
+
+        List<ObjectInfo> dirs = new ArrayList<>(16);
+        String[] split = mo.getObjectName().split("/");
+        StringBuilder path = new StringBuilder("/");
+        ObjectInfo objectInfo;
+        for (String dirName : split) {
+            objectInfo = new ObjectInfo();
+            objectInfo.setId(ObjectId.get());
+            objectInfo.setIsDir(true);
+            objectInfo.setFileName(dirName);
+            objectInfo.setFilePath(path.toString());
+            objectInfo.setUserId(currentUser.getId());
+            objectInfo.setBucketId(bucketInfo.getId());
+            dirs.add(objectInfo);
+            if ("/".equals(path.toString())) {
+                path.append(dirName);
+            } else {
+                path.append("/").append(dirName);
+            }
+        }
+        // todo 检查目录是否已经存在
+        objectInfoDaoService.saveBatch(dirs);
+
+        return ResultFactory.wrapper();
+    }
+
     @PostMapping("delete_objects.json")
     @ApiOperation("删除对象")
-    public Result delete(@RequestBody DeleteObjectsMo mo) {
+    public Result delete(@Validated @RequestBody DeleteObjectsMo mo) {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
 
         // 检查bucket
