@@ -25,4 +25,11 @@
         id, bucketId, user_id, file_name, file_path, file_id, hash, category, size,acl, formatted_size, is_dir, create_time, update_time
     </sql>
 
+    <insert id="insertIgnore">
+        INSERT IGNORE INTO object_info (id, is_dir, file_name, file_path, user_id, bucket_id) VALUES (
+            #{objectInfo.id}, #{objectInfo.isDir},  #{objectInfo.fileName},  #{objectInfo.filePath},
+            #{objectInfo.userId},  #{objectInfo.bucketId}
+        )
+    </insert>
+
 </mapper>

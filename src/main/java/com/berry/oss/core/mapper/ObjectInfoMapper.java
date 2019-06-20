@@ -2,6 +2,7 @@ package com.berry.oss.core.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.berry.oss.core.entity.ObjectInfo;
+import org.apache.ibatis.annotations.Param;
 
 /**
  * <p>
@@ -13,4 +14,9 @@ import com.berry.oss.core.entity.ObjectInfo;
  */
 public interface ObjectInfoMapper extends BaseMapper<ObjectInfo> {
 
+    /**
+     * 插入数据，如遇唯一索引等限制插入失败则会忽略跳过
+     * @param objectInfo 实体信息
+     */
+    void insertIgnore(@Param("objectInfo") ObjectInfo objectInfo);
 }

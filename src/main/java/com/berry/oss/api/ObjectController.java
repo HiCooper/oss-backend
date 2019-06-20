@@ -33,14 +33,17 @@ import org.apache.ibatis.session.SqlSession;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.util.DigestUtils;
 import org.springframework.util.StreamUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.HandlerMapping;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -166,27 +169,8 @@ public class ObjectController {
 
         // 检查文件路径，非 / 则需要创建目录
         if (!DEFAULT_FILE_PATH.equals(filePath)) {
-            List<ObjectInfo> dirs = new ArrayList<>(16);
             String[] split = filePath.split("/");
-            StringBuilder path = new StringBuilder("/");
-            ObjectInfo objectInfo;
-            for (String dirName : split) {
-                objectInfo = new ObjectInfo();
-                objectInfo.setId(ObjectId.get());
-                objectInfo.setIsDir(true);
-                objectInfo.setFileName(dirName);
-                objectInfo.setFilePath(path.toString());
-                objectInfo.setUserId(currentUser.getId());
-                objectInfo.setBucketId(bucketInfo.getId());
-                dirs.add(objectInfo);
-                if ("/".equals(path.toString())) {
-                    path.append(dirName);
-                } else {
-                    path.append("/").append(dirName);
-                }
-            }
-            // todo 检查目录是否已经存在
-            objectInfoDaoService.saveBatch(dirs);
+            createFolderIgnore(currentUser, bucketInfo, split);
         }
 
         String msg = "极速上传成功!";
@@ -264,7 +248,7 @@ public class ObjectController {
         // 将用户id 计算如签名，作为临时 ossAccessKeyId,解密时获取用户id
         String ossAccessKeyId = "TMP." + RSAUtil.encryptByPrivateKey(currentUser.getId().toString());
 
-        String url = "http://" + NetworkUtils.INTERNET_IP + ":8077/api/" + mo.getBucket() + "/" + mo.getObjectPath();
+        String url = "http://" + NetworkUtils.INTERNET_IP + ":8077/ajax/bucket/file/" + mo.getBucket() + mo.getObjectPath();
 
         String urlExpiresAccessKeyId = "Expires=" + (System.currentTimeMillis() + mo.getTimeout() * 1000) / 1000 + "&OSSAccessKeyId=" + URLEncoder.encode(ossAccessKeyId, "UTF-8");
 
@@ -281,16 +265,26 @@ public class ObjectController {
         return ResultFactory.wrapper(vo);
     }
 
-    @GetMapping(value = "{objectPath}")
+    /**
+     * 把指定URL后的字符串全部截断当成参数
+     * @param request
+     * @return
+     */
+    private static String extractPathFromPattern(final HttpServletRequest request) {
+        String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
+        String bestMatchPattern = (String) request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+        return new AntPathMatcher().extractPathWithinPattern(bestMatchPattern, path);
+    }
+
+    @GetMapping(value = "{bucket}/**")
     @ApiOperation("获取对象(私有对象，需要临时口令，且限时访问；公开对象，直接访问)")
     public String getObject(
-            @PathVariable("objectPath") String objectPath,
-            @RequestParam("bucket") String bucket,
+            @PathVariable("bucket") String bucket,
             @RequestParam(value = "Expires", required = false) String expiresTime,
             @RequestParam(value = "OSSAccessKeyId", required = false) String ossAccessKeyId,
             @RequestParam(value = "Signature", required = false) String signature,
-            HttpServletResponse response, WebRequest request) throws Exception {
-
+            HttpServletResponse response, HttpServletRequest servletRequest, WebRequest request) throws Exception {
+        String objectPath = extractPathFromPattern(servletRequest);
         // 检查bucket
         BucketInfo bucketInfo = bucketService.checkBucketExist(bucket);
 
@@ -298,7 +292,7 @@ public class ObjectController {
         String filePath = DEFAULT_FILE_PATH;
         if (objectPath.contains(DEFAULT_FILE_PATH)) {
             fileName = objectPath.substring(objectPath.lastIndexOf("/") + 1);
-            filePath = objectPath.substring(0, objectPath.lastIndexOf("/"));
+            filePath = "/" + objectPath.substring(0, objectPath.lastIndexOf("/"));
         }
         ObjectInfo objectInfo = objectInfoDaoService.getOne(new QueryWrapper<ObjectInfo>()
                 .eq("file_name", fileName)
@@ -352,29 +346,35 @@ public class ObjectController {
         // 检查bucket
         BucketInfo bucketInfo = bucketService.checkBucketExist(mo.getBucket());
 
-        List<ObjectInfo> dirs = new ArrayList<>(16);
         String[] split = mo.getObjectName().split("/");
-        StringBuilder path = new StringBuilder("/");
-        ObjectInfo objectInfo;
-        for (String dirName : split) {
-            objectInfo = new ObjectInfo();
-            objectInfo.setId(ObjectId.get());
-            objectInfo.setIsDir(true);
-            objectInfo.setFileName(dirName);
-            objectInfo.setFilePath(path.toString());
-            objectInfo.setUserId(currentUser.getId());
-            objectInfo.setBucketId(bucketInfo.getId());
-            dirs.add(objectInfo);
-            if ("/".equals(path.toString())) {
-                path.append(dirName);
-            } else {
-                path.append("/").append(dirName);
-            }
-        }
-        // todo 检查目录是否已经存在
-        objectInfoDaoService.saveBatch(dirs);
-
+        createFolderIgnore(currentUser, bucketInfo, split);
         return ResultFactory.wrapper();
+    }
+
+    private void createFolderIgnore(UserInfoDTO currentUser, BucketInfo bucketInfo, String[] split) {
+        try (SqlSession session = sqlSessionTemplate.getSqlSessionFactory().openSession(ExecutorType.BATCH, false)) {
+            ObjectInfoMapper mapper = session.getMapper(ObjectInfoMapper.class);
+            ObjectInfo objectInfo;
+            StringBuilder path = new StringBuilder("/");
+            for (String dirName : split) {
+                objectInfo = new ObjectInfo();
+                objectInfo.setId(ObjectId.get());
+                objectInfo.setIsDir(true);
+                objectInfo.setFileName(dirName);
+                objectInfo.setFilePath(path.toString());
+                objectInfo.setUserId(currentUser.getId());
+                objectInfo.setBucketId(bucketInfo.getId());
+                if ("/".equals(path.toString())) {
+                    path.append(dirName);
+                } else {
+                    path.append("/").append(dirName);
+                }
+                mapper.insertIgnore(objectInfo);
+            }
+            session.commit();
+            // 清理缓存，防止溢出
+            session.clearCache();
+        }
     }
 
     @PostMapping("delete_objects.json")
