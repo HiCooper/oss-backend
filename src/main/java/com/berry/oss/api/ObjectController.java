@@ -157,7 +157,7 @@ public class ObjectController {
         QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_id", currentUser.getId());
         queryWrapper.eq("bucket_id", bucketInfo.getId());
-        queryWrapper.eq("file_path", "/" + filePath);
+        queryWrapper.eq("file_path", filePath);
         queryWrapper.eq("file_name", fileName);
         ObjectInfo one = objectInfoDaoService.getOne(queryWrapper);
         if (one != null) {
@@ -184,8 +184,7 @@ public class ObjectController {
         }
         // 保存上传信息
 
-        String fileObjectPath = filePath.equals(DEFAULT_FILE_PATH) ? DEFAULT_FILE_PATH : "/" + filePath;
-        objectService.saveObjectInfo(bucketInfo.getId(), acl, hash, fileSize, fileName, fileObjectPath, fileId);
+        objectService.saveObjectInfo(bucketInfo.getId(), acl, hash, fileSize, fileName, filePath, fileId);
         return ResultFactory.wrapper(msg);
     }
 
@@ -351,25 +350,33 @@ public class ObjectController {
         return ResultFactory.wrapper();
     }
 
+    /**
+     * 创建目录，存在则忽略
+     * @param currentUser
+     * @param bucketInfo
+     * @param split
+     */
     private void createFolderIgnore(UserInfoDTO currentUser, BucketInfo bucketInfo, String[] split) {
         try (SqlSession session = sqlSessionTemplate.getSqlSessionFactory().openSession(ExecutorType.BATCH, false)) {
             ObjectInfoMapper mapper = session.getMapper(ObjectInfoMapper.class);
             ObjectInfo objectInfo;
             StringBuilder path = new StringBuilder("/");
             for (String dirName : split) {
-                objectInfo = new ObjectInfo();
-                objectInfo.setId(ObjectId.get());
-                objectInfo.setIsDir(true);
-                objectInfo.setFileName(dirName);
-                objectInfo.setFilePath(path.toString());
-                objectInfo.setUserId(currentUser.getId());
-                objectInfo.setBucketId(bucketInfo.getId());
-                if ("/".equals(path.toString())) {
-                    path.append(dirName);
-                } else {
-                    path.append("/").append(dirName);
+                if(StringUtils.isNotBlank(dirName)) {
+                    objectInfo = new ObjectInfo();
+                    objectInfo.setId(ObjectId.get());
+                    objectInfo.setIsDir(true);
+                    objectInfo.setFileName(dirName);
+                    objectInfo.setFilePath(path.toString());
+                    objectInfo.setUserId(currentUser.getId());
+                    objectInfo.setBucketId(bucketInfo.getId());
+                    if ("/".equals(path.toString())) {
+                        path.append(dirName);
+                    } else {
+                        path.append("/").append(dirName);
+                    }
+                    mapper.insertIgnore(objectInfo);
                 }
-                mapper.insertIgnore(objectInfo);
             }
             session.commit();
             // 清理缓存，防止溢出
