@@ -140,16 +140,13 @@ public class ObjectController {
             throw new UploadException("404", "bucket not exist");
         }
 
+        // 计算文件 hash，获取文件大小
+        String hash = SHA256.hash(file.getBytes());
         long fileSize = file.getSize();
         // 1. 获取请求头中，文件大小，文件hash
         if (fileSize > Integer.MAX_VALUE) {
             throw new UploadException("403", "文件大小不能超过2G");
         }
-        // 计算文件 hash，获取文件大小 关闭 hash 验证，前端无法在取的 hash后 添加到请求头中
-        String hash = SHA256.hash(file.getBytes());
-//        if (!String.valueOf(size).equals(fileSize.toString()) || !digest.equals(hash)) {
-//            throw new UploadException("403", "文件校验失败");
-//        }
 
         // 校验通过
         String fileName = file.getOriginalFilename();
