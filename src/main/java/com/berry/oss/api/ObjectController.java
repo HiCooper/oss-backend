@@ -67,7 +67,7 @@ import java.util.regex.Pattern;
 @Api(tags = "对象管理")
 public class ObjectController {
 
-    private static final Pattern FILE_PATH_PATTERN = Pattern.compile("(\\w+\\/?)+$");
+    private static final Pattern FILE_PATH_PATTERN = Pattern.compile("(\\w+/?)+$");
 
     private static final String DEFAULT_FILE_PATH = "/";
 
@@ -217,7 +217,7 @@ public class ObjectController {
      * @param path       文件路径 可选
      * @param bucket     存储空间名称
      * @param objectName 文件名 必填
-     * @return
+     * @return 头部信息
      */
     @GetMapping("head_object.json")
     public Result getObjectHead(
@@ -254,8 +254,8 @@ public class ObjectController {
      * 请求url时，先验证签名，后验证 accessKeyId 由服务器签发，再验证过期时间是否有效，有效则返回对象数据
      *
      * @param mo 请求参数
-     * @return
-     * @throws Exception
+     * @return 访问对象url
+     * @throws Exception  编码异常，签名异常
      */
     @PostMapping("generate_url_with_signed.json")
     public Result generateUrlWithSigned(@RequestBody GenerateUrlWithSignedMo mo) throws Exception {
@@ -441,11 +441,11 @@ public class ObjectController {
     /**
      * 处理对象读取响应
      *
-     * @param objectName
-     * @param response
-     * @param request
-     * @param objectInfo
-     * @throws IOException
+     * @param objectName 对象全路径
+     * @param response 响应
+     * @param request 请求
+     * @param objectInfo 对象信息
+     * @throws IOException IO 异常
      */
     private void handlerResponse(String objectName, HttpServletResponse response, WebRequest request, ObjectInfo objectInfo) throws IOException {
         long lastModified = objectInfo.getUpdateTime().toEpochSecond(OffsetDateTime.now().getOffset()) * 1000;
