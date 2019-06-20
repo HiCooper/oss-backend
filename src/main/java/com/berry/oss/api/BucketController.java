@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.*;
  * @date 2019/6/4 14:56
  */
 @RestController
-@RequestMapping("api/bucket")
+@RequestMapping("ajax/bucket")
 @Api(tags = "Bucket 管理")
 public class BucketController {
 
@@ -49,14 +49,14 @@ public class BucketController {
         this.bucketService = bucketService;
     }
 
-    @GetMapping("list")
+    @GetMapping("list.json")
     @ApiOperation("获取 Bucket 列表")
     public Result list(@RequestParam(required = false) String name) {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
         return ResultFactory.wrapper(bucketInfoDaoService.listBucket(currentUser.getId(), name));
     }
 
-    @PostMapping("create")
+    @PostMapping("new_create_bucket.json")
     @ApiOperation("创建 Bucket")
     public Result create(@Validated @RequestBody CreateBucketMo mo) {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
@@ -72,14 +72,35 @@ public class BucketController {
         return ResultFactory.wrapper();
     }
 
-    @GetMapping("detail")
-    @ApiOperation("获取 Bucket 详情")
+    @GetMapping("detail.json")
+    @ApiOperation("获取 Bucket 基本信息")
     public Result detail(@RequestParam("name") String name) {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
-        return ResultFactory.wrapper(bucketInfoDaoService.getOne(new QueryWrapper<BucketInfo>().eq("user_id", currentUser.getId()).eq("name", name)));
+        BucketInfo bucketInfo = bucketInfoDaoService.getOne(new QueryWrapper<BucketInfo>().eq("user_id", currentUser.getId()).eq("name", name));
+        if (bucketInfo == null) {
+            throw new BaseException(ResultCode.DATA_NOT_EXIST);
+        }
+        return ResultFactory.wrapper(bucketInfo);
     }
 
-    @DeleteMapping("delete")
+    @ApiOperation("获取 Bucket 基本设置")
+    @GetMapping("get_basic_setting.json")
+    public Result getBasicSetting(){
+        return ResultFactory.wrapper();
+    }
+
+    @ApiOperation("获取 Bucket 基本监控数据")
+    @GetMapping("get_bucket_basic_monitor_data.json")
+    public Result getBucketBasicMonitorData(){
+        return ResultFactory.wrapper();
+    }
+    @ApiOperation("获取 Bucket 对象数和文件碎片")
+    @GetMapping("get_object_and_multipart_count.json")
+    public Result getObjectAndMultipartCount(){
+        return ResultFactory.wrapper();
+    }
+
+    @DeleteMapping("delete_bucket.json")
     @ApiOperation("删除 Bucket")
     public Result delete(@RequestParam String bucketId) {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
@@ -91,7 +112,7 @@ public class BucketController {
         return ResultFactory.wrapper(bucketInfoDaoService.removeById(bucketId));
     }
 
-    @PutMapping("updateBucketAcl")
+    @PutMapping("set_acl.json")
     @ApiOperation("更新 Bucket 读写权限")
     public Result updateBucketAcl(@Validated @RequestBody UpdateBucketAclMo mo) {
         BucketInfo bucketInfo = bucketInfoDaoService.getById(mo.getBucketId());
