@@ -105,16 +105,19 @@ public class ObjectController {
     @ApiOperation("获取 Object 列表")
     public Result list(@RequestParam("bucket") String bucket,
                        @RequestParam(value = "path", defaultValue = "/") String path,
-                       @RequestParam(defaultValue = "1") Integer pageNum,
-                       @RequestParam(defaultValue = "10") Integer pageSize) {
+                       @RequestParam(value = "search", defaultValue = "") String search) {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
         BucketInfo bucketInfo = bucketService.checkBucketExist(bucket);
         QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_id", currentUser.getId());
         queryWrapper.eq("bucket_id", bucketInfo.getId());
-        queryWrapper.eq("file_path", path);
-        IPage<ObjectInfo> page = new Page<>(pageNum, pageSize);
-        return ResultFactory.wrapper(objectInfoDaoService.page(page, queryWrapper));
+        queryWrapper.orderByDesc("is_dir");
+        if (StringUtils.isNotBlank(search)) {
+            queryWrapper.likeRight("file_name", search);
+        } else {
+            queryWrapper.eq("file_path", path);
+        }
+        return ResultFactory.wrapper(objectInfoDaoService.list(queryWrapper));
     }
 
     @PostMapping("create")
@@ -123,9 +126,7 @@ public class ObjectController {
             @RequestParam("bucket") String bucket,
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "acl") String acl,
-            @RequestParam(value = "filePath", defaultValue = DEFAULT_FILE_PATH) String filePath,
-            @RequestHeader(value = "fileSize") Long fileSize,
-            @RequestHeader(value = "Digest") String digest) throws IOException {
+            @RequestParam(value = "filePath", defaultValue = DEFAULT_FILE_PATH) String filePath) throws IOException {
 
         Matcher matcher = FILE_PATH_PATTERN.matcher(filePath);
         if (!DEFAULT_FILE_PATH.equals(filePath) && !matcher.find()) {
@@ -139,16 +140,16 @@ public class ObjectController {
             throw new UploadException("404", "bucket not exist");
         }
 
+        long fileSize = file.getSize();
         // 1. 获取请求头中，文件大小，文件hash
         if (fileSize > Integer.MAX_VALUE) {
             throw new UploadException("403", "文件大小不能超过2G");
         }
-        // 计算文件 hash，获取文件大小
+        // 计算文件 hash，获取文件大小 关闭 hash 验证，前端无法在取的 hash后 添加到请求头中
         String hash = SHA256.hash(file.getBytes());
-        long size = file.getSize();
-        if (!String.valueOf(size).equals(fileSize.toString()) || !digest.equals(hash)) {
-            throw new UploadException("403", "文件校验失败");
-        }
+//        if (!String.valueOf(size).equals(fileSize.toString()) || !digest.equals(hash)) {
+//            throw new UploadException("403", "文件校验失败");
+//        }
 
         // 校验通过
         String fileName = file.getOriginalFilename();
@@ -180,7 +181,7 @@ public class ObjectController {
             msg = "上传成功";
             // 快速上传失败，
             // 调用存储数据服务，保存对象，返回24位对象id,
-            fileId = dataSaveService.saveObject(file.getInputStream(), size, hash, fileName, bucketInfo.getName(), currentUser.getUsername());
+            fileId = dataSaveService.saveObject(file.getInputStream(), fileSize, hash, fileName, bucketInfo.getName(), currentUser.getUsername());
         }
         // 保存上传信息
 
