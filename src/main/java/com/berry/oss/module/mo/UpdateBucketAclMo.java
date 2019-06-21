@@ -16,8 +16,8 @@ import javax.validation.constraints.NotBlank;
 public class UpdateBucketAclMo {
 
     @NotBlank
-    private String bucketId;
+    private String bucketName;
 
     @NotBlank
-    private String newAcl;
+    private String acl;
 }

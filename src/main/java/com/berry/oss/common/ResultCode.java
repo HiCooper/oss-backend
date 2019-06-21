@@ -18,6 +18,7 @@ public enum ResultCode implements IMessageEnum {
     ERROR_PARAMETER("0002", "请求参数错误"),
     ERROR_SYNTAX("0003", "请求参数语法错误"),
     DATA_NOT_EXIST("D404", "数据不存在"),
+    FILTS_DAMAGED_OR_MISSING("F404", "文件损坏或丢失"),
     ACCOUNT_NOT_EXIST("D404", "账户不存在"),
     BUCKET_NOT_EXIST("B404", "Bucket 不存在"),
     USERNAME_OR_PASSWORD_ERROR("D404", "用户名或密码错误"),

@@ -37,7 +37,7 @@ import javax.validation.Valid;
  * fileName MultyTestController
  */
 @RestController
-@RequestMapping("api")
+@RequestMapping("auth")
 @Api(value = "授权", tags = "授权")
 public class AuthController {
 

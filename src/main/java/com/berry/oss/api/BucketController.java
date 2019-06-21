@@ -115,11 +115,8 @@ public class BucketController {
     @PutMapping("set_acl.json")
     @ApiOperation("更新 Bucket 读写权限")
     public Result updateBucketAcl(@Validated @RequestBody UpdateBucketAclMo mo) {
-        BucketInfo bucketInfo = bucketInfoDaoService.getById(mo.getBucketId());
-        if (bucketInfo == null) {
-            throw new BaseException(ResultCode.DATA_NOT_EXIST);
-        }
-        bucketInfo.setAcl(mo.getNewAcl());
+        BucketInfo bucketInfo = bucketService.checkBucketExist(mo.getBucketName());
+        bucketInfo.setAcl(mo.getAcl());
         return ResultFactory.wrapper(bucketInfoDaoService.updateById(bucketInfo));
     }
 }

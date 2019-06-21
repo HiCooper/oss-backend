@@ -34,7 +34,6 @@ public interface IDataSaveService {
      *
      * @param objectId 对象id
      * @return 资源对象
-     * @throws IOException
      */
-    ObjectResource getObject(String objectId) throws IOException;
+    ObjectResource getObject(String objectId);
 }

@@ -26,6 +26,8 @@ public class JwtFilter extends GenericFilterBean {
 
     public static final String AUTHORIZATION_HEADER = "authorization";
 
+    private static final String HEALTH_CHECK_URL = "/actuator/health";
+
 
     private TokenProvider tokenProvider;
 
@@ -38,11 +40,13 @@ public class JwtFilter extends GenericFilterBean {
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
             throws IOException, ServletException {
         HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
-        String jwt = resolveToken(httpServletRequest);
-        if (StringUtils.isNotBlank(jwt) && this.tokenProvider.validateToken(jwt)) {
-            // 验证jwt 设置授权信息到该线程上下文
-            Authentication authentication = this.tokenProvider.getAuthentication(jwt);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+        if (!httpServletRequest.getRequestURI().equals(HEALTH_CHECK_URL)) {
+            String jwt = resolveToken(httpServletRequest);
+            if (StringUtils.isNotBlank(jwt) && this.tokenProvider.validateToken(jwt)) {
+                // 验证jwt 设置授权信息到该线程上下文
+                Authentication authentication = this.tokenProvider.getAuthentication(jwt);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
         }
         filterChain.doFilter(servletRequest, servletResponse);
     }
@@ -70,7 +74,7 @@ public class JwtFilter extends GenericFilterBean {
                     return bearerToken;
                 }
             } else {
-                log.trace("No '{}' cookie value", AUTHORIZATION_HEADER);
+                log.debug("No '{}' cookie value", AUTHORIZATION_HEADER);
             }
         }
 

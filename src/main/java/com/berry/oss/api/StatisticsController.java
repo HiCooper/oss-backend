@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @date 2019/6/4 15:43
  */
 @RestController
-@RequestMapping("statis")
+@RequestMapping("ajax/statis")
 @Api(tags = "统计信息")
 public class StatisticsController {
 }

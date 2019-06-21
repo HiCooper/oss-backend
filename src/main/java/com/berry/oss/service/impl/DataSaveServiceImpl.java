@@ -6,6 +6,8 @@ import com.berry.oss.core.entity.ShardInfo;
 import com.berry.oss.core.service.IShardInfoDaoService;
 import com.berry.oss.module.dto.ObjectResource;
 import com.berry.oss.service.IDataSaveService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -22,6 +24,7 @@ import java.io.InputStream;
  */
 @Service
 public class DataSaveServiceImpl implements IDataSaveService {
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Resource
     private ReedSolomonEncoderService reedSolomonEncoderService;
@@ -55,12 +58,14 @@ public class DataSaveServiceImpl implements IDataSaveService {
     public ObjectResource getObject(String objectId) {
         ShardInfo shardInfo = shardInfoDaoService.getOne(new QueryWrapper<ShardInfo>().eq("file_id", objectId));
         if (shardInfo == null) {
-            throw new RuntimeException("资源不存在");
+            logger.error("文件不存在：{}", objectId);
+            return null;
         }
         String shardJson = shardInfo.getShardJson();
         InputStream inputStream = reedSolomonDecoderService.readData(shardJson);
         if (inputStream == null) {
-            throw new RuntimeException("文件损坏或丢失");
+            logger.error("文件损坏或丢失:{}",objectId);
+            return null;
         }
         return new ObjectResource()
                 .setCreateTime(shardInfo.getCreateTime())

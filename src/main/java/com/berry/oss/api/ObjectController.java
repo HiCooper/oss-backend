@@ -329,8 +329,7 @@ public class ObjectController {
             }
         }
 
-        handlerResponse(objectPath, response, request, objectInfo);
-        return null;
+        return handlerResponse(objectPath, response, request, objectInfo);
     }
 
     @Resource
@@ -452,13 +451,16 @@ public class ObjectController {
      * @param objectInfo 对象信息
      * @throws IOException IO 异常
      */
-    private void handlerResponse(String objectName, HttpServletResponse response, WebRequest request, ObjectInfo objectInfo) throws IOException {
+    private String handlerResponse(String objectName, HttpServletResponse response, WebRequest request, ObjectInfo objectInfo) throws IOException {
         long lastModified = objectInfo.getUpdateTime().toEpochSecond(OffsetDateTime.now().getOffset()) * 1000;
         String eTag = "\"" + DigestUtils.md5DigestAsHex(objectName.getBytes()) + "\"";
         if (request.checkNotModified(eTag, lastModified)) {
             response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
         } else {
             ObjectResource object = dataSaveService.getObject(objectInfo.getFileId());
+            if (object == null) {
+                return "对象不存在";
+            }
             String contentType = StringUtils.getContentType(object.getFileName());
             response.setContentType(contentType);
             response.setHeader(HttpHeaders.ETAG, eTag);
@@ -468,6 +470,7 @@ public class ObjectController {
             StreamUtils.copy(object.getInputStream(), response.getOutputStream());
             response.flushBuffer();
         }
+        return null;
     }
 
 }
