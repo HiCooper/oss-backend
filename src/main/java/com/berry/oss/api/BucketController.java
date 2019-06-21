@@ -85,18 +85,19 @@ public class BucketController {
 
     @ApiOperation("获取 Bucket 基本设置")
     @GetMapping("get_basic_setting.json")
-    public Result getBasicSetting(){
+    public Result getBasicSetting() {
         return ResultFactory.wrapper();
     }
 
     @ApiOperation("获取 Bucket 基本监控数据")
     @GetMapping("get_bucket_basic_monitor_data.json")
-    public Result getBucketBasicMonitorData(){
+    public Result getBucketBasicMonitorData() {
         return ResultFactory.wrapper();
     }
+
     @ApiOperation("获取 Bucket 对象数和文件碎片")
     @GetMapping("get_object_and_multipart_count.json")
-    public Result getObjectAndMultipartCount(){
+    public Result getObjectAndMultipartCount() {
         return ResultFactory.wrapper();
     }
 

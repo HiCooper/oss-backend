@@ -64,7 +64,7 @@ public class DataSaveServiceImpl implements IDataSaveService {
         String shardJson = shardInfo.getShardJson();
         InputStream inputStream = reedSolomonDecoderService.readData(shardJson);
         if (inputStream == null) {
-            logger.error("文件损坏或丢失:{}",objectId);
+            logger.error("文件损坏或丢失:{}", objectId);
             return null;
         }
         return new ObjectResource()
