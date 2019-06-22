@@ -3,9 +3,11 @@ package com.berry.oss.common.exceptions;
 import com.berry.oss.common.Result;
 import com.berry.oss.common.ResultCode;
 import com.berry.oss.common.ResultFactory;
+import com.berry.oss.common.XmlResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Berry_Cooper.
@@ -38,6 +41,17 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public Result baseExceptionHandler(HttpServletRequest req, BaseException ex) {
         logger.error("请求接口 [{}] 发生错误，错误信息：{}", req.getRequestURI(), ex.getLocalizedMessage());
         return ResultFactory.wrapper(ex);
+    }
+
+    /**
+     * 返回 xml 格式异常
+     */
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ExceptionHandler(value = XmlResponseException.class)
+    public XmlResponse xmlResponseException(HttpServletRequest req, HttpServletResponse response, XmlResponseException ex) {
+        logger.error("请求接口 [{}] 发生错误，错误信息：{}", req.getRequestURI(), ex.getXmlErrorInfo());
+        response.setContentType(MediaType.APPLICATION_XML_VALUE);
+        return new XmlResponse(ex.getXmlErrorInfo());
     }
 
     /**

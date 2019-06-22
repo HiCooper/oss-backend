@@ -65,7 +65,7 @@ mybatis-plus:
 logging:
   level:
     ROOT: INFO
-    org.springframework.web: ERROR
+    org.springframework.web: XmlResponse
     com.berry.oss: DEBUG
 
 global:

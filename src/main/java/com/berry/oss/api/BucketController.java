@@ -7,7 +7,6 @@ import com.berry.oss.common.ResultFactory;
 import com.berry.oss.common.exceptions.BaseException;
 import com.berry.oss.core.entity.BucketInfo;
 import com.berry.oss.core.service.IBucketInfoDaoService;
-import com.berry.oss.core.service.IObjectInfoDaoService;
 import com.berry.oss.module.mo.CreateBucketMo;
 import com.berry.oss.module.mo.DeleteBucketMo;
 import com.berry.oss.module.mo.UpdateBucketAclMo;
@@ -39,14 +38,11 @@ public class BucketController {
 
     private final IBucketInfoDaoService bucketInfoDaoService;
 
-    private final IObjectInfoDaoService objectInfoDaoService;
-
     private final IBucketService bucketService;
 
     @Autowired
-    public BucketController(IBucketInfoDaoService bucketInfoDaoService, IObjectInfoDaoService objectInfoDaoService, IBucketService bucketService) {
+    public BucketController(IBucketInfoDaoService bucketInfoDaoService, IBucketService bucketService) {
         this.bucketInfoDaoService = bucketInfoDaoService;
-        this.objectInfoDaoService = objectInfoDaoService;
         this.bucketService = bucketService;
     }
 

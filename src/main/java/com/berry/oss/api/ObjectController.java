@@ -6,6 +6,10 @@ import com.berry.oss.common.ResultCode;
 import com.berry.oss.common.ResultFactory;
 import com.berry.oss.common.exceptions.BaseException;
 import com.berry.oss.common.exceptions.UploadException;
+import com.berry.oss.common.exceptions.XmlResponseException;
+import com.berry.oss.common.exceptions.xml.AccessDenied;
+import com.berry.oss.common.exceptions.xml.NotFound;
+import com.berry.oss.common.exceptions.xml.SignatureDoesNotMatch;
 import com.berry.oss.common.utils.*;
 import com.berry.oss.core.entity.BucketInfo;
 import com.berry.oss.core.entity.ObjectInfo;
@@ -299,7 +303,8 @@ public class ObjectController {
                 .eq("bucket_id", bucketInfo.getId())
         );
         if (objectInfo == null) {
-            return "资源不存在";
+//             资源不存在;
+            throw new XmlResponseException(new AccessDenied());
         }
 
         if (!objectInfo.getAcl().startsWith("PUBLIC")) {
@@ -309,7 +314,7 @@ public class ObjectController {
             // 1. 签名验证
             String sign = new String(Base64.getEncoder().encode(MD5.md5Encode(url).getBytes()));
             if (!signature.equals(sign)) {
-                return "签名校验错误";
+                throw new XmlResponseException(new SignatureDoesNotMatch(ossAccessKeyId, signature, servletRequest.getMethod() + " " + expiresTime + " " + objectPath));
             }
 
             // 2. 过期验证
@@ -317,7 +322,7 @@ public class ObjectController {
                 // 时间戳字符串转时间,expiresTime 是秒单位
                 Date date = new Date(Long.valueOf(expiresTime) * 1000);
                 if (date.before(new Date())) {
-                    return "链接已过期";
+                    throw new XmlResponseException(new AccessDenied("Request has expired."));
                 }
             }
 
@@ -327,7 +332,7 @@ public class ObjectController {
                 System.out.println(userIdEncodePart);
                 RSAUtil.decryptByPublicKey(userIdEncodePart);
             } catch (Exception e) {
-                return "身份校验错误";
+                throw new XmlResponseException(new AccessDenied("identity check fail."));
             }
         }
 
@@ -462,7 +467,7 @@ public class ObjectController {
         } else {
             ObjectResource object = dataSaveService.getObject(objectInfo.getFileId());
             if (object == null) {
-                return "对象不存在";
+                throw new XmlResponseException(new NotFound());
             }
             String contentType = StringUtils.getContentType(object.getFileName());
             response.setContentType(contentType);
