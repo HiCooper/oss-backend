@@ -5,7 +5,7 @@ import com.berry.oss.common.utils.ObjectId;
 import com.berry.oss.core.entity.BucketInfo;
 import com.berry.oss.core.mapper.BucketInfoMapper;
 import com.berry.oss.core.service.IBucketInfoDaoService;
-import com.berry.oss.module.vo.BucketListVo;
+import com.berry.oss.module.vo.BucketInfoVo;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -33,7 +33,7 @@ public class BucketInfoDaoServiceImpl extends ServiceImpl<BucketInfoMapper, Buck
 
 
     @Override
-    public List<BucketListVo> listBucket(Integer userId, String name) {
+    public List<BucketInfoVo> listBucket(Integer userId, String name) {
         return bucketInfoMapper.listBucket(userId, name);
     }
 }

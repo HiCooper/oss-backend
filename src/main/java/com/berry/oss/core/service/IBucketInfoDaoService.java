@@ -2,7 +2,7 @@ package com.berry.oss.core.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.berry.oss.core.entity.BucketInfo;
-import com.berry.oss.module.vo.BucketListVo;
+import com.berry.oss.module.vo.BucketInfoVo;
 
 import java.util.List;
 
@@ -23,5 +23,5 @@ public interface IBucketInfoDaoService extends IService<BucketInfo> {
      * @param name   名称（非必填）
      * @return
      */
-    List<BucketListVo> listBucket(Integer userId, String name);
+    List<BucketInfoVo> listBucket(Integer userId, String name);
 }

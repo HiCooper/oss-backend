@@ -6,11 +6,12 @@ import com.berry.oss.common.ResultCode;
 import com.berry.oss.common.ResultFactory;
 import com.berry.oss.common.exceptions.BaseException;
 import com.berry.oss.core.entity.BucketInfo;
-import com.berry.oss.core.entity.ObjectInfo;
 import com.berry.oss.core.service.IBucketInfoDaoService;
 import com.berry.oss.core.service.IObjectInfoDaoService;
 import com.berry.oss.module.mo.CreateBucketMo;
+import com.berry.oss.module.mo.DeleteBucketMo;
 import com.berry.oss.module.mo.UpdateBucketAclMo;
+import com.berry.oss.module.vo.BucketInfoVo;
 import com.berry.oss.security.SecurityUtils;
 import com.berry.oss.security.vm.UserInfoDTO;
 import com.berry.oss.service.IBucketService;
@@ -80,7 +81,9 @@ public class BucketController {
         if (bucketInfo == null) {
             throw new BaseException(ResultCode.DATA_NOT_EXIST);
         }
-        return ResultFactory.wrapper(bucketInfo);
+        BucketInfoVo vo = new BucketInfoVo();
+        BeanUtils.copyProperties(bucketInfo, vo);
+        return ResultFactory.wrapper(vo);
     }
 
     @ApiOperation("获取 Bucket 基本设置")
@@ -101,23 +104,29 @@ public class BucketController {
         return ResultFactory.wrapper();
     }
 
-    @DeleteMapping("delete_bucket.json")
+    @PostMapping("delete_bucket.json")
     @ApiOperation("删除 Bucket")
-    public Result delete(@RequestParam String bucketId) {
-        UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
-        // 检查该 Bucket 是否为空，非空 Bucket 不能删除
-        int count = objectInfoDaoService.count(new QueryWrapper<ObjectInfo>().eq("bucket_id", bucketId).eq("user_id", currentUser.getId()));
-        if (count != 0) {
-            throw new BaseException("403", "Bucket 内容不为空，不能删除");
-        }
-        return ResultFactory.wrapper(bucketInfoDaoService.removeById(bucketId));
+    public Result delete(@Validated @RequestBody DeleteBucketMo mo) {
+        // 检查该 Bucket
+        BucketInfo bucketInfo = bucketService.checkBucketExist(mo.getBucket());
+        return ResultFactory.wrapper(bucketInfoDaoService.removeById(bucketInfo.getId()));
     }
 
-    @PutMapping("set_acl.json")
+    @PostMapping("set_acl.json")
     @ApiOperation("更新 Bucket 读写权限")
     public Result updateBucketAcl(@Validated @RequestBody UpdateBucketAclMo mo) {
-        BucketInfo bucketInfo = bucketService.checkBucketExist(mo.getBucketName());
+        BucketInfo bucketInfo = bucketService.checkBucketExist(mo.getBucket());
         bucketInfo.setAcl(mo.getAcl());
         return ResultFactory.wrapper(bucketInfoDaoService.updateById(bucketInfo));
+    }
+
+    @GetMapping("get_referer.json")
+    @ApiOperation("获取 Bucket 防盗链设置")
+    public Result getReferer(@RequestParam("bucket") String bucket) {
+        BucketInfo bucketInfo = bucketService.checkBucketExist(bucket);
+        // 获取防盗链设置
+        //allowEmpty: true //是否允许空 referer
+        //list: [] //白名单
+        return ResultFactory.wrapper();
     }
 }

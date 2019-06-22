@@ -17,7 +17,7 @@
         id, name, userId, acl, create_time, update_time
     </sql>
 
-    <select id="listBucket" resultType="com.berry.oss.module.vo.BucketListVo">
+    <select id="listBucket" resultType="com.berry.oss.module.vo.BucketInfoVo">
         select id, name, acl, create_time, update_time from bucket_info
         <where>
             AND user_id = #{userId}

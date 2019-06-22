@@ -2,7 +2,7 @@ package com.berry.oss.core.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.berry.oss.core.entity.BucketInfo;
-import com.berry.oss.module.vo.BucketListVo;
+import com.berry.oss.module.vo.BucketInfoVo;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
@@ -17,6 +17,6 @@ import java.util.List;
  */
 public interface BucketInfoMapper extends BaseMapper<BucketInfo> {
 
-    List<BucketListVo> listBucket(@Param("userId") Integer userId, @Param("name") String name);
+    List<BucketInfoVo> listBucket(@Param("userId") Integer userId, @Param("name") String name);
 
 }
