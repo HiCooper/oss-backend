@@ -19,7 +19,11 @@ public class UpdateObjectAclMo {
     private String bucket;
 
     @NotBlank
+    private String objectPath;
+
+    @NotBlank
     private String objectName;
+
 
     @NotBlank
     private String acl;

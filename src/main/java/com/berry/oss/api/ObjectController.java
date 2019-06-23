@@ -35,6 +35,7 @@ import org.apache.ibatis.session.SqlSession;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.DigestUtils;
 import org.springframework.util.StreamUtils;
@@ -281,11 +282,12 @@ public class ObjectController {
 
     @GetMapping(value = "{bucket}/**")
     @ApiOperation("获取对象(私有对象，需要临时口令，且限时访问；公开对象，直接访问)")
-    public String getObject(
+    public void getObject(
             @PathVariable("bucket") String bucket,
             @RequestParam(value = "Expires", required = false) String expiresTime,
             @RequestParam(value = "OSSAccessKeyId", required = false) String ossAccessKeyId,
             @RequestParam(value = "Signature", required = false) String signature,
+            @RequestParam(value = "Download", required = false) Boolean download,
             HttpServletResponse response, HttpServletRequest servletRequest, WebRequest request) throws Exception {
         String objectPath = extractPathFromPattern(servletRequest);
         // 检查bucket
@@ -336,7 +338,7 @@ public class ObjectController {
             }
         }
 
-        return handlerResponse(objectPath, response, request, objectInfo);
+        handlerResponse(objectPath, response, request, objectInfo, download);
     }
 
     @Resource
@@ -433,12 +435,13 @@ public class ObjectController {
 
     @PostMapping("set_object_acl.json")
     @ApiOperation("更新对象读写权限")
-    public Result updateObjectAcl(@RequestBody UpdateObjectAclMo mo) {
+    public Result updateObjectAcl(@Validated @RequestBody UpdateObjectAclMo mo) {
         // 检查bucket
         BucketInfo bucketInfo = bucketService.checkBucketExist(mo.getBucket());
 
         // 检查该对象是否存在
         ObjectInfo objectInfo = objectInfoDaoService.getOne(new QueryWrapper<ObjectInfo>()
+                .eq("file_path", mo.getObjectPath())
                 .eq("file_name", mo.getObjectName())
                 .eq("bucket_id", bucketInfo.getId())
         );
@@ -457,9 +460,21 @@ public class ObjectController {
      * @param response   响应
      * @param request    请求
      * @param objectInfo 对象信息
+     * @param download   是否是下载
      * @throws IOException IO 异常
      */
-    private String handlerResponse(String objectName, HttpServletResponse response, WebRequest request, ObjectInfo objectInfo) throws IOException {
+    private void handlerResponse(String objectName, HttpServletResponse response, WebRequest request, ObjectInfo objectInfo, Boolean download) throws IOException {
+        if (download != null && download) {
+            ObjectResource object = dataSaveService.getObject(objectInfo.getFileId());
+            if (object == null) {
+                throw new XmlResponseException(new NotFound());
+            }
+            response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
+            StreamUtils.copy(object.getInputStream(), response.getOutputStream());
+            response.flushBuffer();
+            return;
+        }
+
         long lastModified = objectInfo.getUpdateTime().toEpochSecond(OffsetDateTime.now().getOffset()) * 1000;
         String eTag = "\"" + DigestUtils.md5DigestAsHex(objectName.getBytes()) + "\"";
         if (request.checkNotModified(eTag, lastModified)) {
@@ -478,7 +493,6 @@ public class ObjectController {
             StreamUtils.copy(object.getInputStream(), response.getOutputStream());
             response.flushBuffer();
         }
-        return null;
     }
 
 }
