@@ -15,6 +15,7 @@ import javax.validation.constraints.NotBlank;
 @Data
 public class UpdateObjectAclMo {
 
+    @NotBlank
     private String bucket;
 
     @NotBlank
