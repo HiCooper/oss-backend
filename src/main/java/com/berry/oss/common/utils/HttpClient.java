@@ -1,7 +1,8 @@
 package com.berry.oss.common.utils;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import okhttp3.*;
-import okhttp3.internal.http.RealInterceptorChain;
 
 import java.io.IOException;
 import java.util.Map;
@@ -29,15 +30,19 @@ public class HttpClient {
                 .build();
     }
 
-    public static Response doPost(String url, Map<String, Object> params) {
+    public static Response doGet(String url, Map<String, Object> params){
+        StringBuffer sb = new StringBuffer();
+        for (Map.Entry<String, Object> entry : params.entrySet()) {
+            sb.append(entry.getKey() + "=" + entry.getValue()).append("&");
+        }
+        url = url + "?" + sb.toString();
         Request request = new Request.Builder()
-                .post(createPostRequestBody(params))
+                .get()
                 .url(url)
                 .build();
-        Call call = CLIENT.newCall(request);
         Response response = null;
         try {
-            response = call.execute();
+            response = CLIENT.newCall(request).execute();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -48,16 +53,23 @@ public class HttpClient {
         return response;
     }
 
-    private static RequestBody createPostRequestBody(Map<String, Object> params) {
-        FormBody.Builder bodyBuilder = new FormBody.Builder();
-        if (params == null || params.isEmpty()){
-            return bodyBuilder.build();
+    public static Response doPost(String url, Map<String, Object> params) {
+        Gson gson = new GsonBuilder().enableComplexMapKeySerialization().create();
+        RequestBody requestBody = RequestBody.create(MediaType.get(org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE), gson.toJson(params));
+        Request request = new Request.Builder()
+                .post(requestBody)
+                .url(url)
+                .build();
+        Response response = null;
+        try {
+            response = CLIENT.newCall(request).execute();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (null != response) {
+                response.close();
+            }
         }
-
-        for (Map.Entry<String, Object> entry : params.entrySet()) {
-            bodyBuilder.add(entry.getKey(), entry.getValue().toString());
-        }
-
-        return bodyBuilder.build();
+        return response;
     }
 }

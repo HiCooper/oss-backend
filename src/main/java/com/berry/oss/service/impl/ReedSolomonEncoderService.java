@@ -13,6 +13,7 @@ import com.berry.oss.remote.IDataServiceClient;
 import com.berry.oss.remote.WriteShardMo;
 import com.berry.oss.remote.WriteShardResponse;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -132,12 +133,14 @@ public class ReedSolomonEncoderService {
             ServerListDTO server = serverList.get(i);
             params.put("shardIndex", i);
             params.put("data", shards[i]);
-            Response response = HttpClient.doPost("http://" + server.getIp() + ":" + server.getPort() + "/data/write", params);
+            String basePath = "http://" + server.getIp() + ":" + server.getPort() ;
+            // todo 读取 response
+            Response response = HttpClient.doPost(basePath + "/data/write", params);
             if (!response.isSuccessful()) {
-                logger.error("数据写入失败，index:{},服务：{}", i, server.getIp() + ":" + server.getPort() + "/data/write");
+                logger.error("数据写入失败，index:{},服务：{}", i, basePath + "/data/write");
                 throw new RuntimeException("数据写入失败");
             }
-            System.out.println(JSON.toJSONString(response));
+            result.add(new WriteShardResponse(basePath + "/data/read", ""));
         }
         return JSON.toJSONString(result);
     }

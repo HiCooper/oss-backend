@@ -2,8 +2,12 @@ package com.berry.oss.service.impl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.berry.oss.common.utils.HttpClient;
+import com.berry.oss.core.entity.ObjectHash;
 import com.berry.oss.erasure.ReedSolomon;
 import com.berry.oss.remote.IDataServiceClient;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -13,6 +17,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Reed-Solomon 4+2
@@ -57,11 +63,22 @@ public class ReedSolomonDecoderService {
                 break;
             }
             JSONObject shard = jsonArray.getJSONObject(i);
+            String url = shard.getString("url");
             String path = shard.getString("path");
-            String ip = shard.getString("ip");
             try {
-                byte[] bytes = dataServiceClient.readShard(path);
+                Map<String, Object> params = new HashMap<>(16);
+                params.put("path", path);
+                Response response = HttpClient.doGet(url, params);
+                if (!response.isSuccessful()) {
+                    logger.error("读取：{} 失败，url：{}, path: {}", i, url, path);
+                    continue;
+                }
+                byte[] bytes = null;
+                if (response.body() != null) {
+                    bytes = response.body().bytes();
+                }
                 if (bytes == null) {
+                    logger.error("读取：{} url：{}, path: {},数据为空", i, url, path);
                     continue;
                 }
                 if (path.substring(path.lastIndexOf(".") + 1).equals(String.valueOf(i))) {

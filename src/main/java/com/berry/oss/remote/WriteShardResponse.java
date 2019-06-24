@@ -15,6 +15,11 @@ import lombok.Data;
 @Data
 public class WriteShardResponse {
 
-    private String ip;
+    private String url;
     private String path;
+
+    public WriteShardResponse(String url, String path) {
+        this.url = url;
+        this.path = path;
+    }
 }
