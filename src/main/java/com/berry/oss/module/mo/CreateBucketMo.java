@@ -1,6 +1,7 @@
 package com.berry.oss.module.mo;
 
 import com.berry.oss.common.constant.CommonConstant;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
 
@@ -28,6 +29,13 @@ public class CreateBucketMo {
     @Pattern(regexp = "^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$")
     @Length(min = 3, max = 63)
     private String name;
+
+    /**
+     * region code
+     */
+    @ApiModelProperty("region code")
+    @NotBlank
+    private String region;
 
     private String acl = CommonConstant.AclType.PRIVATE.name();
 }

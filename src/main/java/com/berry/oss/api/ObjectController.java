@@ -184,7 +184,7 @@ public class ObjectController {
             msg = "上传成功";
             // 快速上传失败，
             // 调用存储数据服务，保存对象，返回24位对象id,
-            fileId = dataSaveService.saveObject(file.getInputStream(), fileSize, hash, fileName, bucketInfo.getName(), currentUser.getUsername());
+            fileId = dataSaveService.saveObject(file.getInputStream(), fileSize, hash, fileName, bucketInfo, currentUser.getUsername());
         }
         // 保存上传信息
 
@@ -328,7 +328,7 @@ public class ObjectController {
                 }
             }
 
-            // 3. 身份验证
+            // 3. 身份验证,这里采用私钥加密，公钥解密，而没有采用 私钥签名，后续可能对账户信息进行控制，故而采用私钥加密 用户id，备解密时需要
             try {
                 String userIdEncodePart = ossAccessKeyId.substring(4);
                 System.out.println(userIdEncodePart);

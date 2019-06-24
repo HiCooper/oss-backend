@@ -1,5 +1,6 @@
 package com.berry.oss.service;
 
+import com.berry.oss.core.entity.BucketInfo;
 import com.berry.oss.module.dto.ObjectResource;
 
 import java.io.IOException;
@@ -22,12 +23,12 @@ public interface IDataSaveService {
      * @param size        size
      * @param hash        hash
      * @param fileName    文件名
-     * @param bucketName  存储空间名
+     * @param bucketInfo  存储空间
      * @param username    用户名
      * @return fileId 对象唯一id
      * @throws IOException
      */
-    String saveObject(InputStream inputStream, long size, String hash, String fileName, String bucketName, String username) throws IOException;
+    String saveObject(InputStream inputStream, long size, String hash, String fileName, BucketInfo bucketInfo, String username) throws IOException;
 
     /**
      * 获取对象

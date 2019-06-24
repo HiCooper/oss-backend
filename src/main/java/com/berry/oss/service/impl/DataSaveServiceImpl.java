@@ -2,6 +2,7 @@ package com.berry.oss.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.berry.oss.common.utils.ObjectId;
+import com.berry.oss.core.entity.BucketInfo;
 import com.berry.oss.core.entity.ShardInfo;
 import com.berry.oss.core.service.IShardInfoDaoService;
 import com.berry.oss.module.dto.ObjectResource;
@@ -39,8 +40,8 @@ public class DataSaveServiceImpl implements IDataSaveService {
     }
 
     @Override
-    public String saveObject(InputStream inputStream, long size, String hash, String fileName, String bucketName, String username) throws IOException {
-        String json = reedSolomonEncoderService.writeData(inputStream, fileName, bucketName, username);
+    public String saveObject(InputStream inputStream, long size, String hash, String fileName, BucketInfo bucketInfo, String username) throws IOException {
+        String json = reedSolomonEncoderService.writeData(inputStream, fileName, bucketInfo, username);
         String fileId = ObjectId.get();
         // 保存对象信息
         ShardInfo shardInfo = new ShardInfo();

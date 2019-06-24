@@ -6,7 +6,9 @@ import com.berry.oss.common.ResultCode;
 import com.berry.oss.common.ResultFactory;
 import com.berry.oss.common.exceptions.BaseException;
 import com.berry.oss.core.entity.BucketInfo;
+import com.berry.oss.core.entity.RegionInfo;
 import com.berry.oss.core.service.IBucketInfoDaoService;
+import com.berry.oss.core.service.IRegionInfoDaoService;
 import com.berry.oss.module.mo.CreateBucketMo;
 import com.berry.oss.module.mo.DeleteBucketMo;
 import com.berry.oss.module.mo.UpdateBucketAclMo;
@@ -40,10 +42,13 @@ public class BucketController {
 
     private final IBucketService bucketService;
 
+    private final IRegionInfoDaoService regionInfoDaoService;
+
     @Autowired
-    public BucketController(IBucketInfoDaoService bucketInfoDaoService, IBucketService bucketService) {
+    public BucketController(IBucketInfoDaoService bucketInfoDaoService, IBucketService bucketService, IRegionInfoDaoService regionInfoDaoService) {
         this.bucketInfoDaoService = bucketInfoDaoService;
         this.bucketService = bucketService;
+        this.regionInfoDaoService = regionInfoDaoService;
     }
 
     @GetMapping("list.json")
@@ -57,6 +62,12 @@ public class BucketController {
     @ApiOperation("创建 Bucket")
     public Result create(@Validated @RequestBody CreateBucketMo mo) {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
+        // 检查 region
+        RegionInfo regionInfo = regionInfoDaoService.getOne(new QueryWrapper<RegionInfo>().eq("code", mo.getRegion()));
+        if (regionInfo == null) {
+            throw new BaseException("404", "region 不存在");
+        }
+
         // 检查该 bucket 名称是否被占用, 全局 bucket 命名唯一
         Boolean result = bucketService.checkBucketNotExist(mo.getName());
         if (!result) {
@@ -65,6 +76,7 @@ public class BucketController {
         BucketInfo bucketInfo = new BucketInfo();
         BeanUtils.copyProperties(mo, bucketInfo);
         bucketInfo.setUserId(currentUser.getId());
+        bucketInfo.setRegionId(regionInfo.getId());
         bucketInfoDaoService.save(bucketInfo);
         return ResultFactory.wrapper();
     }

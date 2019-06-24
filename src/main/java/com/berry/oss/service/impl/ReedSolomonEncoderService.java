@@ -1,17 +1,29 @@
 package com.berry.oss.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.berry.oss.common.utils.HttpClient;
+import com.berry.oss.core.entity.BucketInfo;
+import com.berry.oss.core.entity.ObjectHash;
+import com.berry.oss.core.entity.RegionInfo;
+import com.berry.oss.core.service.IRegionInfoDaoService;
 import com.berry.oss.erasure.ReedSolomon;
+import com.berry.oss.module.dto.ServerListDTO;
 import com.berry.oss.remote.IDataServiceClient;
 import com.berry.oss.remote.WriteShardMo;
 import com.berry.oss.remote.WriteShardResponse;
+import okhttp3.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Command-line program encodes one file using Reed-Solomon 4+2.
@@ -29,6 +41,7 @@ import java.util.List;
  */
 @Service
 public class ReedSolomonEncoderService {
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /**
      * 数据分片数
@@ -49,10 +62,10 @@ public class ReedSolomonEncoderService {
      */
     private static final int BYTES_IN_INT = DATA_SHARDS;
 
-    private final IDataServiceClient dataServiceClient;
+    private final IRegionInfoDaoService regionInfoDaoService;
 
-    public ReedSolomonEncoderService(IDataServiceClient dataServiceClient) {
-        this.dataServiceClient = dataServiceClient;
+    public ReedSolomonEncoderService(IRegionInfoDaoService regionInfoDaoService) {
+        this.regionInfoDaoService = regionInfoDaoService;
     }
 
     /**
@@ -60,12 +73,12 @@ public class ReedSolomonEncoderService {
      *
      * @param inputStream 输入流
      * @param fileName    文件名
-     * @param bucketName  存储空间名
+     * @param bucketInfo  存储空间
      * @param username    用户名
      * @return 对象唯一标识id
      * @throws IOException
      */
-    public String writeData(InputStream inputStream, String fileName, String bucketName, String username) throws IOException {
+    public String writeData(InputStream inputStream, String fileName, BucketInfo bucketInfo, String username) throws IOException {
 
         // Get the size of the input file.  (Files bigger that
         // Integer.MAX_VALUE will fail here!) 最大 2G
@@ -101,19 +114,30 @@ public class ReedSolomonEncoderService {
         ReedSolomon reedSolomon = ReedSolomon.create(DATA_SHARDS, PARITY_SHARDS);
         reedSolomon.encodeParity(shards, 0, shardSize);
 
+        // 获取该存储空间的 6 个 可用服务器列表
+        List<ServerListDTO> serverList = regionInfoDaoService.getServerListByRegionId(bucketInfo.getRegionId());
+        if (serverList.size() != TOTAL_SHARDS) {
+            // 数据写入服务不可用
+            throw new RuntimeException("数据写入服务不可用");
+        }
+
         List<WriteShardResponse> result = new ArrayList<>(16);
 
-        WriteShardMo mo = new WriteShardMo();
-        mo.setUsername(username);
-        mo.setBucketName(bucketName);
-        mo.setFileName(fileName);
-        // 数据分片分发，todo 未实现分发，可考虑使用Http 根据在线注册可用服务器IP和端口 指定ip发送
+        Map<String, Object> params = new HashMap<>(16);
+        params.put("username", username);
+        params.put("bucketName", bucketInfo.getName());
+        params.put("fileName", fileName);
+        // 数据分片分发
         for (int i = 0; i < TOTAL_SHARDS; i++) {
-            mo.setShardIndex(i);
-            mo.setData(shards[i]);
-            // map key [ip, path]
-            WriteShardResponse response = dataServiceClient.writeShard(mo);
-            result.add(response);
+            ServerListDTO server = serverList.get(i);
+            params.put("shardIndex", i);
+            params.put("data", shards[i]);
+            Response response = HttpClient.doPost("http://" + server.getIp() + ":" + server.getPort() + "/data/write", params);
+            if (!response.isSuccessful()) {
+                logger.error("数据写入失败，index:{},服务：{}", i, server.getIp() + ":" + server.getPort() + "/data/write");
+                throw new RuntimeException("数据写入失败");
+            }
+            System.out.println(JSON.toJSONString(response));
         }
         return JSON.toJSONString(result);
     }

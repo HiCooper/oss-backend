@@ -24,6 +24,12 @@ public class BucketInfoVo {
      */
     private String acl;
 
+
+    /**
+     *  区域id
+     */
+    private String regionCode;
+
     /**
      * 创建时间
      */

@@ -12,7 +12,7 @@ import lombok.experimental.Accessors;
  * @author Berry_Cooper.
  * @date 2019-06-23 00:16
  * fileName：XmlResponse
- * Use：
+ * Use：Get请求 错误响应，多用于读取文件
  */
 @Data
 @Accessors(chain = true)

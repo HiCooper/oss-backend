@@ -43,6 +43,11 @@ public class BucketInfo implements Serializable {
     private String acl;
 
     /**
+     * 区域id
+     */
+    private String regionId;
+
+    /**
      * 创建时间
      */
     private LocalDateTime createTime;

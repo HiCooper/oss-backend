@@ -7,6 +7,7 @@
         <id column="id" property="id"/>
         <result column="user_id" property="userId"/>
         <result column="name" property="name"/>
+        <result column="region_id" property="regionId"/>
         <result column="acl" property="acl"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
@@ -14,11 +15,12 @@
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, name, userId, acl, create_time, update_time
+        id, name, userId, region_id, acl, create_time, update_time
     </sql>
 
     <select id="listBucket" resultType="com.berry.oss.module.vo.BucketInfoVo">
-        select id, name, acl, create_time, update_time from bucket_info
+        SELECT a.id, a.name, a.acl, a.create_time, a.update_time, b.code as regionCode from bucket_info a
+        LEFT JOIN region_info b on a.region_id = b.id
         <where>
             AND user_id = #{userId}
             <if test="name != null and name !=''">
