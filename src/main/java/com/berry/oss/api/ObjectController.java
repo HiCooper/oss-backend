@@ -156,12 +156,13 @@ public class ObjectController {
 
         // 校验通过
         String fileName = file.getOriginalFilename();
+        String path = DEFAULT_FILE_PATH.equals(filePath)? DEFAULT_FILE_PATH: filePath.startsWith(DEFAULT_FILE_PATH) ? filePath : DEFAULT_FILE_PATH + filePath;
 
         // 检查该 bucket 及 path 下 同名文件是否存在
         QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_id", currentUser.getId());
         queryWrapper.eq("bucket_id", bucketInfo.getId());
-        queryWrapper.eq("file_path", filePath);
+        queryWrapper.eq("file_path", path);
         queryWrapper.eq("file_name", fileName);
         ObjectInfo one = objectInfoDaoService.getOne(queryWrapper);
         if (one != null) {
@@ -188,7 +189,7 @@ public class ObjectController {
         }
         // 保存上传信息
 
-        objectService.saveObjectInfo(bucketInfo.getId(), acl, hash, fileSize, fileName, filePath, fileId);
+        objectService.saveObjectInfo(bucketInfo.getId(), acl, hash, fileSize, fileName, path, fileId);
         return ResultFactory.wrapper(msg);
     }
 
@@ -291,7 +292,10 @@ public class ObjectController {
             HttpServletResponse response, HttpServletRequest servletRequest, WebRequest request) throws Exception {
         String objectPath = extractPathFromPattern(servletRequest);
         // 检查bucket
-        BucketInfo bucketInfo = bucketService.checkBucketExist(bucket);
+        BucketInfo bucketInfo = bucketInfoDaoService.getOne(new QueryWrapper<BucketInfo>().eq("name", bucket));
+        if (null == bucketInfo) {
+            throw new XmlResponseException(new AccessDenied("bucket does not exist"));
+        }
 
         String fileName = objectPath;
         String filePath = DEFAULT_FILE_PATH;
@@ -402,9 +406,6 @@ public class ObjectController {
         String objects = mo.getObjects();
         String[] objectArray = objects.split(",");
 
-        QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("bucket_id", bucketInfo.getId());
-        queryWrapper.eq("user_id", currentUser.getId());
         try (SqlSession session = sqlSessionTemplate.getSqlSessionFactory().openSession(ExecutorType.BATCH, false)) {
             ObjectInfoMapper mapper = session.getMapper(ObjectInfoMapper.class);
             for (String item : objectArray) {
@@ -414,10 +415,14 @@ public class ObjectController {
                     path = item.substring(0, item.lastIndexOf("/"));
                     fileName = item.substring(item.lastIndexOf("/") + 1);
                 }
+                QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<>();
+                queryWrapper.eq("bucket_id", bucketInfo.getId());
+                queryWrapper.eq("user_id", currentUser.getId());
                 queryWrapper.eq("file_path", path);
                 queryWrapper.eq("file_name", fileName);
                 ObjectInfo objectInfo = mapper.selectOne(queryWrapper);
                 if (objectInfo != null) {
+                    // todo 如果是文件夹，则删除该文件夹下所有的子项
                     // 删除该对象引用关系，减少哈希引用
                     mapper.deleteById(objectInfo.getId());
                     System.out.println();

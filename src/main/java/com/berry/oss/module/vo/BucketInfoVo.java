@@ -26,9 +26,14 @@ public class BucketInfoVo {
 
 
     /**
-     *  区域id
+     * 区域 代码
      */
-    private String regionCode;
+    private String region;
+
+    /**
+     * 区域名
+     */
+    private String regionName;
 
     /**
      * 创建时间
