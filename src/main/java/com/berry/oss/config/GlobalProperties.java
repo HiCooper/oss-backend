@@ -16,38 +16,21 @@ import org.springframework.stereotype.Component;
 @Data
 public class GlobalProperties {
 
+    private final Singleton singleton = new Singleton();
+
     private final Mail mail = new Mail();
 
+    @Data
+    public static class Singleton {
+        private boolean open;
+        private String region;
+        private String address;
+    }
+
+    @Data
     public static class Mail {
-
         private boolean enabled;
-
         private String from;
-
         private String baseUrl;
-
-        public boolean isEnabled() {
-            return enabled;
-        }
-
-        public void setEnabled(boolean enabled) {
-            this.enabled = enabled;
-        }
-
-        public String getFrom() {
-            return from;
-        }
-
-        public void setFrom(String from) {
-            this.from = from;
-        }
-
-        public String getBaseUrl() {
-            return baseUrl;
-        }
-
-        public void setBaseUrl(String baseUrl) {
-            this.baseUrl = baseUrl;
-        }
     }
 }

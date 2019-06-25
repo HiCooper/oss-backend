@@ -17,13 +17,13 @@
         id, name, remark, capacity, create_time, update_time
     </sql>
 
-    <select id="getServerListByRegionId" resultType="com.berry.oss.module.dto.ServerListDTO">
+    <select id="getServerListByRegionIdLimit" resultType="com.berry.oss.module.dto.ServerListDTO">
        SELECT
             b.*
         FROM
             region_and_server a
             LEFT JOIN server_info b ON a.server_id = b.id
         WHERE
-            a.region_id = #{regionId} and a.state = 'up' limit 6
+            a.region_id = #{regionId} and a.state = 'up' limit #{limit}
     </select>
 </mapper>

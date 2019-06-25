@@ -1,19 +1,13 @@
 package com.berry.oss.service.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.berry.oss.common.utils.HttpClient;
+import com.berry.oss.common.utils.StringUtils;
 import com.berry.oss.core.entity.BucketInfo;
-import com.berry.oss.core.entity.ObjectHash;
-import com.berry.oss.core.entity.RegionInfo;
 import com.berry.oss.core.service.IRegionInfoDaoService;
 import com.berry.oss.erasure.ReedSolomon;
 import com.berry.oss.module.dto.ServerListDTO;
-import com.berry.oss.remote.IDataServiceClient;
-import com.berry.oss.remote.WriteShardMo;
 import com.berry.oss.remote.WriteShardResponse;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -116,7 +110,7 @@ public class ReedSolomonEncoderService {
         reedSolomon.encodeParity(shards, 0, shardSize);
 
         // 获取该存储空间的 6 个 可用服务器列表
-        List<ServerListDTO> serverList = regionInfoDaoService.getServerListByRegionId(bucketInfo.getRegionId());
+        List<ServerListDTO> serverList = regionInfoDaoService.getServerListByRegionIdLimit(bucketInfo.getRegionId(), TOTAL_SHARDS);
         if (serverList.size() != TOTAL_SHARDS) {
             // 数据写入服务不可用
             throw new RuntimeException("数据写入服务不可用");
@@ -134,13 +128,12 @@ public class ReedSolomonEncoderService {
             params.put("shardIndex", i);
             params.put("data", shards[i]);
             String basePath = "http://" + server.getIp() + ":" + server.getPort() ;
-            // todo 读取 response
-            Response response = HttpClient.doPost(basePath + "/data/write", params);
-            if (!response.isSuccessful()) {
+            String writePath = HttpClient.doPost(basePath + "/data/write", params);
+            if (StringUtils.isBlank(writePath)) {
                 logger.error("数据写入失败，index:{},服务：{}", i, basePath + "/data/write");
                 throw new RuntimeException("数据写入失败");
             }
-            result.add(new WriteShardResponse(basePath + "/data/read", ""));
+            result.add(new WriteShardResponse(basePath + "/data/read", writePath));
         }
         return JSON.toJSONString(result);
     }

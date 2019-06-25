@@ -65,10 +65,15 @@ mybatis-plus:
 logging:
   level:
     ROOT: INFO
-    org.springframework.web: XmlResponse
+    org.springframework.web: ERROR
     com.berry.oss: DEBUG
 
 global:
+  # 单机模式,region 为默认区 default ，指定 address 为数据存储服务地址
+  singleton:
+    open: true
+    region: default
+    address: 192.168.2.194:8081
   mail:
     from: berry_cooper@163.com
     base-url: http://127.0.0.1:8080

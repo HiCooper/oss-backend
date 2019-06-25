@@ -25,7 +25,7 @@ public class RegionInfoDaoServiceImpl extends ServiceImpl<RegionInfoMapper, Regi
     private RegionInfoMapper mapper;
 
     @Override
-    public List<ServerListDTO> getServerListByRegionId(String regionId) {
-        return mapper.getServerListByRegionId(regionId);
+    public List<ServerListDTO> getServerListByRegionIdLimit(String regionId, Integer limit) {
+        return mapper.getServerListByRegionIdLimit(regionId, limit);
     }
 }

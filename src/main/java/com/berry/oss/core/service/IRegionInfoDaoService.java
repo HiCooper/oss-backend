@@ -19,7 +19,8 @@ public interface IRegionInfoDaoService extends IService<RegionInfo> {
     /**
      * 根据 regionId 后去6个可用服务器列表
      * @param regionId
+     * @param limit
      * @return
      */
-    List<ServerListDTO> getServerListByRegionId(String regionId);
+    List<ServerListDTO> getServerListByRegionIdLimit(String regionId, Integer limit);
 }

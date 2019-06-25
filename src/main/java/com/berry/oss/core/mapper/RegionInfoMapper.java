@@ -17,5 +17,5 @@ import java.util.List;
  */
 public interface RegionInfoMapper extends BaseMapper<RegionInfo> {
 
-    List<ServerListDTO> getServerListByRegionId(@Param("regionId") String regionId);
+    List<ServerListDTO> getServerListByRegionIdLimit(@Param("regionId") String regionId, @Param("regionId") Integer limit);
 }

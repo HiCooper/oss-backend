@@ -10,13 +10,14 @@
         <result column="shard_json" property="shardJson"/>
         <result column="size" property="size"/>
         <result column="hash" property="hash"/>
+        <result column="singleton" property="singleton"/>
         <result column="create_time" property="createTime"/>
 
     </resultMap>
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, file_id,file_name, shard_json, size, hash, create_time
+        id, file_id,file_name, shard_json, size, hash, singleton, create_time
     </sql>
 
 </mapper>

@@ -5,6 +5,8 @@ import com.google.gson.GsonBuilder;
 import okhttp3.*;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -30,46 +32,51 @@ public class HttpClient {
                 .build();
     }
 
-    public static Response doGet(String url, Map<String, Object> params){
+    public static byte[] doGet(String url, Map<String, Object> params){
         StringBuffer sb = new StringBuffer();
         for (Map.Entry<String, Object> entry : params.entrySet()) {
-            sb.append(entry.getKey() + "=" + entry.getValue()).append("&");
+            try {
+                sb.append(entry.getKey() + "=" +URLEncoder.encode(entry.getValue().toString(), "UTF-8")).append("&");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
         }
         url = url + "?" + sb.toString();
+        System.out.println("request url:" + url);
         Request request = new Request.Builder()
                 .get()
                 .url(url)
                 .build();
-        Response response = null;
-        try {
-            response = CLIENT.newCall(request).execute();
+        try (Response response = CLIENT.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                ResponseBody body = response.body();
+                if (null != body) {
+                    return body.bytes();
+                }
+            }
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            if (null != response) {
-                response.close();
-            }
         }
-        return response;
+        return null;
     }
 
-    public static Response doPost(String url, Map<String, Object> params) {
+    public static String doPost(String url, Map<String, Object> params) {
         Gson gson = new GsonBuilder().enableComplexMapKeySerialization().create();
         RequestBody requestBody = RequestBody.create(MediaType.get(org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE), gson.toJson(params));
         Request request = new Request.Builder()
                 .post(requestBody)
                 .url(url)
                 .build();
-        Response response = null;
-        try {
-            response = CLIENT.newCall(request).execute();
+        try (Response response = CLIENT.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                ResponseBody body = response.body();
+                if (null != body) {
+                    return body.string();
+                }
+            }
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            if (null != response) {
-                response.close();
-            }
         }
-        return response;
+        return null;
     }
 }

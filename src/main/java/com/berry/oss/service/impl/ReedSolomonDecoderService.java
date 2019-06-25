@@ -68,15 +68,7 @@ public class ReedSolomonDecoderService {
             try {
                 Map<String, Object> params = new HashMap<>(16);
                 params.put("path", path);
-                Response response = HttpClient.doGet(url, params);
-                if (!response.isSuccessful()) {
-                    logger.error("读取：{} 失败，url：{}, path: {}", i, url, path);
-                    continue;
-                }
-                byte[] bytes = null;
-                if (response.body() != null) {
-                    bytes = response.body().bytes();
-                }
+                byte[] bytes = HttpClient.doGet(url, params);
                 if (bytes == null) {
                     logger.error("读取：{} url：{}, path: {},数据为空", i, url, path);
                     continue;

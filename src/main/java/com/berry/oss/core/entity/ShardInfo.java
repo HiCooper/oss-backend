@@ -56,6 +56,11 @@ public class ShardInfo implements Serializable {
     private Long size;
 
     /**
+     * 单机模式
+     */
+    private Boolean singleton;
+
+    /**
      * 创建时间
      */
     private LocalDateTime createTime;
