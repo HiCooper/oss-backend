@@ -20,7 +20,7 @@ public class GlobalProperties {
     private final Mail mail = new Mail();
 
     private boolean singleton;
-    private String dataPath = "./";
+    private String dataPath;
 
     @Data
     public static class Mail {

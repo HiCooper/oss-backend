@@ -69,7 +69,7 @@ logging:
     com.berry.oss: DEBUG
 
 global:
-  # 单机模式
+  # 单机模式(单机模式没用数据冗余)
   singleton: true
   mail:
     from: berry_cooper@163.com
