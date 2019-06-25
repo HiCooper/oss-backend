@@ -11,10 +11,10 @@ import java.io.InputStream;
  *
  * @author Berry_Cooper.
  * @date 2019-06-07 23:25
- * fileName：IDataSaveService
+ * fileName：IDataService
  * Use：数据存储服务，该接口整存整取
  */
-public interface IDataSaveService {
+public interface IDataService {
 
     /**
      * 保存对象
@@ -36,5 +36,5 @@ public interface IDataSaveService {
      * @param objectId 对象id
      * @return 资源对象
      */
-    ObjectResource getObject(String objectId);
+    ObjectResource getObject(String objectId) throws IOException;
 }

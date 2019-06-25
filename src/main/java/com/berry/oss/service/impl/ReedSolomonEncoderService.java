@@ -113,6 +113,7 @@ public class ReedSolomonEncoderService {
         List<ServerListDTO> serverList = regionInfoDaoService.getServerListByRegionIdLimit(bucketInfo.getRegionId(), TOTAL_SHARDS);
         if (serverList.size() != TOTAL_SHARDS) {
             // 数据写入服务不可用
+            logger.error("分布式模式启动，数据写入服务校验失败,至少需要可用服务数：{}\n可用服务有：{}, \n 明细：{}", TOTAL_SHARDS, serverList.size(), JSON.toJSONString(serverList));
             throw new RuntimeException("数据写入服务不可用");
         }
 
@@ -127,7 +128,7 @@ public class ReedSolomonEncoderService {
             ServerListDTO server = serverList.get(i);
             params.put("shardIndex", i);
             params.put("data", shards[i]);
-            String basePath = "http://" + server.getIp() + ":" + server.getPort() ;
+            String basePath = "http://" + server.getIp() + ":" + server.getPort();
             String writePath = HttpClient.doPost(basePath + "/data/write", params);
             if (StringUtils.isBlank(writePath)) {
                 logger.error("数据写入失败，index:{},服务：{}", i, basePath + "/data/write");

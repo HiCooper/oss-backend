@@ -16,16 +16,11 @@ import org.springframework.stereotype.Component;
 @Data
 public class GlobalProperties {
 
-    private final Singleton singleton = new Singleton();
 
     private final Mail mail = new Mail();
 
-    @Data
-    public static class Singleton {
-        private boolean open;
-        private String region;
-        private String address;
-    }
+    private boolean singleton;
+    private String dataPath = "./";
 
     @Data
     public static class Mail {

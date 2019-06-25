@@ -42,7 +42,6 @@ public class HttpClient {
             }
         }
         url = url + "?" + sb.toString();
-        System.out.println("request url:" + url);
         Request request = new Request.Builder()
                 .get()
                 .url(url)

@@ -25,7 +25,7 @@ import com.berry.oss.module.vo.GenerateUrlWithSignedVo;
 import com.berry.oss.security.SecurityUtils;
 import com.berry.oss.security.vm.UserInfoDTO;
 import com.berry.oss.service.IBucketService;
-import com.berry.oss.service.IDataSaveService;
+import com.berry.oss.service.IDataService;
 import com.berry.oss.service.IObjectHashService;
 import com.berry.oss.service.IObjectService;
 import io.swagger.annotations.Api;
@@ -88,7 +88,7 @@ public class ObjectController {
 
     private final IObjectHashService objectHashService;
 
-    private final IDataSaveService dataSaveService;
+    private final IDataService dataSaveService;
 
     private final IBucketInfoDaoService bucketInfoDaoService;
 
@@ -97,7 +97,7 @@ public class ObjectController {
                             IObjectInfoDaoService objectInfoDaoService,
                             IObjectService objectService,
                             IObjectHashService objectHashService,
-                            IDataSaveService dataSaveService,
+                            IDataService dataSaveService,
                             IBucketInfoDaoService bucketInfoDaoService) {
         this.bucketService = bucketService;
         this.objectInfoDaoService = objectInfoDaoService;
