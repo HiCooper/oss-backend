@@ -15,6 +15,7 @@ public enum ResultCode implements IMessageEnum {
     FAIL("400", "FAIL"),
     INTERNAL_SERVER_ERROR("500", "系统异常,故障信息为：{0}"),
     URL_NOT_FOUND("0001", "URL地址不存在"),
+    BAD_PASSWORD("403", "密码错误"),
     ERROR_PARAMETER("0002", "请求参数错误"),
     ERROR_SYNTAX("0003", "请求参数语法错误"),
     DATA_NOT_EXIST("D404", "数据不存在"),

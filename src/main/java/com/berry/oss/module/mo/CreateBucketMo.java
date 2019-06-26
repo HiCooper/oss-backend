@@ -26,7 +26,7 @@ public class CreateBucketMo {
      * 3. 不允许使用保留关键字，
      */
     @NotBlank
-    @Pattern(regexp = "^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$")
+    @Pattern(regexp = "^[a-z0-9][a-z0-9_\\-]{1,61}[a-z0-9]$")
     @Length(min = 3, max = 63)
     private String name;
 

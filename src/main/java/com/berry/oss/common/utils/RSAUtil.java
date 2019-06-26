@@ -162,12 +162,12 @@ public final class RSAUtil {
      * 校验数字签名
      * (公钥认证)
      *
-     * @param secret 加密数据
+     * @param data   被签名数据，明文
      * @param sign   数字签名
      * @return 校验成功返回true 失败返回false
      * @throws Exception
      */
-    public static boolean verify(String secret, String sign)
+    public static boolean verify(String data, String sign)
             throws Exception {
 
         // 解密由base64编码的公钥
@@ -181,7 +181,7 @@ public final class RSAUtil {
         // 用公钥对信息认证
         Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM);
         signature.initVerify(pubKey);
-        signature.update(secret.getBytes());
+        signature.update(data.getBytes());
 
         // 验证签名是否正常
         return signature.verify(decryptBase64(sign));
