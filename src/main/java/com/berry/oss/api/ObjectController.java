@@ -252,7 +252,7 @@ public class ObjectController {
         // 将用户id 计算如签名，作为临时 ossAccessKeyId,解密时获取用户id
         String ossAccessKeyId = "TMP." + RSAUtil.encryptByPrivateKey(currentUser.getId().toString());
 
-        String url = "http://" + NetworkUtils.INTERNET_IP + ":8077/ajax/bucket/file/" + mo.getBucket() + mo.getObjectPath();
+        String url = "http://47.101.42.169:8077/ajax/bucket/file/" + mo.getBucket() + mo.getObjectPath();
 
         String urlExpiresAccessKeyId = "Expires=" + (System.currentTimeMillis() + mo.getTimeout() * 1000) / 1000 + "&OSSAccessKeyId=" + URLEncoder.encode(ossAccessKeyId, "UTF-8");
 
