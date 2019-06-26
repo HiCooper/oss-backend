@@ -67,6 +67,14 @@ logging:
     ROOT: INFO
     com.berry.oss.dao.mapper: DEBUG
 
+global:
+  # 单机模式(单机模式没用数据冗余)
+  singleton: true
+  mail:
+    from: berry_cooper@163.com
+    base-url: http://127.0.0.1:8080
+  data-path: ./
+
 log:
   # 运行日志存储跟路径
   path: ./logs
