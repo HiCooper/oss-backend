@@ -20,4 +20,9 @@ public class CreateAccessKeyVo {
     private String accessKeyId;
 
     private String accessKeySecret;
+
+    public CreateAccessKeyVo(String accessKeyId, String accessKeySecret) {
+        this.accessKeyId = accessKeyId;
+        this.accessKeySecret = accessKeySecret;
+    }
 }
