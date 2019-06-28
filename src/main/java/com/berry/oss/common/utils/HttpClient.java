@@ -32,11 +32,11 @@ public class HttpClient {
                 .build();
     }
 
-    public static byte[] doGet(String url, Map<String, Object> params){
+    public static byte[] doGet(String url, Map<String, Object> params) {
         StringBuffer sb = new StringBuffer();
         for (Map.Entry<String, Object> entry : params.entrySet()) {
             try {
-                sb.append(entry.getKey() + "=" +URLEncoder.encode(entry.getValue().toString(), "UTF-8")).append("&");
+                sb.append(entry.getKey() + "=" + URLEncoder.encode(entry.getValue().toString(), "UTF-8")).append("&");
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }

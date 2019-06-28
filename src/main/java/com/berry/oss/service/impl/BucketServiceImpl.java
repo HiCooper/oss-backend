@@ -4,8 +4,14 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.berry.oss.common.ResultCode;
 import com.berry.oss.common.exceptions.BaseException;
 import com.berry.oss.core.entity.BucketInfo;
+import com.berry.oss.core.entity.RegionInfo;
 import com.berry.oss.core.service.IBucketInfoDaoService;
+import com.berry.oss.core.service.IRegionInfoDaoService;
+import com.berry.oss.module.vo.BucketInfoVo;
+import com.berry.oss.security.SecurityUtils;
+import com.berry.oss.security.vm.UserInfoDTO;
 import com.berry.oss.service.IBucketService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,10 +27,46 @@ import org.springframework.stereotype.Service;
 public class BucketServiceImpl implements IBucketService {
 
     private final IBucketInfoDaoService bucketInfoDaoService;
+    private final IRegionInfoDaoService regionInfoDaoService;
 
     @Autowired
-    public BucketServiceImpl(IBucketInfoDaoService bucketInfoDaoService) {
+    public BucketServiceImpl(IBucketInfoDaoService bucketInfoDaoService, IRegionInfoDaoService regionInfoDaoService) {
         this.bucketInfoDaoService = bucketInfoDaoService;
+        this.regionInfoDaoService = regionInfoDaoService;
+    }
+
+    @Override
+    public void create(String name, String region, String acl) {
+        UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
+        // 检查 region
+        RegionInfo regionInfo = regionInfoDaoService.getOne(new QueryWrapper<RegionInfo>().eq("code", region));
+        if (regionInfo == null) {
+            throw new BaseException("404", "region 不存在");
+        }
+
+        // 检查该 bucket 名称是否被占用, 全局 bucket 命名唯一
+        Boolean result = checkBucketNotExist(name);
+        if (!result) {
+            throw new BaseException("403", "该Bucket名字已被占用");
+        }
+        BucketInfo bucketInfo = new BucketInfo()
+                .setName(name)
+                .setAcl(acl)
+                .setRegionId(regionInfo.getId())
+                .setUserId(currentUser.getId());
+        bucketInfoDaoService.save(bucketInfo);
+    }
+
+    @Override
+    public BucketInfoVo detail(String name) {
+        UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
+        BucketInfo bucketInfo = bucketInfoDaoService.getOne(new QueryWrapper<BucketInfo>().eq("user_id", currentUser.getId()).eq("name", name));
+        if (bucketInfo == null) {
+            throw new BaseException(ResultCode.DATA_NOT_EXIST);
+        }
+        BucketInfoVo vo = new BucketInfoVo();
+        BeanUtils.copyProperties(bucketInfo, vo);
+        return vo;
     }
 
     @Override

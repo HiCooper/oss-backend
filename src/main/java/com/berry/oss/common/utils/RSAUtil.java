@@ -162,8 +162,8 @@ public final class RSAUtil {
      * 校验数字签名
      * (公钥认证)
      *
-     * @param data   被签名数据，明文
-     * @param sign   数字签名
+     * @param data 被签名数据，明文
+     * @param sign 数字签名
      * @return 校验成功返回true 失败返回false
      * @throws Exception
      */

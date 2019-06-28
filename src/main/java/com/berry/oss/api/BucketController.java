@@ -1,14 +1,11 @@
 package com.berry.oss.api;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.berry.oss.common.Result;
-import com.berry.oss.common.ResultCode;
 import com.berry.oss.common.ResultFactory;
+import com.berry.oss.common.constant.CommonConstant;
 import com.berry.oss.common.exceptions.BaseException;
 import com.berry.oss.core.entity.BucketInfo;
-import com.berry.oss.core.entity.RegionInfo;
 import com.berry.oss.core.service.IBucketInfoDaoService;
-import com.berry.oss.core.service.IRegionInfoDaoService;
 import com.berry.oss.module.mo.CreateBucketMo;
 import com.berry.oss.module.mo.DeleteBucketMo;
 import com.berry.oss.module.mo.UpdateBucketAclMo;
@@ -18,10 +15,11 @@ import com.berry.oss.security.vm.UserInfoDTO;
 import com.berry.oss.service.IBucketService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * Title BucketController
@@ -42,18 +40,15 @@ public class BucketController {
 
     private final IBucketService bucketService;
 
-    private final IRegionInfoDaoService regionInfoDaoService;
-
     @Autowired
-    public BucketController(IBucketInfoDaoService bucketInfoDaoService, IBucketService bucketService, IRegionInfoDaoService regionInfoDaoService) {
+    public BucketController(IBucketInfoDaoService bucketInfoDaoService, IBucketService bucketService) {
         this.bucketInfoDaoService = bucketInfoDaoService;
         this.bucketService = bucketService;
-        this.regionInfoDaoService = regionInfoDaoService;
     }
 
     @GetMapping("list.json")
     @ApiOperation("获取 Bucket 列表")
-    public Result list(@RequestParam(required = false) String name) {
+    public Result<List<BucketInfoVo>> list(@RequestParam(required = false) String name) {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
         return ResultFactory.wrapper(bucketInfoDaoService.listBucket(currentUser.getId(), name));
     }
@@ -61,37 +56,18 @@ public class BucketController {
     @PostMapping("new_create_bucket.json")
     @ApiOperation("创建 Bucket")
     public Result create(@Validated @RequestBody CreateBucketMo mo) {
-        UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
-        // 检查 region
-        RegionInfo regionInfo = regionInfoDaoService.getOne(new QueryWrapper<RegionInfo>().eq("code", mo.getRegion()));
-        if (regionInfo == null) {
-            throw new BaseException("404", "region 不存在");
+        String acl = mo.getAcl();
+        if (!CommonConstant.AclType.ALL_NAME.contains(acl)) {
+            throw new BaseException("403", "非法ACL");
         }
-
-        // 检查该 bucket 名称是否被占用, 全局 bucket 命名唯一
-        Boolean result = bucketService.checkBucketNotExist(mo.getName());
-        if (!result) {
-            throw new BaseException("403", "该Bucket名字已被占用");
-        }
-        BucketInfo bucketInfo = new BucketInfo();
-        BeanUtils.copyProperties(mo, bucketInfo);
-        bucketInfo.setUserId(currentUser.getId());
-        bucketInfo.setRegionId(regionInfo.getId());
-        bucketInfoDaoService.save(bucketInfo);
+        bucketService.create(mo.getName(), mo.getRegion(), mo.getAcl());
         return ResultFactory.wrapper();
     }
 
     @GetMapping("detail.json")
     @ApiOperation("获取 Bucket 基本信息")
-    public Result detail(@RequestParam("name") String name) {
-        UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
-        BucketInfo bucketInfo = bucketInfoDaoService.getOne(new QueryWrapper<BucketInfo>().eq("user_id", currentUser.getId()).eq("name", name));
-        if (bucketInfo == null) {
-            throw new BaseException(ResultCode.DATA_NOT_EXIST);
-        }
-        BucketInfoVo vo = new BucketInfoVo();
-        BeanUtils.copyProperties(bucketInfo, vo);
-        return ResultFactory.wrapper(vo);
+    public Result<BucketInfoVo> detail(@RequestParam("name") String name) {
+        return ResultFactory.wrapper(bucketService.detail(name));
     }
 
     @ApiOperation("获取 Bucket 基本设置")

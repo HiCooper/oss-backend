@@ -25,6 +25,7 @@ public enum ResultCode implements IMessageEnum {
     USERNAME_OR_PASSWORD_ERROR("D404", "用户名或密码错误"),
     ACCOUNT_DISABLE("D40401", "账户不可用"),
     ACCOUNT_LOCKED("D40402", "账户已被锁定"),
+    ACCESS_KEY_LIMIT_THREE("403", "账户最多能创建3个密钥对"),
     TOKEN_VERIFY_FAIL("TOKEN_VERIFY_FAIL", "身份凭证校验失败"),
     NOT_LOGIN("D404", "用户未登录"),
     MISSING_PARAMETER("D400", "缺少请求参数：{0}"),

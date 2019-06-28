@@ -1,13 +1,8 @@
 package com.berry.oss.module.dto;
 
-import com.alibaba.fastjson.JSON;
-import com.berry.oss.common.exceptions.UploadException;
 import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Title FileInfoDTO
@@ -32,6 +27,7 @@ public class FileInfoDTO {
 
     /**
      * 将全路径 转化为 路径 和 文件名
+     *
      * @param fullPath
      */
     public FileInfoDTO(String fullPath) {
@@ -45,7 +41,7 @@ public class FileInfoDTO {
             if (path.length() > 1 && path.endsWith(DEFAULT_FILE_PATH)) {
                 path = path.substring(0, path.length() - 1);
             }
-            if(!path.startsWith(DEFAULT_FILE_PATH)) {
+            if (!path.startsWith(DEFAULT_FILE_PATH)) {
                 path = DEFAULT_FILE_PATH + path;
             }
             this.filePath = path;

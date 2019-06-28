@@ -19,7 +19,8 @@
     </sql>
 
     <select id="listBucket" resultType="com.berry.oss.module.vo.BucketInfoVo">
-        SELECT a.id, a.name, a.acl, a.create_time, a.update_time, b.code as region, b.name as regionName from bucket_info a
+        SELECT a.id, a.name, a.acl, a.create_time, a.update_time, b.code as region, b.name as regionName from
+        bucket_info a
         LEFT JOIN region_info b on a.region_id = b.id
         <where>
             AND user_id = #{userId}

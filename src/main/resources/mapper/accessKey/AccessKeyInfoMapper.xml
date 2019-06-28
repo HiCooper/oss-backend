@@ -4,12 +4,12 @@
 
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.berry.oss.core.entity.AccessKeyInfo">
-        <id column="access_key_id" property="accessKeyId" />
-        <result column="access_key_secret" property="accessKeySecret" />
-        <result column="user_id" property="userId" />
-        <result column="create_time" property="createTime" />
-        <result column="update_time" property="updateTime" />
-        <result column="state" property="state" />
+        <id column="access_key_id" property="accessKeyId"/>
+        <result column="access_key_secret" property="accessKeySecret"/>
+        <result column="user_id" property="userId"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="state" property="state"/>
     </resultMap>
 
     <!-- 通用查询结果列 -->

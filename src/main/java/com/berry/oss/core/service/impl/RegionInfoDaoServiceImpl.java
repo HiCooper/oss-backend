@@ -1,9 +1,9 @@
 package com.berry.oss.core.service.impl;
 
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.berry.oss.core.entity.RegionInfo;
 import com.berry.oss.core.mapper.RegionInfoMapper;
 import com.berry.oss.core.service.IRegionInfoDaoService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.berry.oss.module.dto.ServerListDTO;
 import org.springframework.stereotype.Service;
 
@@ -12,7 +12,7 @@ import java.util.List;
 
 /**
  * <p>
- *  服务实现类
+ * 服务实现类
  * </p>
  *
  * @author HiCooper
