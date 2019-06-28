@@ -64,12 +64,6 @@ public class BucketController {
         return ResultFactory.wrapper();
     }
 
-    @GetMapping("detail.json")
-    @ApiOperation("获取 Bucket 基本信息")
-    public Result<BucketInfoVo> detail(@RequestParam("name") String name) {
-        return ResultFactory.wrapper(bucketService.detail(name));
-    }
-
     @ApiOperation("获取 Bucket 基本设置")
     @GetMapping("get_basic_setting.json")
     public Result getBasicSetting() {
