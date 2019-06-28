@@ -33,7 +33,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("ajax/bucket")
-@Api(tags = "Bucket 管理")
+@Api(tags = "存储空间 Bucket 管理")
 public class BucketController {
 
     private final IBucketInfoDaoService bucketInfoDaoService;

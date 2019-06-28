@@ -76,12 +76,14 @@ public interface IObjectService {
     Map<String, Object> getObjectHead(String bucket, String path, String objectName);
 
     /**
-     * 根据过期时间 生成对象零时访问url
+     * 根据过期时间 生成对象临时访问url
+     * 请求url时，先验证签名，后验证 accessKeyId 由服务器签发，再验证过期时间是否有效，有效则返回对象数据
      *
      * @param bucket     bucket name
      * @param objectPath 对象全路径
      * @param timeout    过期时间
-     * @return url信息
+     * @return ossAccessKeyId： 私钥加密的用户id，保证由服务器签发，不被假冒
+     * Signature：Expires 和 OSSAccessKeyId 参数进行 base64(md5(str)) 签名，保证不被篡改,
      * @throws Exception 签名异常 或 URL编码异常
      */
     GenerateUrlWithSignedVo generateUrlWithSigned(String bucket, String objectPath, Integer timeout) throws Exception;

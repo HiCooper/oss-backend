@@ -96,11 +96,7 @@ public class ObjectController {
     }
 
     /**
-     * 生成附带签名的临时访问资源的url
-     * ossAccessKeyId： 私钥加密的用户id，保证由服务器签发，不被假冒
-     * Signature：Expires 和 OSSAccessKeyId 参数进行 base64(md5(str)) 签名，保证不被篡改,
-     * <p>
-     * 请求url时，先验证签名，后验证 accessKeyId 由服务器签发，再验证过期时间是否有效，有效则返回对象数据
+     * 根据过期时间 生成对象临时访问url
      *
      * @param mo 请求参数
      * @return 访问对象url
@@ -113,7 +109,7 @@ public class ObjectController {
 
 
     @GetMapping(value = "{bucket}/**")
-    @ApiOperation("获取对象(私有对象，需要临时口令，且限时访问；公开对象，直接访问)")
+    @ApiOperation("获取对象(私有对象，需要临时口令，且限时访问；公开对象，直接访问，** 为对象相对根路径的全路径，包含对象名)")
     public void getObject(
             @PathVariable("bucket") String bucket,
             @RequestParam(value = "Expires", required = false) String expiresTime,

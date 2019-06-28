@@ -5,6 +5,7 @@ import com.berry.oss.common.ResultFactory;
 import com.berry.oss.module.mo.CreateAccessKeyMo;
 import com.berry.oss.module.mo.UpdateAccessKeyMo;
 import com.berry.oss.service.IAccessKeyService;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("ajax/access_key")
+@Api(tags = "密钥信息")
 public class AccessKeyInfoController {
 
     private final IAccessKeyService accessKeyService;
