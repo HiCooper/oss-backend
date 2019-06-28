@@ -14,7 +14,7 @@ import lombok.Data;
 public class GenerateUrlWithSignedMo {
 
     /**
-     *  bucket name
+     * bucket name
      */
     private String bucket;
     /**

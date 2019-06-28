@@ -87,6 +87,7 @@ public class ObjectController {
      * @param objectName 文件名 必填
      * @return 头部信息
      */
+    @ApiOperation("获取文件头部信息")
     @GetMapping("head_object.json")
     public Result<Map<String, Object>> getObjectHead(
             @RequestParam(value = "bucket") String bucket,
@@ -102,11 +103,11 @@ public class ObjectController {
      * @return 访问对象url
      * @throws Exception 编码异常，签名异常
      */
+    @ApiOperation("根据过期时间 生成对象临时访问url")
     @PostMapping("generate_url_with_signed.json")
     public Result<GenerateUrlWithSignedVo> generateUrlWithSigned(@RequestBody GenerateUrlWithSignedMo mo) throws Exception {
         return ResultFactory.wrapper(objectService.generateUrlWithSigned(mo.getBucket(), mo.getObjectPath(), mo.getTimeout()));
     }
-
 
     @GetMapping(value = "{bucket}/**")
     @ApiOperation("获取对象(私有对象，需要临时口令，且限时访问；公开对象，直接访问，** 为对象相对根路径的全路径，包含对象名)")
@@ -119,7 +120,6 @@ public class ObjectController {
             HttpServletResponse response, HttpServletRequest servletRequest, WebRequest request) throws Exception {
         objectService.getObject(bucket, expiresTime, ossAccessKeyId, signature, download, response, servletRequest, request);
     }
-
 
     @PostMapping("create_folder.json")
     @ApiOperation("新建目录，支持同事创建多级目录")

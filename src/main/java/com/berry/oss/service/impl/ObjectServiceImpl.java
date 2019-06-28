@@ -272,7 +272,13 @@ public class ObjectServiceImpl implements IObjectService {
         String ip = globalProperties.getServerIp();
         String url = "http://" + ip + ":" + port + "/ajax/bucket/file/" + bucket + objectPath;
 
-        String urlExpiresAccessKeyId = "Expires=" + (System.currentTimeMillis() + timeout * 1000) / 1000 + "&OSSAccessKeyId=" + URLEncoder.encode(ossAccessKeyId, "UTF-8");
+        long expires = (System.currentTimeMillis() + timeout * 1000) / 1000;
+        String tempAccessKeyId = URLEncoder.encode(ossAccessKeyId, "UTF-8");
+
+        Map<String, Object> paramsMap = new HashMap<>(3);
+        paramsMap.put("Expires", expires);
+        paramsMap.put("OSSAccessKeyId", tempAccessKeyId);
+        String urlExpiresAccessKeyId = StringUtils.sortMap(paramsMap);
 
         // 对 参数部分 进行md5签名计算,并 base64编码
         String sign = new String(Base64.getEncoder().encode(MD5.md5Encode(urlExpiresAccessKeyId).getBytes()));
