@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:mysql://127.0.0.1:3306/your_db?characterEncoding=utf8&useSSL=false&useUnicode=true&allowPublicKeyRetrieval=true
-    username: your_name
-    password: your_password
+    url: jdbc:mysql://127.0.0.1:3306/db_oss_service?characterEncoding=utf8&useSSL=false&useUnicode=true&allowPublicKeyRetrieval=true
+    username: berry
+    password: okmnji123
     driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.alibaba.druid.pool.DruidDataSource
     platform: mysql
@@ -14,7 +14,7 @@ spring:
     # Redis服务器连接端口
     port: 6379
     # Redis服务器连接密码（默认为空）
-    password: your_redis_passwd
+    password: okmnji123
     jedis:
       pool:
         # 连接池最大连接数（使用负值表示没有限制）

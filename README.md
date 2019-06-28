@@ -1,6 +1,15 @@
 # OSS-对象存储服务后端
 
 #### 项目介绍
+
+![avatar](./pic/demo.png)
+
+Demo 示例：http://47.101.42.169:9002
+````
+username: test
+password: 123456
+````
+
 oss-backend
 微服务基本项目结构
 
