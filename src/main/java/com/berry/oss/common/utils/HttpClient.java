@@ -32,15 +32,8 @@ public class HttpClient {
     }
 
     public static byte[] doGet(String url, Map<String, Object> params) {
-        StringBuffer sb = new StringBuffer();
-        for (Map.Entry<String, Object> entry : params.entrySet()) {
-            try {
-                sb.append(entry.getKey() + "=" + URLEncoder.encode(entry.getValue().toString(), "UTF-8")).append("&");
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-        }
-        url = url + "?" + sb.toString();
+        String sortMap = StringUtils.sortMap(params);
+        url = url + "?" + sortMap;
         Request request = new Request.Builder()
                 .get()
                 .url(url)

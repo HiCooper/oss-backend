@@ -28,8 +28,8 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
     /**
      * 对所有传入参数按照字段名的 ASCII 码从小到大排序（字典序）&拼接成字符
      *
-     * @param paramsMap
-     * @return
+     * @param paramsMap map
+     * @return urlStr
      */
     public static String sortMap(Map<String, Object> paramsMap) {
         List<Map.Entry<String, Object>> infoIds = new ArrayList<>(paramsMap.entrySet());
