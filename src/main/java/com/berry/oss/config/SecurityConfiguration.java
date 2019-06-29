@@ -1,7 +1,8 @@
 package com.berry.oss.config;
 
 import com.berry.oss.security.AuthoritiesConstants;
-import com.berry.oss.security.jwt.JwtConfigurer;
+import com.berry.oss.security.FilterConfigurer;
+import com.berry.oss.security.access.AccessProvider;
 import com.berry.oss.security.jwt.TokenProvider;
 import org.springframework.beans.factory.BeanInitializationException;
 import org.springframework.context.annotation.Bean;
@@ -41,9 +42,12 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     private CorsFilter corsFilter;
 
     private final TokenProvider tokenProvider;
+    private final AccessProvider accessProvider;
 
-    public SecurityConfiguration(TokenProvider tokenProvider) {
+
+    public SecurityConfiguration(TokenProvider tokenProvider, AccessProvider accessProvider) {
         this.tokenProvider = tokenProvider;
+        this.accessProvider = accessProvider;
     }
 
     /**
@@ -131,7 +135,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     }
 
-    private JwtConfigurer securityConfigurerAdapter() {
-        return new JwtConfigurer(this.tokenProvider);
+    private FilterConfigurer securityConfigurerAdapter() {
+        return new FilterConfigurer(this.tokenProvider, this.accessProvider);
     }
 }

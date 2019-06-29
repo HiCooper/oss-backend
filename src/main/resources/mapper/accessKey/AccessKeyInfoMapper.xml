@@ -17,4 +17,10 @@
         access_key_id, access_key_secret, user_id, create_time, update_time, state
     </sql>
 
+    <select id="getUserInfoDTO" resultType="com.berry.oss.security.dto.UserInfoDTO">
+        select a.access_key_id, a.access_key_secret, b.id, b.username from access_key_info a
+        left join user b on b.id = a.user_id
+         where a.access_key_id = #{accessKeyId}
+    </select>
+
 </mapper>

@@ -1,6 +1,6 @@
 package com.berry.oss.security;
 
-import com.berry.oss.security.vm.UserInfoDTO;
+import com.berry.oss.security.dto.UserInfoDTO;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -30,17 +30,21 @@ public final class SecurityUtils {
                 }).orElse(null);
     }
 
+
     /**
-     * Get the JWT of the current user.
+     * Get the credentials of the current user.
+     * 如果是 带有 authorization 请求头经过授权的用户，该信息为用户jwt，
+     * 如果是 带有 access_token 请求头经过授权的请求， 该信息为 bucket 名称，
      *
-     * @return the JWT of the current user
+     * @return the credentials of the current user
      */
-    public static Optional<String> getCurrentUserJWT() {
+    public static Optional<String> getCurrentCredentials() {
         SecurityContext securityContext = SecurityContextHolder.getContext();
         return Optional.ofNullable(securityContext.getAuthentication())
                 .filter(authentication -> authentication.getCredentials() instanceof String)
                 .map(authentication -> (String) authentication.getCredentials());
     }
+
 
     /**
      * Check if a user is authenticated.

@@ -11,7 +11,7 @@ import com.berry.oss.module.mo.DeleteBucketMo;
 import com.berry.oss.module.mo.UpdateBucketAclMo;
 import com.berry.oss.module.vo.BucketInfoVo;
 import com.berry.oss.security.SecurityUtils;
-import com.berry.oss.security.vm.UserInfoDTO;
+import com.berry.oss.security.dto.UserInfoDTO;
 import com.berry.oss.service.IBucketService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

@@ -2,6 +2,7 @@ package com.berry.oss.core.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.berry.oss.core.entity.AccessKeyInfo;
+import com.berry.oss.security.dto.UserInfoDTO;
 
 /**
  * <p>
@@ -13,4 +14,5 @@ import com.berry.oss.core.entity.AccessKeyInfo;
  */
 public interface IAccessKeyInfoDaoService extends IService<AccessKeyInfo> {
 
+    UserInfoDTO getUserInfoDTO(String accessKeyId);
 }

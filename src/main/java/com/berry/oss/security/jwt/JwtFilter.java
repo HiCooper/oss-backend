@@ -1,5 +1,6 @@
 package com.berry.oss.security.jwt;
 
+import com.berry.oss.common.constant.Constants;
 import com.berry.oss.common.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,26 +22,23 @@ import java.io.IOException;
  * @author xueancao
  */
 public class JwtFilter extends GenericFilterBean {
-    private final Logger log = LoggerFactory.getLogger(JwtFilter.class);
 
+    private final Logger log = LoggerFactory.getLogger(JwtFilter.class);
 
     public static final String AUTHORIZATION_HEADER = "authorization";
 
-    private static final String HEALTH_CHECK_URL = "/actuator/health";
-
-
     private TokenProvider tokenProvider;
 
-    JwtFilter(TokenProvider tokenProvider) {
+    public JwtFilter(TokenProvider tokenProvider) {
         this.tokenProvider = tokenProvider;
     }
-
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
             throws IOException, ServletException {
         HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
-        if (!httpServletRequest.getRequestURI().equals(HEALTH_CHECK_URL)) {
+        String requestUrl = httpServletRequest.getRequestURI();
+        if (!requestUrl.equals(Constants.HEALTH_CHECK_URL) && !requestUrl.equals(Constants.ERROR_STATE_URL)) {
             String jwt = resolveToken(httpServletRequest);
             if (StringUtils.isNotBlank(jwt) && this.tokenProvider.validateToken(jwt)) {
                 // 验证jwt 设置授权信息到该线程上下文

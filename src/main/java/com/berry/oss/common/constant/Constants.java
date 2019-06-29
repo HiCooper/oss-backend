@@ -1,5 +1,6 @@
 package com.berry.oss.common.constant;
 
+import java.nio.charset.Charset;
 import java.util.regex.Pattern;
 
 /**
@@ -21,6 +22,32 @@ public final class Constants {
      * 默认文件路径（根路径 / ）
      */
     public static final String DEFAULT_FILE_PATH = "/";
+
+    /**
+     * 所有都是UTF-8编码
+     */
+    public static final Charset UTF_8 = Charset.forName("UTF-8");
+
+
+    /**
+     * 心跳检查url
+     */
+    public static final String HEALTH_CHECK_URL = "/actuator/health";
+
+    /**
+     * 错误状态响应
+     */
+    public static final String ERROR_STATE_URL = "/error";
+
+    /**
+     * 用户 授权密钥口令 key
+     */
+    public static final String ACCESS_TOKEN_KEY = "access_token";
+
+    /**
+     * access_token 负载信息长度 3
+     */
+    public static final int ENCODE_DATA_LENGTH = 3;
 
 
     public static final String LOGIN_REGEX = "^[_.@A-Za-z0-9-]*$";

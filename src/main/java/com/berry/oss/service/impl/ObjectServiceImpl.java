@@ -19,7 +19,7 @@ import com.berry.oss.core.service.IObjectInfoDaoService;
 import com.berry.oss.module.dto.ObjectResource;
 import com.berry.oss.module.vo.GenerateUrlWithSignedVo;
 import com.berry.oss.security.SecurityUtils;
-import com.berry.oss.security.vm.UserInfoDTO;
+import com.berry.oss.security.dto.UserInfoDTO;
 import com.berry.oss.service.IBucketService;
 import com.berry.oss.service.IDataService;
 import com.berry.oss.service.IObjectHashService;

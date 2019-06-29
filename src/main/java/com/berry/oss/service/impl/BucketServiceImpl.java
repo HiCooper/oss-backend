@@ -9,7 +9,7 @@ import com.berry.oss.core.service.IBucketInfoDaoService;
 import com.berry.oss.core.service.IRegionInfoDaoService;
 import com.berry.oss.module.vo.BucketInfoVo;
 import com.berry.oss.security.SecurityUtils;
-import com.berry.oss.security.vm.UserInfoDTO;
+import com.berry.oss.security.dto.UserInfoDTO;
 import com.berry.oss.service.IBucketService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;

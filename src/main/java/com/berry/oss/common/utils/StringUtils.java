@@ -1,6 +1,7 @@
 package com.berry.oss.common.utils;
 
 
+import com.berry.oss.common.constant.Constants;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.springframework.http.MediaType;
 
@@ -179,6 +180,14 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
             return "image/svg+xml";
         }
         return MediaType.APPLICATION_OCTET_STREAM_VALUE;
+    }
+
+    public static byte[] utf8Bytes(String data) {
+        return data.getBytes(Constants.UTF_8);
+    }
+
+    public static String utf8String(byte[] data) {
+        return new String(data, Constants.UTF_8);
     }
 
 }

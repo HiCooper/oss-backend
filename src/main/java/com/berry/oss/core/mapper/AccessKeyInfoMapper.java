@@ -2,6 +2,8 @@ package com.berry.oss.core.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.berry.oss.core.entity.AccessKeyInfo;
+import com.berry.oss.security.dto.UserInfoDTO;
+import org.apache.ibatis.annotations.Param;
 
 /**
  * <p>
@@ -13,4 +15,5 @@ import com.berry.oss.core.entity.AccessKeyInfo;
  */
 public interface AccessKeyInfoMapper extends BaseMapper<AccessKeyInfo> {
 
+    UserInfoDTO getUserInfoDTO(@Param("accessKeyId") String accessKeyId);
 }

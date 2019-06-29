@@ -10,7 +10,7 @@ import com.berry.oss.module.vo.CreateAccessKeyVo;
 import com.berry.oss.security.SecurityUtils;
 import com.berry.oss.security.core.entity.User;
 import com.berry.oss.security.core.service.IUserDaoService;
-import com.berry.oss.security.vm.UserInfoDTO;
+import com.berry.oss.security.dto.UserInfoDTO;
 import com.berry.oss.service.IAccessKeyService;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;

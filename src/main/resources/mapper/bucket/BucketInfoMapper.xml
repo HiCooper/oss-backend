@@ -23,9 +23,9 @@
         bucket_info a
         LEFT JOIN region_info b on a.region_id = b.id
         <where>
-            AND user_id = #{userId}
+            AND a.user_id = #{userId}
             <if test="name != null and name !=''">
-                AND name like concat(#{name}, "%")
+                AND a.name like concat(#{name}, "%")
             </if>
         </where>
     </select>

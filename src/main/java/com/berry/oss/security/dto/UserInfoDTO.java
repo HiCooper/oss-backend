@@ -1,6 +1,8 @@
-package com.berry.oss.security.vm;
+package com.berry.oss.security.dto;
 
+import com.berry.oss.security.access.AccessKeyPair;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
 /**
@@ -11,9 +13,10 @@ import lombok.experimental.Accessors;
  * fileName：UserInfoDTO
  * Use：
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 @Accessors(chain = true)
-public class UserInfoDTO {
+public class UserInfoDTO extends AccessKeyPair {
 
     private Integer id;
 
@@ -27,5 +30,4 @@ public class UserInfoDTO {
         this.id = id;
         this.username = username;
     }
-
 }
