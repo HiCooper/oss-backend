@@ -37,14 +37,15 @@ public class Auth {
 
 
     /**
-     * 获取上传 口令
+     * 获取授权 口令，
+     * <p>注意：该口令拥有对应账户的所有权限</p>
      *
      * @param expires 有效时长，单位秒。默认3600s
      * @return
      */
-    public String uploadToken(long expires) {
+    public String accessToken(long expires) {
         long deadline = System.currentTimeMillis() / 1000 + expires;
-        // 这里仅保存了 过期时间信息
+        // 这里仅保存了 过期时间信息,可添加更多信息，以便日志记录，如请求ip
         StringMap map = new StringMap();
         map.put("deadline", deadline);
         // 1.过期时间 和 bucket 转 json 再 base64 编码 得到 encodeJson
@@ -61,9 +62,9 @@ public class Auth {
 
     public static void main(String[] args) throws IllegalAccessException {
 
-        // 1。 生成 上传token
+        // 1。 生成 token
         Auth auth = Auth.create("yRdQE7hybEfPD5Kgt4fXCe", "wkZ2RvEnuom/Pa4RTQGmPdFVd6g7/CO");
-        String token = auth.uploadToken(3600);
+        String token = auth.accessToken(3600);
         System.out.println(token);
 
         // 2. 验证 token 并获取信息 json { deadline: Number }
