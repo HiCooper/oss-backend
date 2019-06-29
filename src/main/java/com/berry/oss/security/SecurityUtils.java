@@ -34,15 +34,15 @@ public final class SecurityUtils {
     /**
      * Get the credentials of the current user.
      * 如果是 带有 authorization 请求头经过授权的用户，该信息为用户jwt，
-     * 如果是 带有 access_token 请求头经过授权的请求， 该信息为 bucket 名称，
+     * 如果是 带有 access_token 请求头经过授权的请求， 该信息为 accessToken，
      *
      * @return the credentials of the current user
      */
-    public static Optional<String> getCurrentCredentials() {
+    public static String getCurrentCredentials() {
         SecurityContext securityContext = SecurityContextHolder.getContext();
         return Optional.ofNullable(securityContext.getAuthentication())
                 .filter(authentication -> authentication.getCredentials() instanceof String)
-                .map(authentication -> (String) authentication.getCredentials());
+                .map(authentication -> (String) authentication.getCredentials()).orElse(null);
     }
 
 

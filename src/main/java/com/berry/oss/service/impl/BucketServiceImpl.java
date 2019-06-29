@@ -15,6 +15,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * Created with IntelliJ IDEA.
  *
@@ -33,6 +35,11 @@ public class BucketServiceImpl implements IBucketService {
     public BucketServiceImpl(IBucketInfoDaoService bucketInfoDaoService, IRegionInfoDaoService regionInfoDaoService) {
         this.bucketInfoDaoService = bucketInfoDaoService;
         this.regionInfoDaoService = regionInfoDaoService;
+    }
+
+    @Override
+    public List<BucketInfoVo> listBucket(Integer userId, String name) {
+        return bucketInfoDaoService.listBucket(userId, name);
     }
 
     @Override
@@ -55,18 +62,6 @@ public class BucketServiceImpl implements IBucketService {
                 .setRegionId(regionInfo.getId())
                 .setUserId(currentUser.getId());
         bucketInfoDaoService.save(bucketInfo);
-    }
-
-    @Override
-    public BucketInfoVo detail(String name) {
-        UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
-        BucketInfo bucketInfo = bucketInfoDaoService.getOne(new QueryWrapper<BucketInfo>().eq("user_id", currentUser.getId()).eq("name", name));
-        if (bucketInfo == null) {
-            throw new BaseException(ResultCode.DATA_NOT_EXIST);
-        }
-        BucketInfoVo vo = new BucketInfoVo();
-        BeanUtils.copyProperties(bucketInfo, vo);
-        return vo;
     }
 
     @Override

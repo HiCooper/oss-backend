@@ -3,6 +3,8 @@ package com.berry.oss.service;
 import com.berry.oss.core.entity.BucketInfo;
 import com.berry.oss.module.vo.BucketInfoVo;
 
+import java.util.List;
+
 /**
  * Created with IntelliJ IDEA.
  *
@@ -14,6 +16,14 @@ import com.berry.oss.module.vo.BucketInfoVo;
 public interface IBucketService {
 
     /**
+     * 获取 bucket 列表
+     * @param userId 用户id
+     * @param name 全模糊搜索名字
+     * @return list
+     */
+    List<BucketInfoVo> listBucket(Integer userId, String name);
+
+    /**
      * 创建 bucket
      *
      * @param name   bucket 名称
@@ -23,18 +33,10 @@ public interface IBucketService {
     void create(String name, String region, String acl);
 
     /**
-     * bucket 基本信息
-     *
-     * @param name bucket 名称
-     * @return
-     */
-    BucketInfoVo detail(String name);
-
-    /**
      * 检查 bucket name 是否存在
      *
      * @param bucketName bucket name
-     * @return
+     * @return info
      */
     BucketInfo checkBucketExist(String bucketName);
 
@@ -42,7 +44,7 @@ public interface IBucketService {
      * 检查该 bucket 不存在
      *
      * @param bucketName bucketName
-     * @return
+     * @return boolean
      */
     Boolean checkBucketNotExist(String bucketName);
 }

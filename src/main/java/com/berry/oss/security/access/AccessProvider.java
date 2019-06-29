@@ -55,9 +55,9 @@ public class AccessProvider {
             return null;
         }
 
-        String bucket;
+        // 验证token有效性，请求无法获取错误信息
         try {
-            bucket = Auth.verifyThenGetData(accessToken, principal.getAccessKeySecret());
+            Auth.verifyThenGetData(accessToken, principal.getAccessKeySecret());
         } catch (IllegalAccessException e) {
             logger.error(e.getLocalizedMessage());
             return null;
@@ -67,6 +67,6 @@ public class AccessProvider {
         List<GrantedAuthority> grantedAuthorities = roleList.stream()
                 .map(role -> new SimpleGrantedAuthority(role.getName()))
                 .collect(Collectors.toList());
-        return new UsernamePasswordAuthenticationToken(principal, bucket, grantedAuthorities);
+        return new UsernamePasswordAuthenticationToken(principal, accessToken, grantedAuthorities);
     }
 }

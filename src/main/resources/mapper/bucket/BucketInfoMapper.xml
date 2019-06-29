@@ -25,7 +25,7 @@
         <where>
             AND a.user_id = #{userId}
             <if test="name != null and name !=''">
-                AND a.name like concat(#{name}, "%")
+                AND a.name like concat("%", #{name}, "%")
             </if>
         </where>
     </select>

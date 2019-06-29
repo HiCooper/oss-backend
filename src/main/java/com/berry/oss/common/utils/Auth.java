@@ -39,14 +39,13 @@ public class Auth {
     /**
      * 获取上传 口令
      *
-     * @param bucket  存储空间名
      * @param expires 有效时长，单位秒。默认3600s
      * @return
      */
-    public String uploadToken(String bucket, long expires) {
+    public String uploadToken(long expires) {
         long deadline = System.currentTimeMillis() / 1000 + expires;
+        // 这里仅保存了 过期时间信息
         StringMap map = new StringMap();
-        map.put("scope", bucket);
         map.put("deadline", deadline);
         // 1.过期时间 和 bucket 转 json 再 base64 编码 得到 encodeJson
         String json = Json.encode(map);
@@ -64,12 +63,11 @@ public class Auth {
 
         // 1。 生成 上传token
         Auth auth = Auth.create("yRdQE7hybEfPD5Kgt4fXCe", "wkZ2RvEnuom/Pa4RTQGmPdFVd6g7/CO");
-        String token = auth.uploadToken("berry", 3600);
+        String token = auth.uploadToken(3600);
         System.out.println(token);
 
-        // 2. 验证 token 并获取信息 json {bucket: String, deadline: Number }
-        String s = verifyThenGetData(token, "wkZ2RvEnuom/Pa4RTQGmPdFVd6g7/CO");
-        System.out.println(s);
+        // 2. 验证 token 并获取信息 json { deadline: Number }
+        verifyThenGetData(token, "wkZ2RvEnuom/Pa4RTQGmPdFVd6g7/CO");
 //        yRdQE7hybEfPD5Kgt4fXCe:osOs0CWkcnVvbZQBjPTgsu5E49c=:eyJzY29wZSI6ImJlcnJ5IiwiZGVhZGxpbmUiOjE1NjE4MDMyMDR9
     }
 
@@ -80,10 +78,10 @@ public class Auth {
      * @param accessKeySecret 私钥
      * @return bucket name
      */
-    public static String verifyThenGetData(String encodedData, String accessKeySecret) throws IllegalAccessException {
+    public static void verifyThenGetData(String encodedData, String accessKeySecret) throws IllegalAccessException {
         String[] dataArr = encodedData.split(":");
         if (dataArr.length != Constants.ENCODE_DATA_LENGTH) {
-            throw new IllegalArgumentException("非法token");
+            throw new IllegalArgumentException("非法口令");
         }
         String accessKeyId = dataArr[0];
         String encodedSign = dataArr[1];
@@ -102,7 +100,6 @@ public class Auth {
         if (deadDate.before(new Date())) {
             throw new IllegalAccessException("口令已过期");
         }
-        return object.getString("scope");
     }
 
 

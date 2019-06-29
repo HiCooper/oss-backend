@@ -49,7 +49,7 @@ public class BucketController {
     @ApiOperation("获取 Bucket 列表")
     public Result<List<BucketInfoVo>> list(@RequestParam(required = false) String name) {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
-        return ResultFactory.wrapper(bucketInfoDaoService.listBucket(currentUser.getId(), name));
+        return ResultFactory.wrapper(bucketService.listBucket(currentUser.getId(), name));
     }
 
     @PostMapping("new_create_bucket.json")

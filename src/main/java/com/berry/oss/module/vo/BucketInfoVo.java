@@ -24,7 +24,6 @@ public class BucketInfoVo {
      */
     private String acl;
 
-
     /**
      * 区域 代码
      */
