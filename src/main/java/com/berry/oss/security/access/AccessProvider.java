@@ -51,6 +51,9 @@ public class AccessProvider {
         }
         String accessKeyId = data[0];
         UserInfoDTO principal = accessKeyInfoDaoService.getUserInfoDTO(accessKeyId);
+        if (principal == null) {
+            return null;
+        }
 
         String bucket;
         try {
