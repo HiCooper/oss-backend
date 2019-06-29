@@ -60,17 +60,17 @@ public class Auth {
         return this.accessKeyId + ":" + encodedSign + ":" + encodeJson;
     }
 
-    public static void main(String[] args) throws IllegalAccessException {
-
-        // 1。 生成 token
-        Auth auth = Auth.create("yRdQE7hybEfPD5Kgt4fXCe", "wkZ2RvEnuom/Pa4RTQGmPdFVd6g7/CO");
-        String token = auth.accessToken(3600);
-        System.out.println(token);
-
-        // 2. 验证 token 并获取信息 json { deadline: Number }
-        verifyThenGetData(token, "wkZ2RvEnuom/Pa4RTQGmPdFVd6g7/CO");
-//        yRdQE7hybEfPD5Kgt4fXCe:osOs0CWkcnVvbZQBjPTgsu5E49c=:eyJzY29wZSI6ImJlcnJ5IiwiZGVhZGxpbmUiOjE1NjE4MDMyMDR9
-    }
+//    public static void main(String[] args) throws IllegalAccessException {
+//
+//        // 1。 生成 token
+//        Auth auth = Auth.create("yRdQE7hybEfPD5Kgt4fXCe", "wkZ2RvEnuom/Pa4RTQGmPdFVd6g7/CO");
+//        String token = auth.accessToken(3600);
+//        System.out.println(token);
+//
+//        // 2. 验证 token 并获取信息 json { deadline: Number }
+//        verifyThenGetData(token, "wkZ2RvEnuom/Pa4RTQGmPdFVd6g7/CO");
+////        yRdQE7hybEfPD5Kgt4fXCe:osOs0CWkcnVvbZQBjPTgsu5E49c=:eyJzY29wZSI6ImJlcnJ5IiwiZGVhZGxpbmUiOjE1NjE4MDMyMDR9
+//    }
 
     /**
      * 验证签名，返回 json 信息
