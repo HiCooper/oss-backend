@@ -220,6 +220,10 @@ public class ObjectServiceImpl implements IObjectService {
         }
 
         if (!objectInfo.getAcl().startsWith("PUBLIC") && !skipCheckAuth) {
+            if(StringUtils.isAnyBlank(expiresTime, ossAccessKeyId, signature)){
+                throw new XmlResponseException(new AccessDenied("illegal url"));
+            }
+
             // 非公开资源，需要验证身份及签名
             String url = "Expires=" + expiresTime + "&OSSAccessKeyId=" + URLEncoder.encode(ossAccessKeyId, "UTF-8");
 
@@ -450,7 +454,7 @@ public class ObjectServiceImpl implements IObjectService {
     private void handlerResponse(String objectName, HttpServletResponse response, WebRequest request, ObjectInfo objectInfo, Boolean download) throws IOException {
         if (download != null && download) {
             ObjectResource object = dataService.getObject(objectInfo.getFileId());
-            if (object == null) {
+            if (object == null || object.getInputStream() == null) {
                 throw new XmlResponseException(new NotFound());
             }
             response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);

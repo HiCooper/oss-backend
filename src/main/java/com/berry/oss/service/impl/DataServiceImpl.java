@@ -94,7 +94,7 @@ public class DataServiceImpl implements IDataService {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             try {
                 outputStream.write(bytes);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 logger.error("构造返回数据流失败");
                 return null;
             }

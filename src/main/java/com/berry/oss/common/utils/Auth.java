@@ -69,7 +69,6 @@ public class Auth {
 //
 //        // 2. 验证 token 并获取信息 json { deadline: Number }
 //        verifyThenGetData(token, "wkZ2RvEnuom/Pa4RTQGmPdFVd6g7/CO");
-////        yRdQE7hybEfPD5Kgt4fXCe:osOs0CWkcnVvbZQBjPTgsu5E49c=:eyJzY29wZSI6ImJlcnJ5IiwiZGVhZGxpbmUiOjE1NjE4MDMyMDR9
 //    }
 
     /**
