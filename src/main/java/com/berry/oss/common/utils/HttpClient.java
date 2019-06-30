@@ -5,8 +5,6 @@ import com.google.gson.GsonBuilder;
 import okhttp3.*;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 

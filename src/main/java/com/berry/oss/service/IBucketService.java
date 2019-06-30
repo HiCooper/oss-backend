@@ -17,8 +17,9 @@ public interface IBucketService {
 
     /**
      * 获取 bucket 列表
+     *
      * @param userId 用户id
-     * @param name 全模糊搜索名字
+     * @param name   全模糊搜索名字
      * @return list
      */
     List<BucketInfoVo> listBucket(Integer userId, String name);
@@ -50,6 +51,7 @@ public interface IBucketService {
 
     /**
      * 检查用户是否拥有该 bucket
+     *
      * @param userId 用户id
      * @param bucket bucket name
      * @return true or false

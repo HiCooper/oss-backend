@@ -21,7 +21,7 @@ import javax.annotation.Resource;
 public class AccessKeyInfoDaoServiceImpl extends ServiceImpl<AccessKeyInfoMapper, AccessKeyInfo> implements IAccessKeyInfoDaoService {
 
     @Resource
-    private  AccessKeyInfoMapper accessKeyInfoMapper;
+    private AccessKeyInfoMapper accessKeyInfoMapper;
 
     @Override
     public UserInfoDTO getUserInfoDTO(String accessKeyId) {

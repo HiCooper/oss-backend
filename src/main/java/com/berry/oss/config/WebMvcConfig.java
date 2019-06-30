@@ -60,6 +60,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     /**
      * 注册拦截器
+     *
      * @param registry
      */
     @Override

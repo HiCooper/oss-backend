@@ -220,7 +220,7 @@ public class ObjectServiceImpl implements IObjectService {
         }
 
         if (!objectInfo.getAcl().startsWith("PUBLIC") && !skipCheckAuth) {
-            if(StringUtils.isAnyBlank(expiresTime, ossAccessKeyId, signature)){
+            if (StringUtils.isAnyBlank(expiresTime, ossAccessKeyId, signature)) {
                 throw new XmlResponseException(new AccessDenied("illegal url"));
             }
 
