@@ -74,5 +74,8 @@ public class ResultFactory {
     public static Result wrapper(UploadException ex) {
         return new Result(ex);
     }
+    public static Result wrapper(IllegalAccessException ex) {
+        return new Result(ex);
+    }
 
 }

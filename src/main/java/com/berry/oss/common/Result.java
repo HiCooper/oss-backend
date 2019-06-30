@@ -58,6 +58,11 @@ public class Result<M> implements Serializable {
         this.msg = ex.getMessage();
     }
 
+    public Result(IllegalAccessException ex) {
+        this.code = "403";
+        this.msg = ex.getLocalizedMessage();
+    }
+
     public Result(M data, IMessageEnum msgDefined) {
         if (data != null) {
             this.data = data;

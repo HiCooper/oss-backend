@@ -4,37 +4,32 @@ import com.berry.oss.common.constant.Constants;
 import com.berry.oss.common.utils.StringUtils;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.filter.GenericFilterBean;
+import org.springframework.web.servlet.HandlerInterceptor;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * Created with IntelliJ IDEA.
  *
  * @author Berry_Cooper.
- * @date 2019-06-29 16:21
- * fileName：AccessFilter
+ * @date 2019-06-30 14:54
+ * fileName：AccessInterceptor
  * Use：
  */
-public class AccessFilter extends GenericFilterBean {
+public class AccessInterceptor implements HandlerInterceptor {
 
     private final AccessProvider accessProvider;
 
-    public AccessFilter(AccessProvider accessProvider) {
+    public AccessInterceptor(AccessProvider accessProvider) {
         this.accessProvider = accessProvider;
     }
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        HttpServletRequest httpServletRequest = (HttpServletRequest) request;
-        String requestUrl = httpServletRequest.getRequestURI();
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws IllegalAccessException {
+        String requestUrl = request.getRequestURI();
         if (!requestUrl.equals(Constants.HEALTH_CHECK_URL) && !requestUrl.equals(Constants.ERROR_STATE_URL)) {
-            String accessToken = ((HttpServletRequest) request).getHeader(Constants.ACCESS_TOKEN_KEY);
+            String accessToken = request.getHeader(Constants.ACCESS_TOKEN_KEY);
             if (StringUtils.isNotBlank(accessToken)) {
                 Authentication authentication = this.accessProvider.getAuthentication(accessToken);
                 if (authentication != null) {
@@ -42,6 +37,6 @@ public class AccessFilter extends GenericFilterBean {
                 }
             }
         }
-        chain.doFilter(request, response);
+        return true;
     }
 }

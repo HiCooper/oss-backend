@@ -32,6 +32,8 @@ public enum ResultCode implements IMessageEnum {
 
     UNAUTHORIZED("401", "Unauthorized"),
 
+    ILLEGAL_ACCESS_TOKEN("403", "ILLEGAL ACCESS TOKEN"),
+
     PAYMENT_REQUIRED("402", "Payment Required"),
 
     FORBIDDEN("403", "Forbidden"),

@@ -54,6 +54,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return new XmlResponse(ex.getXmlErrorInfo());
     }
 
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ExceptionHandler(value = IllegalAccessException.class)
+    public Result illegalAccessException(HttpServletRequest req, IllegalAccessException ex) {
+        logger.error("请求接口 [{}] 发生错误，错误信息：{}", req.getRequestURI(), ex.getLocalizedMessage());
+        return ResultFactory.wrapper(ex);
+    }
+
     /**
      * 未知异常处理
      *

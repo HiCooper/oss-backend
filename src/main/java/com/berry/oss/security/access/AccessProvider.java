@@ -1,6 +1,8 @@
 package com.berry.oss.security.access;
 
+import com.berry.oss.common.ResultCode;
 import com.berry.oss.common.constant.Constants;
+import com.berry.oss.common.exceptions.BaseException;
 import com.berry.oss.common.utils.Auth;
 import com.berry.oss.core.service.IAccessKeyInfoDaoService;
 import com.berry.oss.security.core.entity.Role;
@@ -32,9 +34,6 @@ import java.util.stream.Collectors;
 @Component
 public class AccessProvider {
 
-    private final Logger logger = LoggerFactory.getLogger(AccessProvider.class);
-
-
     private final IAccessKeyInfoDaoService accessKeyInfoDaoService;
 
     @Resource
@@ -44,24 +43,19 @@ public class AccessProvider {
         this.accessKeyInfoDaoService = accessKeyInfoDaoService;
     }
 
-    Authentication getAuthentication(String accessToken) {
+    Authentication getAuthentication(String accessToken) throws IllegalAccessException {
         String[] data = accessToken.split(":");
         if (data.length != Constants.ENCODE_DATA_LENGTH) {
-            return null;
+            throw new BaseException(ResultCode.ILLEGAL_ACCESS_TOKEN);
         }
         String accessKeyId = data[0];
         UserInfoDTO principal = accessKeyInfoDaoService.getUserInfoDTO(accessKeyId);
         if (principal == null) {
-            return null;
+            throw new BaseException(ResultCode.DATA_NOT_EXIST);
         }
 
         // 验证token有效性，请求无法获取错误信息
-        try {
-            Auth.verifyThenGetData(accessToken, principal.getAccessKeySecret());
-        } catch (IllegalAccessException e) {
-            logger.error(e.getLocalizedMessage());
-            return null;
-        }
+        Auth.verifyThenGetData(accessToken, principal.getAccessKeySecret());
 
         Set<Role> roleList = userDaoService.findRoleListByUserId(principal.getId());
         List<GrantedAuthority> grantedAuthorities = roleList.stream()
