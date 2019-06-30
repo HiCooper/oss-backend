@@ -101,9 +101,3 @@ service -- 业务服务层
 * 2.添加用户 A 到 系统过期用户队列
 
 * 3.对每个请求， 根据用户名，检查 用户名是否在 SystemExpire 中， 如果在，返回 token 过期，要求重新登陆，用户重新登陆后，移除队列
-
-
-
-[维基百科]: https://en.wikipedia.org/wiki/Object_storage
-
-[]: https://en.wikipedia.org/wiki/Object_storage
