@@ -20,10 +20,7 @@ import com.berry.oss.module.dto.ObjectResource;
 import com.berry.oss.module.vo.GenerateUrlWithSignedVo;
 import com.berry.oss.security.SecurityUtils;
 import com.berry.oss.security.dto.UserInfoDTO;
-import com.berry.oss.service.IBucketService;
-import com.berry.oss.service.IDataService;
-import com.berry.oss.service.IObjectHashService;
-import com.berry.oss.service.IObjectService;
+import com.berry.oss.service.*;
 import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
 import org.mybatis.spring.SqlSessionTemplate;
@@ -73,6 +70,7 @@ public class ObjectServiceImpl implements IObjectService {
     private final IDataService dataService;
     private final IBucketInfoDaoService bucketInfoDaoService;
     private final GlobalProperties globalProperties;
+    private final IAuthService authService;
 
     @Value("${server.port}")
     private String port;
@@ -83,19 +81,21 @@ public class ObjectServiceImpl implements IObjectService {
                       IBucketService bucketService,
                       IDataService dataService,
                       IBucketInfoDaoService bucketInfoDaoService,
-                      GlobalProperties globalProperties) {
+                      GlobalProperties globalProperties,
+                      IAuthService authService) {
         this.objectInfoDaoService = objectInfoDaoService;
         this.objectHashService = objectHashService;
         this.bucketService = bucketService;
         this.dataService = dataService;
         this.bucketInfoDaoService = bucketInfoDaoService;
         this.globalProperties = globalProperties;
+        this.authService = authService;
     }
 
     @Override
     public List<ObjectInfo> list(String bucket, String path, String search) {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
-        BucketInfo bucketInfo = bucketService.checkBucketExist(bucket);
+        BucketInfo bucketInfo = bucketService.checkUserHaveBucket(bucket);
         QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_id", currentUser.getId());
         queryWrapper.eq("bucket_id", bucketInfo.getId());
@@ -118,7 +118,10 @@ public class ObjectServiceImpl implements IObjectService {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
 
         // 检查bucket
-        BucketInfo bucketInfo = bucketInfoDaoService.getOne(new QueryWrapper<BucketInfo>().eq("name", bucket));
+        BucketInfo bucketInfo = bucketInfoDaoService.getOne(new QueryWrapper<BucketInfo>()
+                .eq("name", bucket)
+                .eq("user_id", currentUser.getId())
+        );
         if (bucketInfo == null) {
             throw new UploadException("404", "bucket not exist");
         }
@@ -176,7 +179,7 @@ public class ObjectServiceImpl implements IObjectService {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
 
         // 检查bucket
-        BucketInfo bucketInfo = bucketService.checkBucketExist(bucket);
+        BucketInfo bucketInfo = bucketService.checkUserHaveBucket(bucket);
 
         String[] objectArr = objectName.split("/");
         createFolderIgnore(currentUser.getId(), bucketInfo.getId(), objectArr);
@@ -184,6 +187,15 @@ public class ObjectServiceImpl implements IObjectService {
 
     @Override
     public void getObject(String bucket, String expiresTime, String ossAccessKeyId, String signature, Boolean download, HttpServletResponse response, HttpServletRequest servletRequest, WebRequest request) throws IOException {
+
+        boolean skipCheckAuth = false;
+        UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser != null && currentUser.getId() != null) {
+            // 用户请求头中带有密钥口令，无需url验证
+            // 1. 检查当前用户 是否拥有对 所请求bucket的访问权限，通过后 可获取对该bucket的完全权限,跳过 url 校验
+            skipCheckAuth = authService.checkUserHaveAccessToBucket(currentUser.getId(), bucket);
+        }
+
         String objectPath = extractPathFromPattern(servletRequest);
         // 检查bucket
         BucketInfo bucketInfo = bucketInfoDaoService.getOne(new QueryWrapper<BucketInfo>().eq("name", bucket));
@@ -207,7 +219,7 @@ public class ObjectServiceImpl implements IObjectService {
             throw new XmlResponseException(new AccessDenied());
         }
 
-        if (!objectInfo.getAcl().startsWith("PUBLIC")) {
+        if (!objectInfo.getAcl().startsWith("PUBLIC") && !skipCheckAuth) {
             // 非公开资源，需要验证身份及签名
             String url = "Expires=" + expiresTime + "&OSSAccessKeyId=" + URLEncoder.encode(ossAccessKeyId, "UTF-8");
 
@@ -229,7 +241,6 @@ public class ObjectServiceImpl implements IObjectService {
             // 3. 身份验证,这里采用私钥加密，公钥解密，而没有采用 私钥签名，后续可能对账户信息进行控制，故而采用私钥加密 用户id，备解密时需要
             try {
                 String userIdEncodePart = ossAccessKeyId.substring(4);
-                System.out.println(userIdEncodePart);
                 RSAUtil.decryptByPublicKey(userIdEncodePart);
             } catch (Exception e) {
                 throw new XmlResponseException(new AccessDenied("identity check fail."));
@@ -242,7 +253,7 @@ public class ObjectServiceImpl implements IObjectService {
     @Override
     public Map<String, Object> getObjectHead(String bucket, String path, String objectName) {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
-        BucketInfo bucketInfo = bucketService.checkBucketExist(bucket);
+        BucketInfo bucketInfo = bucketService.checkUserHaveBucket(bucket);
         String eTag = DigestUtils.md5DigestAsHex(objectName.getBytes());
         QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<ObjectInfo>()
                 .eq("bucket_id", bucketInfo.getId())
@@ -266,6 +277,11 @@ public class ObjectServiceImpl implements IObjectService {
     @Override
     public GenerateUrlWithSignedVo generateUrlWithSigned(String bucket, String objectPath, Integer timeout) throws Exception {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
+
+        if (!bucketService.checkUserHaveBucket(currentUser.getId(), bucket)) {
+            throw new BaseException(ResultCode.DATA_NOT_EXIST);
+        }
+
         // 将用户id 计算如签名，作为临时 ossAccessKeyId,解密时获取用户id
         String ossAccessKeyId = "TMP." + RSAUtil.encryptByPrivateKey(currentUser.getId().toString());
 
@@ -298,7 +314,7 @@ public class ObjectServiceImpl implements IObjectService {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
 
         // 检查bucket
-        BucketInfo bucketInfo = bucketService.checkBucketExist(bucket);
+        BucketInfo bucketInfo = bucketService.checkUserHaveBucket(bucket);
 
         String[] objectArray = objects.split(",");
 
@@ -337,7 +353,7 @@ public class ObjectServiceImpl implements IObjectService {
     @Override
     public Boolean updateObjectAcl(String bucket, String objectPath, String objectName, String acl) {
         // 检查bucket
-        BucketInfo bucketInfo = bucketService.checkBucketExist(bucket);
+        BucketInfo bucketInfo = bucketService.checkUserHaveBucket(bucket);
 
         // 检查该对象是否存在
         ObjectInfo objectInfo = objectInfoDaoService.getOne(new QueryWrapper<ObjectInfo>()

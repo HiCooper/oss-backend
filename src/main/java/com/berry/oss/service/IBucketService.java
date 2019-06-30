@@ -33,12 +33,12 @@ public interface IBucketService {
     void create(String name, String region, String acl);
 
     /**
-     * 检查 bucket name 是否存在
+     * 检查 当前用户 bucket 是否存在
      *
      * @param bucketName bucket name
      * @return info
      */
-    BucketInfo checkBucketExist(String bucketName);
+    BucketInfo checkUserHaveBucket(String bucketName);
 
     /**
      * 检查该 bucket 不存在
@@ -47,4 +47,12 @@ public interface IBucketService {
      * @return boolean
      */
     Boolean checkBucketNotExist(String bucketName);
+
+    /**
+     * 检查用户是否拥有该 bucket
+     * @param userId 用户id
+     * @param bucket bucket name
+     * @return true or false
+     */
+    Boolean checkUserHaveBucket(Integer userId, String bucket);
 }

@@ -85,14 +85,14 @@ public class BucketController {
     @ApiOperation("删除 Bucket")
     public Result delete(@Validated @RequestBody DeleteBucketMo mo) {
         // 检查该 Bucket
-        BucketInfo bucketInfo = bucketService.checkBucketExist(mo.getBucket());
+        BucketInfo bucketInfo = bucketService.checkUserHaveBucket(mo.getBucket());
         return ResultFactory.wrapper(bucketInfoDaoService.removeById(bucketInfo.getId()));
     }
 
     @PostMapping("set_acl.json")
     @ApiOperation("更新 Bucket 读写权限")
     public Result updateBucketAcl(@Validated @RequestBody UpdateBucketAclMo mo) {
-        BucketInfo bucketInfo = bucketService.checkBucketExist(mo.getBucket());
+        BucketInfo bucketInfo = bucketService.checkUserHaveBucket(mo.getBucket());
         bucketInfo.setAcl(mo.getAcl());
         return ResultFactory.wrapper(bucketInfoDaoService.updateById(bucketInfo));
     }
@@ -100,7 +100,7 @@ public class BucketController {
     @GetMapping("get_referer.json")
     @ApiOperation("获取 Bucket 防盗链设置")
     public Result getReferer(@RequestParam("bucket") String bucket) {
-        BucketInfo bucketInfo = bucketService.checkBucketExist(bucket);
+        BucketInfo bucketInfo = bucketService.checkUserHaveBucket(bucket);
         // 获取防盗链设置
         //allowEmpty: true //是否允许空 referer
         //list: [] //白名单

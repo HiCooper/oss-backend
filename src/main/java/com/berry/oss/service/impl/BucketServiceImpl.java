@@ -11,7 +11,6 @@ import com.berry.oss.module.vo.BucketInfoVo;
 import com.berry.oss.security.SecurityUtils;
 import com.berry.oss.security.dto.UserInfoDTO;
 import com.berry.oss.service.IBucketService;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -65,8 +64,12 @@ public class BucketServiceImpl implements IBucketService {
     }
 
     @Override
-    public BucketInfo checkBucketExist(String bucketName) {
-        BucketInfo bucketInfo = bucketInfoDaoService.getOne(new QueryWrapper<BucketInfo>().eq("name", bucketName));
+    public BucketInfo checkUserHaveBucket(String bucketName) {
+        UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
+        BucketInfo bucketInfo = bucketInfoDaoService.getOne(new QueryWrapper<BucketInfo>()
+                .eq("name", bucketName)
+                .eq("user_id", currentUser.getId())
+        );
         if (null == bucketInfo) {
             throw new BaseException(ResultCode.BUCKET_NOT_EXIST);
         }
@@ -77,5 +80,12 @@ public class BucketServiceImpl implements IBucketService {
     public Boolean checkBucketNotExist(String bucketName) {
         int count = bucketInfoDaoService.count(new QueryWrapper<BucketInfo>().eq("name", bucketName));
         return 0 == count;
+    }
+
+    @Override
+    public Boolean checkUserHaveBucket(Integer userId, String bucket) {
+        int count = bucketInfoDaoService.count(new QueryWrapper<BucketInfo>().eq("name", bucket)
+                .eq("user_id", userId));
+        return 1 == count;
     }
 }
