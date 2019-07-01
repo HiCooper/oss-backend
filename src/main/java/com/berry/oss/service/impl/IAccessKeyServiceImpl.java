@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.berry.oss.common.ResultCode;
 import com.berry.oss.common.constant.Constants;
 import com.berry.oss.common.exceptions.BaseException;
+import com.berry.oss.common.utils.StringUtils;
 import com.berry.oss.core.entity.AccessKeyInfo;
 import com.berry.oss.core.service.IAccessKeyInfoDaoService;
 import com.berry.oss.module.vo.CreateAccessKeyVo;
@@ -64,10 +65,8 @@ public class IAccessKeyServiceImpl implements IAccessKeyService {
         }
 
         // 密码校验通过
-        String salt = BCrypt.gensalt();
-        String accessKeyId = salt.substring(7);
-        String hash = BCrypt.hashpw(user.getUsername(), salt);
-        String accessKeySecret = hash.substring(29);
+        String accessKeyId = StringUtils.getRandomStr(22);
+        String accessKeySecret = StringUtils.getRandomStr(31);
 
         AccessKeyInfo accessKeyInfo = new AccessKeyInfo()
                 .setAccessKeyId(accessKeyId)

@@ -93,7 +93,7 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
      * @return 指定长度位字符串
      */
     public static String getRandomStr(int length) {
-        String base = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        String base = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789./";
         Random random = new Random();
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < length; i++) {
@@ -101,6 +101,12 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
             sb.append(base.charAt(number));
         }
         return sb.toString();
+    }
+
+    public static void main(String[] args) {
+        for (int i = 0; i < 20; i++) {
+            System.out.println(getRandomStr(22));
+        }
     }
 
     /**
