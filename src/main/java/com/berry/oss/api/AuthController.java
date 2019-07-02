@@ -52,19 +52,19 @@ public class AuthController {
 
     @PostMapping("/login")
     @ApiOperation("登录")
-    public ResponseEntity<LoginSuccessVo> authorize(@Valid @RequestBody LoginVM loginVM, HttpServletResponse response) {
+    public ResponseEntity<LoginSuccessVo> authorize(@Valid @RequestBody LoginVM loginVm, HttpServletResponse response) {
         // 用户是否存在
-        User user = userDaoService.getOne(new QueryWrapper<User>().eq("username", loginVM.getUsername()));
+        User user = userDaoService.getOne(new QueryWrapper<User>().eq("username", loginVm.getUsername()));
         if (user == null) {
             throw new BaseException(ResultCode.ACCOUNT_NOT_EXIST);
         }
         // 密码是否正确
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(loginVM.getUsername(), loginVM.getPassword());
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(loginVm.getUsername(), loginVm.getPassword());
 
         try {
             Authentication authentication = this.authenticationManager.authenticate(authenticationToken);
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            boolean rememberMe = (loginVM.getRememberMe() == null) ? false : loginVM.getRememberMe();
+            boolean rememberMe = (loginVm.getRememberMe() == null) ? false : loginVm.getRememberMe();
             String jwt = this.tokenProvider.createAndSignToken(authentication, user.getId(), rememberMe);
             HttpHeaders httpHeaders = new HttpHeaders();
             httpHeaders.add(JwtFilter.AUTHORIZATION_HEADER, jwt);
@@ -76,7 +76,7 @@ public class AuthController {
                 expires = TokenProvider.TOKEN_VALIDITY_IN_MILLISECONDS_FOR_REMEMBER_ME / 1000;
             }
             httpHeaders.add("expires", String.valueOf(expires));
-            return new ResponseEntity<>(new LoginSuccessVo(jwt, expires, new UserInfoDTO(user.getId(), user.getUsername())), httpHeaders, HttpStatus.OK);
+            return new ResponseEntity<>(new LoginSuccessVo(jwt, expires, new UserInfo(user.getId(), user.getUsername())), httpHeaders, HttpStatus.OK);
         } catch (AuthenticationException e) {
             if (e instanceof DisabledException) {
                 throw new BaseException(ResultCode.ACCOUNT_DISABLE);
@@ -106,12 +106,24 @@ public class AuthController {
 
         private long expires;
 
-        private UserInfoDTO userInfo;
+        private UserInfo userInfo;
 
-        LoginSuccessVo(String token, long expires, UserInfoDTO userInfo) {
+        LoginSuccessVo(String token, long expires, UserInfo userInfo) {
             this.token = token;
             this.expires = expires;
             this.userInfo = userInfo;
+        }
+
+    }
+
+    @Data
+    private static class UserInfo{
+        private Integer id;
+        private String username;
+
+        UserInfo(Integer id, String username) {
+            this.id = id;
+            this.username = username;
         }
     }
 }
