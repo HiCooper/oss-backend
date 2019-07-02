@@ -2,7 +2,8 @@ package com.berry.oss.config;
 
 import com.berry.oss.security.AuthoritiesConstants;
 import com.berry.oss.security.FilterConfigurer;
-import com.berry.oss.security.jwt.TokenProvider;
+import com.berry.oss.security.access.AccessProvider;
+import com.berry.oss.security.filter.TokenProvider;
 import org.springframework.beans.factory.BeanInitializationException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,9 +43,12 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     private final TokenProvider tokenProvider;
 
+    private AccessProvider accessProvider;
 
-    public SecurityConfiguration(TokenProvider tokenProvider) {
+
+    public SecurityConfiguration(TokenProvider tokenProvider, AccessProvider accessProvider) {
         this.tokenProvider = tokenProvider;
+        this.accessProvider = accessProvider;
     }
 
     /**
@@ -136,6 +140,6 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     }
 
     private FilterConfigurer securityConfigurerAdapter() {
-        return new FilterConfigurer(this.tokenProvider);
+        return new FilterConfigurer(this.tokenProvider, this.accessProvider);
     }
 }

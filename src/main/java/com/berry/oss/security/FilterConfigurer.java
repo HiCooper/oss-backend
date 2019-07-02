@@ -1,7 +1,8 @@
 package com.berry.oss.security;
 
-import com.berry.oss.security.jwt.JwtFilter;
-import com.berry.oss.security.jwt.TokenProvider;
+import com.berry.oss.security.access.AccessProvider;
+import com.berry.oss.security.filter.JwtFilter;
+import com.berry.oss.security.filter.TokenProvider;
 import org.springframework.security.config.annotation.SecurityConfigurerAdapter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.DefaultSecurityFilterChain;
@@ -14,13 +15,16 @@ public class FilterConfigurer extends SecurityConfigurerAdapter<DefaultSecurityF
 
     private final TokenProvider tokenProvider;
 
-    public FilterConfigurer(TokenProvider tokenProvider) {
+    private AccessProvider accessProvider;
+
+    public FilterConfigurer(TokenProvider tokenProvider, AccessProvider accessProvider) {
         this.tokenProvider = tokenProvider;
+        this.accessProvider = accessProvider;
     }
 
     @Override
     public void configure(HttpSecurity http) {
-        JwtFilter customFilter = new JwtFilter(tokenProvider);
+        JwtFilter customFilter = new JwtFilter(tokenProvider, accessProvider);
         http.addFilterBefore(customFilter, UsernamePasswordAuthenticationFilter.class);
     }
 }

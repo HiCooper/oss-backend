@@ -1,7 +1,8 @@
-package com.berry.oss.security.jwt;
+package com.berry.oss.security.filter;
 
 import com.berry.oss.common.constant.Constants;
 import com.berry.oss.common.utils.StringUtils;
+import com.berry.oss.security.access.AccessProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
@@ -29,8 +30,11 @@ public class JwtFilter extends GenericFilterBean {
 
     private TokenProvider tokenProvider;
 
-    public JwtFilter(TokenProvider tokenProvider) {
+    private AccessProvider accessProvider;
+
+    public JwtFilter(TokenProvider tokenProvider, AccessProvider accessProvider) {
         this.tokenProvider = tokenProvider;
+        this.accessProvider = accessProvider;
     }
 
     @Override
@@ -44,6 +48,25 @@ public class JwtFilter extends GenericFilterBean {
                 // 验证jwt 设置授权信息到该线程上下文
                 Authentication authentication = this.tokenProvider.getAuthentication(jwt);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+            } else {
+                String ossAuth = httpServletRequest.getHeader(Constants.OSS_SDK_AUTH_HEAD_NAME);
+                if (StringUtils.isNotBlank(ossAuth)) {
+                    // 只验证 token 格式 尝试设置用户信息
+                    Authentication authentication = this.accessProvider.getSdkAuthentication(ossAuth);
+                    if (authentication != null) {
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                    }
+                } else {
+                    // 上传 token 拦截器
+                    String accessToken = httpServletRequest.getHeader(Constants.ACCESS_TOKEN_KEY);
+                    if (StringUtils.isNotBlank(accessToken)) {
+                        // 只验证 token 格式 尝试设置用户信息
+                        Authentication authentication = this.accessProvider.getUploadAuthentication(accessToken);
+                        if (authentication != null) {
+                            SecurityContextHolder.getContext().setAuthentication(authentication);
+                        }
+                    }
+                }
             }
         }
         filterChain.doFilter(servletRequest, servletResponse);

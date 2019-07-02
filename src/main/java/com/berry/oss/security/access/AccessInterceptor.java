@@ -2,8 +2,6 @@ package com.berry.oss.security.access;
 
 import com.berry.oss.common.constant.Constants;
 import com.berry.oss.common.utils.StringUtils;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
@@ -32,18 +30,14 @@ public class AccessInterceptor implements HandlerInterceptor {
             // sdk 通用请求拦截器,sdk token 验证后将不验证 upload token
             String ossAuth = request.getHeader(Constants.OSS_SDK_AUTH_HEAD_NAME);
             if (StringUtils.isNotBlank(ossAuth)) {
-                Authentication authentication = this.accessProvider.getSdkAuthentication(ossAuth, request);
-                if (authentication != null) {
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                }
+                // 验证 token 合法性
+                this.accessProvider.validateSdkAuthentication(request);
             } else {
                 // 上传 token 拦截器
                 String accessToken = request.getHeader(Constants.ACCESS_TOKEN_KEY);
                 if (StringUtils.isNotBlank(accessToken)) {
-                    Authentication authentication = this.accessProvider.getUploadAuthentication(accessToken, requestUrl);
-                    if (authentication != null) {
-                        SecurityContextHolder.getContext().setAuthentication(authentication);
-                    }
+                    // 验证 token 合法性
+                    this.accessProvider.validateUploadAuthentication(requestUrl);
                 }
             }
         }

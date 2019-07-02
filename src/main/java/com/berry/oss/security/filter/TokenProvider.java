@@ -1,4 +1,4 @@
-package com.berry.oss.security.jwt;
+package com.berry.oss.security.filter;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;

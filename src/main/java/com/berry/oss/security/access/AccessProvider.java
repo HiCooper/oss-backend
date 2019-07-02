@@ -1,10 +1,10 @@
 package com.berry.oss.security.access;
 
-import com.berry.oss.common.ResultCode;
 import com.berry.oss.common.constant.Constants;
 import com.berry.oss.common.exceptions.BaseException;
 import com.berry.oss.common.utils.Auth;
 import com.berry.oss.core.service.IAccessKeyInfoDaoService;
+import com.berry.oss.security.SecurityUtils;
 import com.berry.oss.security.core.entity.Role;
 import com.berry.oss.security.core.service.IUserDaoService;
 import com.berry.oss.security.dto.UserInfoDTO;
@@ -45,55 +45,51 @@ public class AccessProvider {
         this.accessKeyInfoDaoService = accessKeyInfoDaoService;
     }
 
-    Authentication getUploadAuthentication(String accessToken, String requestUrl) throws IllegalAccessException {
+    public Authentication getUploadAuthentication(String accessToken) {
         String[] data = accessToken.split(":");
         if (data.length != Constants.ENCODE_DATA_LENGTH) {
-            throw new BaseException(ResultCode.ILLEGAL_ACCESS_TOKEN);
+            logger.error("非法token，负载信息长度 3,实际 为:{}", data.length);
         }
-        String accessKeyId = data[0];
-        UserInfoDTO principal = accessKeyInfoDaoService.getUserInfoDTO(accessKeyId);
-        if (principal == null) {
-            throw new BaseException(ResultCode.DATA_NOT_EXIST);
-        }
-
-        // 验证token有效性，请求无法获取错误信息
-        Auth.verifyUploadToken(data, principal.getAccessKeySecret(), requestUrl);
-
-        Set<Role> roleList = userDaoService.findRoleListByUserId(principal.getId());
-        List<GrantedAuthority> grantedAuthorities = roleList.stream()
-                .map(role -> new SimpleGrantedAuthority(role.getName()))
-                .collect(Collectors.toList());
-        return new UsernamePasswordAuthenticationToken(principal, accessToken, grantedAuthorities);
+        return getAuthentication(accessToken, data[0]);
     }
 
-    Authentication getSdkAuthentication(String ossAuth, HttpServletRequest request) throws IllegalAccessException {
+    public Authentication getSdkAuthentication(String ossAuth) {
         if (!ossAuth.startsWith(Constants.OSS_SDK_AUTH_PREFIX)) {
-            throw new BaseException(ResultCode.ILLEGAL_ACCESS_TOKEN);
+            logger.error("sdk 口令前缀必须为：OSS-， token:{}", ossAuth);
         }
         String dataStr = ossAuth.substring(4);
-
         String[] data = dataStr.split(":");
         if (data.length != Constants.ENCODE_SDK_DATA_LENGTH) {
-            throw new BaseException(ResultCode.ILLEGAL_ACCESS_TOKEN);
+            logger.error("非法token，负载信息长度 2,实际 为:{}", data.length);
         }
-        String accessKeyId = data[0];
-        UserInfoDTO principal = accessKeyInfoDaoService.getUserInfoDTO(accessKeyId);
-        if (principal == null) {
-            throw new BaseException(ResultCode.DATA_NOT_EXIST);
-        }
+        return getAuthentication(ossAuth, data[0]);
+    }
 
+    void validateUploadAuthentication(String requestUrl) throws IllegalAccessException {
+        UserInfoDTO userInfoDTO = SecurityUtils.getCurrentUser();
+        String credentials = SecurityUtils.getCurrentCredentials();
+        // 验证token有效性，请求无法获取错误信息
+        Auth.verifyUploadToken(credentials.split(":"), userInfoDTO.getAccessKeySecret(), requestUrl);
+    }
+
+    void validateSdkAuthentication(HttpServletRequest request) throws IllegalAccessException {
+        UserInfoDTO userInfoDTO = SecurityUtils.getCurrentUser();
+        String credentials = SecurityUtils.getCurrentCredentials();
         byte[] body;
         try {
             body = getRequestBody(request);
         } catch (IOException e) {
             throw new BaseException("400", "读取请求体异常");
         }
-        String contentType =request.getContentType();
-        System.out.println(contentType);
-
         // 校验 token 签名
-        Auth.validRequest(ossAuth, request.getRequestURI(), body, request.getContentType(), accessKeyId, principal.getAccessKeySecret());
+        Auth.validRequest(credentials, request.getRequestURI(), body, request.getContentType(), userInfoDTO.getAccessKeyId(), userInfoDTO.getAccessKeySecret());
+    }
 
+    private Authentication getAuthentication(String ossAuth, String accessKeyId) {
+        UserInfoDTO principal = accessKeyInfoDaoService.getUserInfoDTO(accessKeyId);
+        if (principal == null) {
+            logger.error("find user by accessKeyId fail, accessKeyId={} ", accessKeyId);
+        }
         Set<Role> roleList = userDaoService.findRoleListByUserId(principal.getId());
         List<GrantedAuthority> grantedAuthorities = roleList.stream()
                 .map(role -> new SimpleGrantedAuthority(role.getName()))
@@ -103,7 +99,7 @@ public class AccessProvider {
 
     private static byte[] getRequestBody(HttpServletRequest request) throws IOException {
         int length = request.getContentLength();
-        if (length == -1){
+        if (length == -1) {
             return null;
         }
         ServletInputStream inputStream = request.getInputStream();
