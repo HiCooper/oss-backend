@@ -6,8 +6,6 @@ import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
 import com.berry.oss.security.access.AccessInterceptor;
 import com.berry.oss.security.access.AccessProvider;
 import org.apache.http.Consts;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -25,7 +23,6 @@ import java.util.List;
  */
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
-    private static final Logger logger = LoggerFactory.getLogger(WebMvcConfig.class);
 
     private final AccessProvider accessProvider;
 
@@ -66,7 +63,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new AccessInterceptor(accessProvider))
-                .addPathPatterns("/**")
-                .excludePathPatterns("/index.html", "/", "/user/login");
+                .addPathPatterns("/ajax/**")
+                .excludePathPatterns("/index.html", "/", "/auth/login", "/swagger-ui.html");
     }
 }
