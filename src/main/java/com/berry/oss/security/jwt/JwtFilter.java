@@ -15,8 +15,6 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 请求过滤器，如果请求头信息包含 'authorization' 验证token通过后 添加 安全凭证
@@ -29,22 +27,6 @@ public class JwtFilter extends GenericFilterBean {
 
     public static final String AUTHORIZATION_HEADER = "authorization";
 
-    private static final List<String> WRITE_LIST = new ArrayList<>();
-
-    // 过滤器白名单
-    static {
-        WRITE_LIST.add("/swagger.+");
-        WRITE_LIST.add("/csrf");
-        WRITE_LIST.add("/v2/api-docs");
-        WRITE_LIST.add(Constants.HEALTH_CHECK_URL);
-        WRITE_LIST.add(Constants.ERROR_STATE_URL);
-    }
-
-    public static void main(String[] args) {
-        System.out.println("/swagger-resources/configuration/ui".matches("/swagger.+"));
-    }
-
-
     private TokenProvider tokenProvider;
 
     public JwtFilter(TokenProvider tokenProvider) {
@@ -56,7 +38,7 @@ public class JwtFilter extends GenericFilterBean {
             throws IOException, ServletException {
         HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
         String requestUrl = httpServletRequest.getRequestURI();
-        if (WRITE_LIST.stream().noneMatch(requestUrl::matches)) {
+        if (Constants.WRITE_LIST.stream().noneMatch(requestUrl::matches)) {
             String jwt = resolveToken(httpServletRequest);
             if (StringUtils.isNotBlank(jwt) && this.tokenProvider.validateToken(jwt)) {
                 // 验证jwt 设置授权信息到该线程上下文

@@ -1,6 +1,8 @@
 package com.berry.oss.common.constant;
 
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -68,6 +70,17 @@ public final class Constants {
     public static final String FORM_MIME = "application/x-www-form-urlencoded";
 
     public static final String DEFAULT_MIME = "application/octet-stream";
+
+    public static final List<String> WRITE_LIST = new ArrayList<>();
+
+    // 过滤器，拦截器白名单
+    static {
+        WRITE_LIST.add("/swagger.+");
+        WRITE_LIST.add("/csrf");
+        WRITE_LIST.add("/v2/api-docs");
+        WRITE_LIST.add(Constants.HEALTH_CHECK_URL);
+        WRITE_LIST.add(Constants.ERROR_STATE_URL);
+    }
 
 
     public static final String LOGIN_REGEX = "^[_.@A-Za-z0-9-]*$";
