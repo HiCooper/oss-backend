@@ -117,8 +117,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .and()
                 .authorizeRequests()
                 .antMatchers("/auth/login").permitAll()
-                // 放开了所有api
+                // 放开 object get api
                 .antMatchers("/ajax/bucket/file/**").permitAll()
+
                 .antMatchers("/ajax/register").permitAll()
                 .antMatchers("/ajax/activate").permitAll()
                 .antMatchers("/ajax/account/password/init").permitAll()

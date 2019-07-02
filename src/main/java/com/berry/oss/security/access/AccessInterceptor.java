@@ -29,11 +29,21 @@ public class AccessInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws IllegalAccessException {
         String requestUrl = request.getRequestURI();
         if (!requestUrl.equals(Constants.HEALTH_CHECK_URL) && !requestUrl.equals(Constants.ERROR_STATE_URL)) {
-            String accessToken = request.getHeader(Constants.ACCESS_TOKEN_KEY);
-            if (StringUtils.isNotBlank(accessToken)) {
-                Authentication authentication = this.accessProvider.getAuthentication(accessToken, requestUrl);
+            // sdk 通用请求拦截器,sdk token 验证后将不验证 upload token
+            String ossAuth = request.getHeader(Constants.OSS_SDK_AUTH_HEAD_NAME);
+            if (StringUtils.isNotBlank(ossAuth)) {
+                Authentication authentication = this.accessProvider.getSdkAuthentication(ossAuth, request);
                 if (authentication != null) {
                     SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
+            } else {
+                // 上传 token 拦截器
+                String accessToken = request.getHeader(Constants.ACCESS_TOKEN_KEY);
+                if (StringUtils.isNotBlank(accessToken)) {
+                    Authentication authentication = this.accessProvider.getUploadAuthentication(accessToken, requestUrl);
+                    if (authentication != null) {
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                    }
                 }
             }
         }

@@ -60,7 +60,7 @@ public class JwtFilter extends GenericFilterBean {
         if (StringUtils.isNotBlank(bearerToken)) {
             return bearerToken;
         } else {
-            Cookie cookie = getCookie(request, AUTHORIZATION_HEADER);
+            Cookie cookie = getCookie(request);
             if (cookie != null) {
                 // Validate that the cookie is used at the correct place.
                 String path = StringUtils.trimToNull(cookie.getPath());
@@ -82,15 +82,14 @@ public class JwtFilter extends GenericFilterBean {
     /**
      * 获取cookie
      *
-     * @param request
-     * @param cookieName
+     * @param request request
      * @return
      */
-    private static Cookie getCookie(HttpServletRequest request, String cookieName) {
+    private static Cookie getCookie(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (javax.servlet.http.Cookie cookie : cookies) {
-                if (cookie.getName().equals(cookieName)) {
+                if (cookie.getName().equals(AUTHORIZATION_HEADER)) {
                     return cookie;
                 }
             }

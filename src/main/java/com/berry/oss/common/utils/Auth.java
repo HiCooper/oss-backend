@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import java.net.URI;
 import java.security.GeneralSecurityException;
 import java.util.Date;
 
@@ -25,9 +26,9 @@ public class Auth {
      */
     private static final String ENCODE_JSON_REQUEST_IP_KEY = "requestIp";
     /**
-     * 加密json 中 授权目标方法 key
+     * 授权token 可访问的唯一 地址
      */
-    private static final String ENCODE_JSON_TARGET_URL_KEY = "targetUrl";
+    private static final String UPLOAD_URL = "/ajax/bucket/file/create";
     /**
      * 加密json 中 token过期时间 key
      */
@@ -44,17 +45,12 @@ public class Auth {
     }
 
     /**
-     * 验证签名，返回 json 信息
+     * 验证 upload 请求token 签名
      *
-     * @param encodedData     待解码 token
+     * @param dataArr     待解码 token 字符串数组
      * @param accessKeySecret 私钥
-     * @return bucket name
      */
-    public static void verifyThenGetData(String encodedData, String accessKeySecret, String requestUrl) throws IllegalAccessException {
-        String[] dataArr = encodedData.split(":");
-        if (dataArr.length != Constants.ENCODE_DATA_LENGTH) {
-            throw new IllegalArgumentException("非法口令");
-        }
+    public static void verifyUploadToken(String[] dataArr, String accessKeySecret, String requestUrl) throws IllegalAccessException {
         String accessKeyId = dataArr[0];
         String encodedSign = dataArr[1];
         String encodeJson = dataArr[2];
@@ -72,11 +68,50 @@ public class Auth {
         if (deadDate.before(new Date())) {
             throw new IllegalAccessException("口令已过期");
         }
-        // 验证 目标访问url
-        if (!requestUrl.equals(object.getString(ENCODE_JSON_TARGET_URL_KEY))) {
+        // 验证 目标访问url 必须是 'UPLOAD_URL'
+        if (!requestUrl.equals(UPLOAD_URL)) {
             throw new IllegalAccessException("非授权访问url");
         }
         logger.info("来源IP：{}，成功通过AccessKeyId:{},访问URL:{}", object.getString(ENCODE_JSON_REQUEST_IP_KEY), accessKeyId, requestUrl);
+    }
+
+    /**
+     * 校验通用请求 token 签名
+     *
+     * @param originAuthorization 原始 token
+     * @param urlString           请求url
+     * @param body                请求体
+     * @param contentType         请求体类型
+     * @param accessKeyId         accessKeyId
+     * @param accessKeySecret     accessKeySecret
+     * @throws IllegalAccessException 签名校验失败
+     */
+    public static void validRequest(String originAuthorization, String urlString, byte[] body, String contentType, String accessKeyId, String accessKeySecret) throws IllegalAccessException {
+
+        URI uri = URI.create(urlString);
+        String path = uri.getRawPath();
+        String query = uri.getRawQuery();
+
+        Mac mac = Auth.create(accessKeyId, accessKeySecret).createMac();
+
+        mac.update(StringUtils.utf8Bytes(path));
+
+        if (query != null && query.length() != 0) {
+            mac.update((byte) ('?'));
+            mac.update(StringUtils.utf8Bytes(query));
+        }
+        mac.update((byte) '\n');
+        if (body != null && Constants.FORM_MIME.equalsIgnoreCase(contentType)) {
+            mac.update(body);
+        }
+
+        String digest = Base64Util.encode(mac.doFinal());
+        String signRequestStr = accessKeyId + ":" + digest;
+
+        String authorization = "OSS " + signRequestStr;
+        if (!authorization.equals(originAuthorization)) {
+            throw new IllegalAccessException("签名校验失败");
+        }
     }
 
     private static Auth create(String accessKeyId, String accessKeySecret) {

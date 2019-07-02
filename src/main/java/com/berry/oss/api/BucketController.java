@@ -47,7 +47,7 @@ public class BucketController {
 
     @GetMapping("list.json")
     @ApiOperation("获取 Bucket 列表")
-    public Result<List<BucketInfoVo>> list(@RequestParam(required = false) String name) {
+    public Result<List<BucketInfoVo>> list(@RequestParam(name = "name", required = false) String name) {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
         return ResultFactory.wrapper(bucketService.listBucket(currentUser.getId(), name));
     }
@@ -60,24 +60,6 @@ public class BucketController {
             throw new BaseException("403", "非法ACL");
         }
         bucketService.create(mo.getName(), mo.getRegion(), mo.getAcl());
-        return ResultFactory.wrapper();
-    }
-
-    @ApiOperation("获取 Bucket 基本设置")
-    @GetMapping("get_basic_setting.json")
-    public Result getBasicSetting() {
-        return ResultFactory.wrapper();
-    }
-
-    @ApiOperation("获取 Bucket 基本监控数据")
-    @GetMapping("get_bucket_basic_monitor_data.json")
-    public Result getBucketBasicMonitorData() {
-        return ResultFactory.wrapper();
-    }
-
-    @ApiOperation("获取 Bucket 对象数和文件碎片")
-    @GetMapping("get_object_and_multipart_count.json")
-    public Result getObjectAndMultipartCount() {
         return ResultFactory.wrapper();
     }
 
@@ -104,6 +86,32 @@ public class BucketController {
         // 获取防盗链设置
         //allowEmpty: true //是否允许空 referer
         //list: [] //白名单
+        return ResultFactory.wrapper();
+    }
+    @PostMapping("update_referer.json")
+    @ApiOperation("更新 Bucket 防盗链设置")
+    public Result updateReferer(@RequestParam("bucket") String bucket) {
+        BucketInfo bucketInfo = bucketService.checkUserHaveBucket(bucket);
+        // 获取防盗链设置
+        //allowEmpty: true //是否允许空 referer
+        //list: [] //白名单
+        return ResultFactory.wrapper();
+    }
+
+    @ApiOperation("Bucket 概览")
+    @GetMapping("overview.json")
+    public Result getBucketOverview() {
+        return ResultFactory.wrapper();
+    }
+
+    @ApiOperation("30天热点数据")
+    @GetMapping("get_last_thirty_day_hot_data.json")
+    public Result getLastThirtyDayHotData() {
+        return ResultFactory.wrapper();
+    }
+    @ApiOperation("30天文件访问统计")
+    @GetMapping("get_last_thirty_day_file_access_data.json")
+    public Result getLastThirtyDayFileAccessData() {
         return ResultFactory.wrapper();
     }
 }
