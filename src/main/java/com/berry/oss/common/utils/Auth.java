@@ -34,6 +34,8 @@ public class Auth {
      */
     private static final String ENCODE_JSON_DEADLINE_KEY = "deadline";
 
+    private static final String HMAC_SHA_1 = "HmacSHA1";
+
     private static final Logger logger = LoggerFactory.getLogger(Auth.class);
 
     public final String accessKeyId;
@@ -47,7 +49,7 @@ public class Auth {
     /**
      * 验证 upload 请求token 签名
      *
-     * @param dataArr     待解码 token 字符串数组
+     * @param dataArr         待解码 token 字符串数组
      * @param accessKeySecret 私钥
      */
     public static void verifyUploadToken(String[] dataArr, String accessKeySecret, String requestUrl) throws IllegalAccessException {
@@ -108,7 +110,7 @@ public class Auth {
         String digest = Base64Util.encode(mac.doFinal());
         String signRequestStr = accessKeyId + ":" + digest;
 
-        String authorization = "OSS " + signRequestStr;
+        String authorization = Constants.OSS_SDK_AUTH_PREFIX + signRequestStr;
         if (!authorization.equals(originAuthorization)) {
             throw new IllegalAccessException("签名校验失败");
         }
@@ -119,14 +121,14 @@ public class Auth {
             throw new IllegalArgumentException("empty key");
         }
         byte[] sk = StringUtils.utf8Bytes(accessKeySecret);
-        SecretKeySpec secretKeySpec = new SecretKeySpec(sk, "HmacSHA1");
+        SecretKeySpec secretKeySpec = new SecretKeySpec(sk, HMAC_SHA_1);
         return new Auth(accessKeyId, secretKeySpec);
     }
 
     private Mac createMac() {
         Mac mac;
         try {
-            mac = Mac.getInstance("HmacSHA1");
+            mac = Mac.getInstance(HMAC_SHA_1);
             mac.init(secretKeySpec);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();

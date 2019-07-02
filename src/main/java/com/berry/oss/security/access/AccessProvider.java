@@ -67,12 +67,12 @@ public class AccessProvider {
     }
 
     Authentication getSdkAuthentication(String ossAuth, HttpServletRequest request) throws IllegalAccessException {
-        if (!ossAuth.startsWith(Constants.OSS_SDK_AUTH_HEAD_NAME)) {
+        if (!ossAuth.startsWith(Constants.OSS_SDK_AUTH_PREFIX)) {
             throw new BaseException(ResultCode.ILLEGAL_ACCESS_TOKEN);
         }
-        ossAuth = ossAuth.substring(4);
+        String dataStr = ossAuth.substring(4);
 
-        String[] data = ossAuth.split(":");
+        String[] data = dataStr.split(":");
         if (data.length != Constants.ENCODE_SDK_DATA_LENGTH) {
             throw new BaseException(ResultCode.ILLEGAL_ACCESS_TOKEN);
         }
@@ -88,6 +88,8 @@ public class AccessProvider {
         } catch (IOException e) {
             throw new BaseException("400", "读取请求体异常");
         }
+        String contentType =request.getContentType();
+        System.out.println(contentType);
 
         // 校验 token 签名
         Auth.validRequest(ossAuth, request.getRequestURI(), body, request.getContentType(), accessKeyId, principal.getAccessKeySecret());
@@ -101,6 +103,9 @@ public class AccessProvider {
 
     private static byte[] getRequestBody(HttpServletRequest request) throws IOException {
         int length = request.getContentLength();
+        if (length == -1){
+            return null;
+        }
         ServletInputStream inputStream = request.getInputStream();
         byte[] body = new byte[length];
         int read = inputStream.read(body, 0, length);

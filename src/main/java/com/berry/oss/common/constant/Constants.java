@@ -54,6 +54,11 @@ public final class Constants {
     public static final String OSS_SDK_AUTH_HEAD_NAME = "oss_sdk_authorization";
 
     /**
+     * sdk 口令前缀
+     */
+    public static final String OSS_SDK_AUTH_PREFIX = "OSS-";
+
+    /**
      * oss_sdk_authorization 负载信息长度 2
      */
     public static final int ENCODE_SDK_DATA_LENGTH = 2;
