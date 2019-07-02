@@ -39,7 +39,7 @@ public class AccessProvider {
         this.accessKeyInfoDaoService = accessKeyInfoDaoService;
     }
 
-    Authentication getAuthentication(String accessToken) throws IllegalAccessException {
+    Authentication getAuthentication(String accessToken, String requestUrl) throws IllegalAccessException {
         String[] data = accessToken.split(":");
         if (data.length != Constants.ENCODE_DATA_LENGTH) {
             throw new BaseException(ResultCode.ILLEGAL_ACCESS_TOKEN);
@@ -51,7 +51,7 @@ public class AccessProvider {
         }
 
         // 验证token有效性，请求无法获取错误信息
-        Auth.verifyThenGetData(accessToken, principal.getAccessKeySecret());
+        Auth.verifyThenGetData(accessToken, principal.getAccessKeySecret(), requestUrl);
 
         Set<Role> roleList = userDaoService.findRoleListByUserId(principal.getId());
         List<GrantedAuthority> grantedAuthorities = roleList.stream()

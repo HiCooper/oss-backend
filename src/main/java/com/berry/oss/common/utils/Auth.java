@@ -2,6 +2,8 @@ package com.berry.oss.common.utils;
 
 import com.alibaba.fastjson.JSONObject;
 import com.berry.oss.common.constant.Constants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -18,6 +20,21 @@ import java.util.Date;
  */
 public class Auth {
 
+    /**
+     * 加密json 中 请求ip key
+     */
+    private static final String ENCODE_JSON_REQUEST_IP_KEY = "requestIp";
+    /**
+     * 加密json 中 授权目标方法 key
+     */
+    private static final String ENCODE_JSON_TARGET_URL_KEY = "targetUrl";
+    /**
+     * 加密json 中 token过期时间 key
+     */
+    private static final String ENCODE_JSON_DEADLINE_KEY = "deadline";
+
+    private static final Logger logger = LoggerFactory.getLogger(Auth.class);
+
     public final String accessKeyId;
     private final SecretKeySpec secretKeySpec;
 
@@ -26,51 +43,6 @@ public class Auth {
         this.secretKeySpec = secretKeySpec;
     }
 
-    public static Auth create(String accessKeyId, String accessKeySecret) {
-        if (StringUtils.isBlank(accessKeyId) || StringUtils.isBlank(accessKeySecret)) {
-            throw new IllegalArgumentException("empty key");
-        }
-        byte[] sk = StringUtils.utf8Bytes(accessKeySecret);
-        SecretKeySpec secretKeySpec = new SecretKeySpec(sk, "HmacSHA1");
-        return new Auth(accessKeyId, secretKeySpec);
-    }
-
-
-    /**
-     * 获取授权 口令，sdk 用
-     * <p>注意：该口令拥有对应账户的所有权限</p>
-     *
-     * @param expires 有效时长，单位秒。默认3600s
-     * @return
-     */
-    public String accessToken(long expires) {
-        long deadline = System.currentTimeMillis() / 1000 + expires;
-        // 这里仅保存了 过期时间信息,可添加更多信息，以便日志记录，如请求ip
-        StringMap map = new StringMap();
-        map.put("deadline", deadline);
-        // 1.过期时间 和 bucket 转 json 再 base64 编码 得到 encodeJson
-        String json = Json.encode(map);
-        String encodeJson = Base64Util.encode(StringUtils.utf8Bytes(json));
-
-        // 2.对 encodeJson 进行 mac 加密 再进行 base64 编码 得到 encodedSign
-        Mac mac = this.createMac();
-        String encodedSign = Base64Util.encode(mac.doFinal(StringUtils.utf8Bytes(encodeJson)));
-
-        // 3.拼接 accessKeyId encodedSign 和 encodeJson，用英文冒号隔开
-        return this.accessKeyId + ":" + encodedSign + ":" + encodeJson;
-    }
-
-//    public static void main(String[] args) throws IllegalAccessException {
-//
-//        // 1。 生成 token
-//        Auth auth = Auth.create("yRdQE7hybEfPD5Kgt4fXCe", "wkZ2RvEnuom/Pa4RTQGmPdFVd6g7/CO");
-//        String token = auth.accessToken(3600);
-//        System.out.println(token);
-//
-//        // 2. 验证 token 并获取信息 json { deadline: Number }
-//        verifyThenGetData(token, "wkZ2RvEnuom/Pa4RTQGmPdFVd6g7/CO");
-//    }
-
     /**
      * 验证签名，返回 json 信息
      *
@@ -78,7 +50,7 @@ public class Auth {
      * @param accessKeySecret 私钥
      * @return bucket name
      */
-    public static void verifyThenGetData(String encodedData, String accessKeySecret) throws IllegalAccessException {
+    public static void verifyThenGetData(String encodedData, String accessKeySecret, String requestUrl) throws IllegalAccessException {
         String[] dataArr = encodedData.split(":");
         if (dataArr.length != Constants.ENCODE_DATA_LENGTH) {
             throw new IllegalArgumentException("非法口令");
@@ -95,13 +67,26 @@ public class Auth {
         String json = StringUtils.utf8String(Base64Util.decode(encodeJson));
         // 验证json 有效期
         JSONObject object = JSONObject.parseObject(json);
-        long deadline = object.getLong("deadline");
+        long deadline = object.getLong(ENCODE_JSON_DEADLINE_KEY);
         Date deadDate = new Date(deadline * 1000);
         if (deadDate.before(new Date())) {
             throw new IllegalAccessException("口令已过期");
         }
+        // 验证 目标访问url
+        if (!requestUrl.equals(object.getString(ENCODE_JSON_TARGET_URL_KEY))) {
+            throw new IllegalAccessException("非授权访问url");
+        }
+        logger.info("来源IP：{}，成功通过AccessKeyId:{},访问URL:{}", object.getString(ENCODE_JSON_REQUEST_IP_KEY), accessKeyId, requestUrl);
     }
 
+    private static Auth create(String accessKeyId, String accessKeySecret) {
+        if (StringUtils.isBlank(accessKeyId) || StringUtils.isBlank(accessKeySecret)) {
+            throw new IllegalArgumentException("empty key");
+        }
+        byte[] sk = StringUtils.utf8Bytes(accessKeySecret);
+        SecretKeySpec secretKeySpec = new SecretKeySpec(sk, "HmacSHA1");
+        return new Auth(accessKeyId, secretKeySpec);
+    }
 
     private Mac createMac() {
         Mac mac;

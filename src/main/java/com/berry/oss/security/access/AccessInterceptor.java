@@ -31,7 +31,7 @@ public class AccessInterceptor implements HandlerInterceptor {
         if (!requestUrl.equals(Constants.HEALTH_CHECK_URL) && !requestUrl.equals(Constants.ERROR_STATE_URL)) {
             String accessToken = request.getHeader(Constants.ACCESS_TOKEN_KEY);
             if (StringUtils.isNotBlank(accessToken)) {
-                Authentication authentication = this.accessProvider.getAuthentication(accessToken);
+                Authentication authentication = this.accessProvider.getAuthentication(accessToken, requestUrl);
                 if (authentication != null) {
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
