@@ -2,13 +2,14 @@ package com.berry.oss.security.access;
 
 import com.berry.oss.common.constant.Constants;
 import com.berry.oss.common.utils.StringUtils;
-import org.springframework.core.annotation.Order;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -26,10 +27,21 @@ public class AccessInterceptor implements HandlerInterceptor {
         this.accessProvider = accessProvider;
     }
 
+    private static final List<String> WRITE_LIST = new ArrayList<>();
+
+    // 拦截器白名单
+    static {
+        WRITE_LIST.add("/swagger.+");
+        WRITE_LIST.add("/csrf");
+        WRITE_LIST.add("/v2/api-docs");
+        WRITE_LIST.add(Constants.HEALTH_CHECK_URL);
+        WRITE_LIST.add(Constants.ERROR_STATE_URL);
+    }
+
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws IllegalAccessException {
         String requestUrl = request.getRequestURI();
-        if (!requestUrl.equals(Constants.HEALTH_CHECK_URL) && !requestUrl.equals(Constants.ERROR_STATE_URL)) {
+        if (WRITE_LIST.stream().noneMatch(requestUrl::matches)) {
             // sdk 通用请求拦截器,sdk token 验证后将不验证 upload token
             String ossAuth = request.getHeader(Constants.OSS_SDK_AUTH_HEAD_NAME);
             if (StringUtils.isNotBlank(ossAuth)) {
