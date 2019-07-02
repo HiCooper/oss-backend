@@ -68,13 +68,14 @@ public class AuthController {
             String jwt = this.tokenProvider.createAndSignToken(authentication, user.getId(), rememberMe);
             HttpHeaders httpHeaders = new HttpHeaders();
             httpHeaders.add(JwtFilter.AUTHORIZATION_HEADER, jwt);
-            Cookie cookie = new Cookie(JwtFilter.AUTHORIZATION_HEADER, jwt);
-            cookie.setHttpOnly(true);
-            response.addCookie(cookie);
             long expires = TokenProvider.TOKEN_VALIDITY_IN_MILLISECONDS / 1000;
             if (rememberMe) {
                 expires = TokenProvider.TOKEN_VALIDITY_IN_MILLISECONDS_FOR_REMEMBER_ME / 1000;
             }
+            Cookie cookie = new Cookie(JwtFilter.AUTHORIZATION_HEADER, jwt);
+            cookie.setMaxAge(Integer.valueOf(String.valueOf(expires)));
+            cookie.setHttpOnly(true);
+            response.addCookie(cookie);
             httpHeaders.add("expires", String.valueOf(expires));
             return new ResponseEntity<>(new LoginSuccessVo(jwt, expires, new UserInfo(user.getId(), user.getUsername())), httpHeaders, HttpStatus.OK);
         } catch (AuthenticationException e) {

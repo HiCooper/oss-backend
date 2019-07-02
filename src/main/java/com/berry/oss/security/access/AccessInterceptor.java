@@ -2,6 +2,7 @@ package com.berry.oss.security.access;
 
 import com.berry.oss.common.constant.Constants;
 import com.berry.oss.common.utils.StringUtils;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.servlet.HandlerInterceptor;
