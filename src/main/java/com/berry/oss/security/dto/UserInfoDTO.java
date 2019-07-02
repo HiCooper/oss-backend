@@ -1,6 +1,6 @@
 package com.berry.oss.security.dto;
 
-import com.berry.oss.security.access.AccessKeyPair;
+import com.berry.oss.security.interceptor.AccessKeyPair;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;

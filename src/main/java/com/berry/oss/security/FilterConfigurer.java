@@ -1,6 +1,6 @@
 package com.berry.oss.security;
 
-import com.berry.oss.security.access.AccessProvider;
+import com.berry.oss.security.interceptor.AccessProvider;
 import com.berry.oss.security.filter.JwtFilter;
 import com.berry.oss.security.filter.TokenProvider;
 import org.springframework.security.config.annotation.SecurityConfigurerAdapter;

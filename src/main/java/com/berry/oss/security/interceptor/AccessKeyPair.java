@@ -1,4 +1,4 @@
-package com.berry.oss.security.access;
+package com.berry.oss.security.interceptor;
 
 import lombok.Data;
 import lombok.experimental.Accessors;

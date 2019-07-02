@@ -1,4 +1,4 @@
-package com.berry.oss.security.access;
+package com.berry.oss.security.interceptor;
 
 import com.berry.oss.common.constant.Constants;
 import com.berry.oss.common.utils.StringUtils;

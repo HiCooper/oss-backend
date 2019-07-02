@@ -2,7 +2,7 @@ package com.berry.oss.security.filter;
 
 import com.berry.oss.common.constant.Constants;
 import com.berry.oss.common.utils.StringUtils;
-import com.berry.oss.security.access.AccessProvider;
+import com.berry.oss.security.interceptor.AccessProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
