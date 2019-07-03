@@ -1,6 +1,7 @@
 package com.berry.oss.security.filter;
 
 import com.berry.oss.common.constant.Constants;
+import com.berry.oss.common.utils.NetworkUtils;
 import com.berry.oss.common.utils.StringUtils;
 import com.berry.oss.security.interceptor.AccessProvider;
 import org.slf4j.Logger;
@@ -22,9 +23,9 @@ import java.io.IOException;
  *
  * @author xueancao
  */
-public class JwtFilter extends GenericFilterBean {
+public class AuthFilter extends GenericFilterBean {
 
-    private final Logger log = LoggerFactory.getLogger(JwtFilter.class);
+    private final Logger log = LoggerFactory.getLogger(AuthFilter.class);
 
     public static final String AUTHORIZATION_HEADER = "authorization";
 
@@ -32,7 +33,7 @@ public class JwtFilter extends GenericFilterBean {
 
     private AccessProvider accessProvider;
 
-    public JwtFilter(TokenProvider tokenProvider, AccessProvider accessProvider) {
+    public AuthFilter(TokenProvider tokenProvider, AccessProvider accessProvider) {
         this.tokenProvider = tokenProvider;
         this.accessProvider = accessProvider;
     }
@@ -44,6 +45,7 @@ public class JwtFilter extends GenericFilterBean {
         String requestUrl = httpServletRequest.getRequestURI();
         if (Constants.WRITE_LIST.stream().noneMatch(requestUrl::matches)) {
             String jwt = resolveToken(httpServletRequest);
+            String ip = NetworkUtils.getRequestIpAddress(httpServletRequest);
             if (StringUtils.isNotBlank(jwt) && this.tokenProvider.validateToken(jwt)) {
                 // 验证jwt 设置授权信息到该线程上下文
                 Authentication authentication = this.tokenProvider.getAuthentication(jwt);
@@ -54,6 +56,7 @@ public class JwtFilter extends GenericFilterBean {
                     // 只验证 token 格式 尝试设置用户信息
                     Authentication authentication = this.accessProvider.getSdkAuthentication(ossAuth);
                     if (authentication != null) {
+                        log.info("IP:{} 通过 sdk 授权初步验证", ip);
                         SecurityContextHolder.getContext().setAuthentication(authentication);
                     }
                 } else {
@@ -63,6 +66,7 @@ public class JwtFilter extends GenericFilterBean {
                         // 只验证 token 格式 尝试设置用户信息
                         Authentication authentication = this.accessProvider.getUploadAuthentication(accessToken);
                         if (authentication != null) {
+                            log.info("IP:{} 通过 upload token 授权初步验证", ip);
                             SecurityContextHolder.getContext().setAuthentication(authentication);
                         }
                     }

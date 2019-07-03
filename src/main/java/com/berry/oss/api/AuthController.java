@@ -5,7 +5,7 @@ import com.berry.oss.common.ResultCode;
 import com.berry.oss.common.exceptions.BaseException;
 import com.berry.oss.security.core.entity.User;
 import com.berry.oss.security.core.service.IUserDaoService;
-import com.berry.oss.security.filter.JwtFilter;
+import com.berry.oss.security.filter.AuthFilter;
 import com.berry.oss.security.filter.TokenProvider;
 import com.berry.oss.security.vm.LoginVM;
 import io.swagger.annotations.Api;
@@ -66,12 +66,12 @@ public class AuthController {
             boolean rememberMe = (loginVm.getRememberMe() == null) ? false : loginVm.getRememberMe();
             String jwt = this.tokenProvider.createAndSignToken(authentication, user.getId(), rememberMe);
             HttpHeaders httpHeaders = new HttpHeaders();
-            httpHeaders.add(JwtFilter.AUTHORIZATION_HEADER, jwt);
+            httpHeaders.add(AuthFilter.AUTHORIZATION_HEADER, jwt);
             long expires = TokenProvider.TOKEN_VALIDITY_IN_MILLISECONDS / 1000;
             if (rememberMe) {
                 expires = TokenProvider.TOKEN_VALIDITY_IN_MILLISECONDS_FOR_REMEMBER_ME / 1000;
             }
-            Cookie cookie = new Cookie(JwtFilter.AUTHORIZATION_HEADER, jwt);
+            Cookie cookie = new Cookie(AuthFilter.AUTHORIZATION_HEADER, jwt);
             cookie.setMaxAge(Integer.valueOf(String.valueOf(expires)));
             cookie.setHttpOnly(true);
             response.addCookie(cookie);
