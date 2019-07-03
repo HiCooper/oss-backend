@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.berry.oss.common.utils.HttpClient;
 import com.berry.oss.erasure.ReedSolomon;
-import com.berry.oss.remote.IDataServiceClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -36,11 +35,6 @@ public class ReedSolomonDecoderService {
     private static final int TOTAL_SHARDS = 6;
     private static final int BYTES_IN_INT = 4;
 
-    private final IDataServiceClient dataServiceClient;
-
-    public ReedSolomonDecoderService(IDataServiceClient dataServiceClient) {
-        this.dataServiceClient = dataServiceClient;
-    }
 
     public InputStream readData(String shardJson) {
 

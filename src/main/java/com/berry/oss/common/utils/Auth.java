@@ -19,7 +19,7 @@ import java.util.Date;
  * fileName：Auth
  * Use：
  */
-public class Auth {
+public final class Auth {
 
     /**
      * 加密json 中 请求ip key

@@ -1,4 +1,4 @@
-package com.berry.oss.remote;
+package com.berry.oss.module.mo;
 
 import lombok.Data;
 

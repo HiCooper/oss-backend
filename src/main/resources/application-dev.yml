@@ -27,19 +27,19 @@ spring:
         min-idle: 0
     timeout: 2000ms
 
-  cloud:
-    consul:
-      discovery:
-        enabled: true
-        health-check-interval: 10s
-        health-check-url: http://127.0.0.1:${server.port}/actuator/health
-        instance-id: ${spring.application.name}:${spring.cloud.consul.discovery.instance_id:${random.value}}
-        port: ${server.port}
-        service-name: OSS_SERVICE
-        tags: dev
-      enabled: true
-      host: 127.0.0.1
-      port: 8500
+#  cloud:
+#    consul:
+#      discovery:
+#        enabled: true
+#        health-check-interval: 10s
+#        health-check-url: http://127.0.0.1:${server.port}/actuator/health
+#        instance-id: ${spring.application.name}:${spring.cloud.consul.discovery.instance_id:${random.value}}
+#        port: ${server.port}
+#        service-name: OSS_SERVICE
+#        tags: dev
+#      enabled: true
+#      host: 127.0.0.1
+#      port: 8500
 
 server:
   undertow:

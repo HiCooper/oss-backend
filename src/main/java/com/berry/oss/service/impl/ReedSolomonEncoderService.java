@@ -7,7 +7,7 @@ import com.berry.oss.core.entity.BucketInfo;
 import com.berry.oss.core.service.IRegionInfoDaoService;
 import com.berry.oss.erasure.ReedSolomon;
 import com.berry.oss.module.dto.ServerListDTO;
-import com.berry.oss.remote.WriteShardResponse;
+import com.berry.oss.module.dto.WriteShardResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
