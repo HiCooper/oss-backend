@@ -143,7 +143,6 @@ public class TokenProvider {
         JWTVerifier verifier = JWT.require(algorithm)
                 .withIssuer(ISSUER)
                 .build(); //Reusable verifier instance
-        DecodedJWT decodedJWT = verifier.verify(jwt);
-        return decodedJWT.getClaims();
+        return verifier.verify(jwt).getClaims();
     }
 }
