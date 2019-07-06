@@ -78,6 +78,7 @@ public final class Constants {
         WRITE_LIST.add("/swagger.+");
         WRITE_LIST.add("/csrf");
         WRITE_LIST.add("/v2/api-docs");
+        WRITE_LIST.add("/webjars/.+");
         WRITE_LIST.add(Constants.HEALTH_CHECK_URL);
         WRITE_LIST.add(Constants.ERROR_STATE_URL);
     }

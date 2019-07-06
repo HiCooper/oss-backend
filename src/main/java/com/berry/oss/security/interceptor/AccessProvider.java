@@ -3,6 +3,7 @@ package com.berry.oss.security.interceptor;
 import com.berry.oss.common.constant.Constants;
 import com.berry.oss.common.exceptions.BaseException;
 import com.berry.oss.common.utils.Auth;
+import com.berry.oss.common.utils.StringUtils;
 import com.berry.oss.core.service.IAccessKeyInfoDaoService;
 import com.berry.oss.security.SecurityUtils;
 import com.berry.oss.security.core.entity.Role;
@@ -49,6 +50,7 @@ public class AccessProvider {
         String[] data = accessToken.split(":");
         if (data.length != Constants.ENCODE_DATA_LENGTH) {
             logger.error("非法token，负载信息长度 3,实际 为:{}", data.length);
+            return null;
         }
         return getAuthentication(accessToken, data[0]);
     }
@@ -56,11 +58,13 @@ public class AccessProvider {
     public Authentication getSdkAuthentication(String ossAuth) {
         if (!ossAuth.startsWith(Constants.OSS_SDK_AUTH_PREFIX)) {
             logger.error("sdk 口令前缀必须为：OSS-， token:{}", ossAuth);
+            return null;
         }
         String dataStr = ossAuth.substring(4);
         String[] data = dataStr.split(":");
         if (data.length != Constants.ENCODE_SDK_DATA_LENGTH) {
             logger.error("非法token，负载信息长度 2,实际 为:{}", data.length);
+            return null;
         }
         return getAuthentication(ossAuth, data[0]);
     }
@@ -81,14 +85,18 @@ public class AccessProvider {
         } catch (IOException e) {
             throw new BaseException("400", "读取请求体异常");
         }
+        String path = request.getRequestURI();
+        String query = request.getQueryString();
+        String urlStr = StringUtils.isBlank(query) ? path : path + "?" + query;
         // 校验 token 签名
-        Auth.validRequest(credentials, request.getRequestURI(), body, request.getContentType(), userInfoDTO.getAccessKeyId(), userInfoDTO.getAccessKeySecret());
+        Auth.validRequest(credentials, urlStr, body, request.getContentType(), userInfoDTO.getAccessKeyId(), userInfoDTO.getAccessKeySecret());
     }
 
     private Authentication getAuthentication(String ossAuth, String accessKeyId) {
         UserInfoDTO principal = accessKeyInfoDaoService.getUserInfoDTO(accessKeyId);
         if (principal == null) {
             logger.error("find user by accessKeyId fail, accessKeyId={} ", accessKeyId);
+            return null;
         }
         Set<Role> roleList = userDaoService.findRoleListByUserId(principal.getId());
         List<GrantedAuthority> grantedAuthorities = roleList.stream()
