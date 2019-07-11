@@ -106,4 +106,12 @@ public interface IObjectService {
      * @return 成功与否
      */
     Boolean updateObjectAcl(String bucket, String objectPath, String objectName, String acl);
+
+    /**
+     * 生成批量下载url
+     * @param bucket
+     * @param objectPath
+     * @return
+     */
+    List<String> generateDownloadUrl(String bucket, List<String> objectPath) throws Exception;
 }

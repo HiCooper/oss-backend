@@ -5,10 +5,7 @@ import com.berry.oss.common.Result;
 import com.berry.oss.common.ResultFactory;
 import com.berry.oss.core.entity.ObjectInfo;
 import com.berry.oss.core.service.IObjectInfoDaoService;
-import com.berry.oss.module.mo.CreateFolderMo;
-import com.berry.oss.module.mo.DeleteObjectsMo;
-import com.berry.oss.module.mo.GenerateUrlWithSignedMo;
-import com.berry.oss.module.mo.UpdateObjectAclMo;
+import com.berry.oss.module.mo.*;
 import com.berry.oss.module.vo.GenerateUrlWithSignedVo;
 import com.berry.oss.service.IObjectService;
 import io.swagger.annotations.Api;
@@ -106,6 +103,12 @@ public class ObjectController {
     @PostMapping("generate_url_with_signed.json")
     public Result<GenerateUrlWithSignedVo> generateUrlWithSigned(@RequestBody GenerateUrlWithSignedMo mo) throws Exception {
         return ResultFactory.wrapper(objectService.generateUrlWithSigned(mo.getBucket(), mo.getObjectPath(), mo.getTimeout()));
+    }
+
+    @ApiOperation("生成对象临时下载url 60s 有效")
+    @PostMapping("generate_download_url.json")
+    public Result generateDownloadUrl(@Validated @RequestBody GenerateDownloadUrlMo mo) throws Exception {
+       return ResultFactory.wrapper(objectService.generateDownloadUrl(mo.getBucket(), mo.getObjectPath()));
     }
 
     @GetMapping(value = "{bucket}/**")

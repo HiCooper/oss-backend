@@ -289,6 +289,9 @@ public class ObjectServiceImpl implements IObjectService {
         // 将用户id 计算如签名，作为临时 ossAccessKeyId,解密时获取用户id
         String ossAccessKeyId = "TMP." + RSAUtil.encryptByPrivateKey(currentUser.getId().toString());
 
+        if (!objectPath.startsWith(DEFAULT_FILE_PATH)) {
+            objectPath = "/" + objectPath;
+        }
         String ip = globalProperties.getServerIp();
         String url = "http://" + ip + ":" + port + "/ajax/bucket/file/" + bucket + objectPath;
 
@@ -310,6 +313,16 @@ public class ObjectServiceImpl implements IObjectService {
         return new GenerateUrlWithSignedVo()
                 .setUrl(url)
                 .setSignature(signature);
+    }
+
+    @Override
+    public List<String> generateDownloadUrl(String bucket, List<String> objectPath) throws Exception {
+        List<String> url = new ArrayList<>();
+        for (String object : objectPath) {
+            GenerateUrlWithSignedVo generateUrlWithSignedVo = generateUrlWithSigned(bucket, object, 60);
+            url.add(generateUrlWithSignedVo.getUrl() + "?" + generateUrlWithSignedVo.getSignature() + "&Download=true");
+        }
+        return url;
     }
 
     @Transactional(rollbackFor = Exception.class)
