@@ -79,17 +79,11 @@ public class AccessProvider {
     void validateSdkAuthentication(HttpServletRequest request) throws IllegalAccessException {
         UserInfoDTO userInfoDTO = SecurityUtils.getCurrentUser();
         String credentials = SecurityUtils.getCurrentCredentials();
-        byte[] body;
-        try {
-            body = getRequestBody(request);
-        } catch (IOException e) {
-            throw new BaseException("400", "读取请求体异常");
-        }
         String path = request.getRequestURI();
         String query = request.getQueryString();
         String urlStr = StringUtils.isBlank(query) ? path : path + "?" + query;
         // 校验 token 签名
-        Auth.validRequest(credentials, urlStr, body, request.getContentType(), userInfoDTO.getAccessKeyId(), userInfoDTO.getAccessKeySecret());
+        Auth.validRequest(credentials, urlStr,  userInfoDTO.getAccessKeyId(), userInfoDTO.getAccessKeySecret());
     }
 
     private Authentication getAuthentication(String ossAuth, String accessKeyId) {
@@ -103,19 +97,5 @@ public class AccessProvider {
                 .map(role -> new SimpleGrantedAuthority(role.getName()))
                 .collect(Collectors.toList());
         return new UsernamePasswordAuthenticationToken(principal, ossAuth, grantedAuthorities);
-    }
-
-    private static byte[] getRequestBody(HttpServletRequest request) throws IOException {
-        int length = request.getContentLength();
-        if (length == -1) {
-            return null;
-        }
-        ServletInputStream inputStream = request.getInputStream();
-        byte[] body = new byte[length];
-        int read = inputStream.read(body, 0, length);
-        if (read != length) {
-            logger.error("read request body length error");
-        }
-        return body;
     }
 }

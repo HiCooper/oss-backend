@@ -5,6 +5,7 @@ import com.berry.oss.common.utils.NetworkUtils;
 import com.berry.oss.common.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;

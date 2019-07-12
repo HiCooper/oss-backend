@@ -82,13 +82,11 @@ public final class Auth {
      *
      * @param originAuthorization 原始 token
      * @param urlString           请求url
-     * @param body                请求体
-     * @param contentType         请求体类型
      * @param accessKeyId         accessKeyId
      * @param accessKeySecret     accessKeySecret
      * @throws IllegalAccessException 签名校验失败
      */
-    public static void validRequest(String originAuthorization, String urlString, byte[] body, String contentType, String accessKeyId, String accessKeySecret) throws IllegalAccessException {
+    public static void validRequest(String originAuthorization, String urlString, String accessKeyId, String accessKeySecret) throws IllegalAccessException {
 
         URI uri = URI.create(urlString);
         String path = uri.getRawPath();
@@ -103,9 +101,6 @@ public final class Auth {
             mac.update(StringUtils.utf8Bytes(query));
         }
         mac.update((byte) '\n');
-        if (body != null && Constants.FORM_MIME.equalsIgnoreCase(contentType)) {
-            mac.update(body);
-        }
 
         String digest = Base64Util.encode(mac.doFinal());
         String signRequestStr = accessKeyId + ":" + digest;
