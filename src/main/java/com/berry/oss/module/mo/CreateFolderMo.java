@@ -24,7 +24,7 @@ public class CreateFolderMo {
      * 全路径
      */
     @NotBlank
-    @Length(min = 2, max = 254, message = "长度在2～254之间")
+    @Length(min = 2, max = 254, message = "路径长度在2～254之间")
     @Pattern(regexp = "^[^/]((?!//)[a-zA-Z0-9/\\u4E00-\\u9FA5]+)*[^/]$", message = "路径不符合要求")
     private String folder;
 }
