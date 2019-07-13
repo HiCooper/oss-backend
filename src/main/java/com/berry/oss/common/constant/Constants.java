@@ -17,8 +17,9 @@ public final class Constants {
 
     /**
      * 文件路径正则
+     * 不以 '/' 开头和结尾， 不能出现连续 '//' ，仅允许字母数字中文和单个 '/'
      */
-    public static final Pattern FILE_PATH_PATTERN = Pattern.compile("(\\w+/?)+$");
+    public static final Pattern FILE_PATH_PATTERN = Pattern.compile("^[^/]((?!//)[a-zA-Z0-9/\\u4E00-\\u9FA5]+)*[^/]$");
 
     /**
      * 默认文件路径（根路径 / ）

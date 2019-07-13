@@ -23,6 +23,6 @@ public class CreateFolderMo {
      * 全路径
      */
     @NotBlank
-    @Pattern(regexp = "^[^\\/]((?!\\/\\/)[a-zA-Z0-9\\/\\u4E00-\\u9FA5]+)*[^\\/]$", message = "路径不符合要求")
+    @Pattern(regexp = "^[^/]((?!//)[a-zA-Z0-9/\\u4E00-\\u9FA5]+)*[^/]$", message = "路径不符合要求")
     private String objectName;
 }

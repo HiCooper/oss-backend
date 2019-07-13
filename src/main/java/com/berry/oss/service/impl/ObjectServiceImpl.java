@@ -94,6 +94,14 @@ public class ObjectServiceImpl implements IObjectService {
 
     @Override
     public List<ObjectInfo> list(String bucket, String path, String search) {
+        // 校验path 规范
+        Matcher matcher = Constants.FILE_PATH_PATTERN.matcher(path);
+        if (!DEFAULT_FILE_PATH.equals(path) && !matcher.find()) {
+            throw new UploadException("403", "当前上传文件目录不正确！");
+        }
+        // 补充 path 前缀 '/'
+        path = DEFAULT_FILE_PATH.equals(path) ? DEFAULT_FILE_PATH : DEFAULT_FILE_PATH + path;
+
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
         BucketInfo bucketInfo = bucketService.checkUserHaveBucket(bucket);
         QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<>();
@@ -111,6 +119,7 @@ public class ObjectServiceImpl implements IObjectService {
     @Transactional(rollbackFor = Exception.class)
     @Override
     public String create(String bucket, MultipartFile file, String acl, String filePath) throws IOException {
+        // 校验path 规范
         Matcher matcher = Constants.FILE_PATH_PATTERN.matcher(filePath);
         if (!DEFAULT_FILE_PATH.equals(filePath) && !matcher.find()) {
             throw new UploadException("403", "当前上传文件目录不正确！");
@@ -136,7 +145,8 @@ public class ObjectServiceImpl implements IObjectService {
 
         // 校验通过
         String fileName = file.getOriginalFilename();
-        String path = DEFAULT_FILE_PATH.equals(filePath) ? DEFAULT_FILE_PATH : filePath.startsWith(DEFAULT_FILE_PATH) ? filePath : DEFAULT_FILE_PATH + filePath;
+        // 补充 path 前缀 '/'
+        String path = DEFAULT_FILE_PATH.equals(filePath) ? DEFAULT_FILE_PATH : DEFAULT_FILE_PATH + filePath;
 
         // 检查该 bucket 及 path 下 同名文件是否存在
         QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<>();
@@ -262,10 +272,8 @@ public class ObjectServiceImpl implements IObjectService {
         QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<ObjectInfo>()
                 .eq("bucket_id", bucketInfo.getId())
                 .eq("user_id", currentUser.getId())
+                .eq("file_path", path)
                 .eq("file_name", objectName);
-        if (StringUtils.isNotBlank(path)) {
-            queryWrapper.eq("file_path", path);
-        }
         ObjectInfo objectInfo = objectInfoDaoService.getOne(queryWrapper);
         if (objectInfo == null) {
             throw new BaseException(ResultCode.DATA_NOT_EXIST);
@@ -290,7 +298,7 @@ public class ObjectServiceImpl implements IObjectService {
         String ossAccessKeyId = "TMP." + RSAUtil.encryptByPrivateKey(currentUser.getId().toString());
 
         if (!objectPath.startsWith(DEFAULT_FILE_PATH)) {
-            objectPath = "/" + objectPath;
+            objectPath = DEFAULT_FILE_PATH + objectPath;
         }
         String ip = globalProperties.getServerIp();
         String url = "http://" + ip + ":" + port + "/ajax/bucket/file/" + bucket + objectPath;

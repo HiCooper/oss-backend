@@ -55,7 +55,6 @@ public class ObjectController {
     public Result<List<ObjectInfo>> list(@RequestParam("bucket") String bucket,
                                          @RequestParam(value = "path", defaultValue = "/") String path,
                                          @RequestParam(value = "search", defaultValue = "") String search) {
-        // todo 校验 参数格式合法
         return ResultFactory.wrapper(objectService.list(bucket, path, search));
     }
 
@@ -78,7 +77,7 @@ public class ObjectController {
     /**
      * 获取文件头部信息
      *
-     * @param path       文件路径 可选
+     * @param path       文件路径
      * @param bucket     存储空间名称
      * @param objectName 文件名 必填
      * @return 头部信息
@@ -87,7 +86,7 @@ public class ObjectController {
     @GetMapping("head_object.json")
     public Result<Map<String, Object>> getObjectHead(
             @RequestParam(value = "bucket") String bucket,
-            @RequestParam(value = "path", required = false) String path,
+            @RequestParam(value = "path", defaultValue = DEFAULT_FILE_PATH) String path,
             @RequestParam(value = "objectName") String objectName) {
         return ResultFactory.wrapper(objectService.getObjectHead(bucket, path, objectName));
     }

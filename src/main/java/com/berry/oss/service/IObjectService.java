@@ -109,9 +109,9 @@ public interface IObjectService {
 
     /**
      * 生成批量下载url
-     * @param bucket
-     * @param objectPath
-     * @return
+     * @param bucket bucket name
+     * @param objectPath  对象全路径
+     * @return url list
      */
     List<String> generateDownloadUrl(String bucket, List<String> objectPath) throws Exception;
 }
