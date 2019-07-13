@@ -94,14 +94,6 @@ public class ObjectServiceImpl implements IObjectService {
 
     @Override
     public List<ObjectInfo> list(String bucket, String path, String search) {
-        // 校验path 规范
-        Matcher matcher = Constants.FILE_PATH_PATTERN.matcher(path);
-        if (!DEFAULT_FILE_PATH.equals(path) && !matcher.find()) {
-            throw new UploadException("403", "当前上传文件目录不正确！");
-        }
-        // 补充 path 前缀 '/'
-        path = DEFAULT_FILE_PATH.equals(path) ? DEFAULT_FILE_PATH : DEFAULT_FILE_PATH + path;
-
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
         BucketInfo bucketInfo = bucketService.checkUserHaveBucket(bucket);
         QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<>();
