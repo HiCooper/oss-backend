@@ -24,7 +24,7 @@ public class AuthServiceImpl implements IAuthService {
     }
 
     @Override
-    public Boolean checkUserHaveAccessToBucket(Integer userId, String bucket) {
+    public Boolean checkUserHaveAccessToBucket(Integer userId, String bucket, String objectPath) {
         return bucketService.checkUserHaveBucket(userId, bucket);
     }
 }

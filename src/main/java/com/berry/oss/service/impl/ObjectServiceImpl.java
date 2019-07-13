@@ -190,15 +190,16 @@ public class ObjectServiceImpl implements IObjectService {
     @Override
     public void getObject(String bucket, String expiresTime, String ossAccessKeyId, String signature, Boolean download, HttpServletResponse response, HttpServletRequest servletRequest, WebRequest request) throws IOException {
 
+        String objectPath = extractPathFromPattern(servletRequest);
+
         boolean skipCheckAuth = false;
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
         if (currentUser != null && currentUser.getId() != null) {
             // 用户请求头中带有密钥口令，无需url验证
             // 1. 检查当前用户 是否拥有对 所请求bucket的访问权限，通过后 可获取对该bucket的完全权限,跳过 url 校验
-            skipCheckAuth = authService.checkUserHaveAccessToBucket(currentUser.getId(), bucket);
+            skipCheckAuth = authService.checkUserHaveAccessToBucket(currentUser.getId(), bucket, objectPath);
         }
 
-        String objectPath = extractPathFromPattern(servletRequest);
         // 检查bucket
         BucketInfo bucketInfo = bucketInfoDaoService.getOne(new QueryWrapper<BucketInfo>().eq("name", bucket));
         if (null == bucketInfo) {
