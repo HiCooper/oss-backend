@@ -58,6 +58,15 @@ public class ObjectController {
         return ResultFactory.wrapper(objectService.list(bucket, path, search));
     }
 
+    /**
+     *
+     * @param bucket bucket name
+     * @param file file
+     * @param acl acl
+     * @param filePath 所在路径  以 / 开头
+     * @return msg
+     * @throws IOException io exception
+     */
     @PostMapping("create")
     @ApiOperation("创建对象")
     public Result<String> create(
