@@ -125,12 +125,12 @@ public class ObjectController {
     @PostMapping("create_folder.json")
     @ApiOperation("新建目录，支持同事创建多级目录")
     public Result createFolder(@Validated @RequestBody CreateFolderMo mo) {
-        objectService.createFolder(mo.getBucket(), mo.getObjectName());
+        objectService.createFolder(mo.getBucket(), mo.getFolder());
         return ResultFactory.wrapper();
     }
 
     @PostMapping("delete_objects.json")
-    @ApiOperation("删除对象")
+    @ApiOperation("删除对象或文件夹")
     public Result delete(@Validated @RequestBody DeleteObjectsMo mo) {
         objectService.delete(mo.getBucket(), mo.getObjects());
         return ResultFactory.wrapper();

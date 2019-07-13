@@ -177,13 +177,13 @@ public class ObjectServiceImpl implements IObjectService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void createFolder(String bucket, String objectName) {
+    public void createFolder(String bucket, String folder) {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
 
         // 检查bucket
         BucketInfo bucketInfo = bucketService.checkUserHaveBucket(bucket);
 
-        String[] objectArr = objectName.split("/");
+        String[] objectArr = folder.split("/");
         createFolderIgnore(currentUser.getId(), bucketInfo.getId(), objectArr);
     }
 
@@ -351,11 +351,13 @@ public class ObjectServiceImpl implements IObjectService {
                 queryWrapper.eq("file_name", fileName);
                 ObjectInfo objectInfo = mapper.selectOne(queryWrapper);
                 if (objectInfo != null) {
-                    // todo 如果是文件夹，则删除该文件夹下所有的子项
-                    // 删除该对象引用关系，减少哈希引用
+                    // 删除该对象引用关系
                     mapper.deleteById(objectInfo.getId());
-                    System.out.println();
-                    if (!objectInfo.getIsDir()) {
+                    if (objectInfo.getIsDir()) {
+                        // 如果是文件夹，则删除该文件夹下所有的子项
+                        mapper.delete(new QueryWrapper<ObjectInfo>().eq("file_path", item));
+                    } else {
+                        // 对象hash引用 计数 -1
                         objectHashService.decreaseRefCountByHash(objectInfo.getHash());
                     }
                 }

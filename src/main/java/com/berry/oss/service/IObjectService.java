@@ -40,9 +40,9 @@ public interface IObjectService {
      * 新建目录
      *
      * @param bucket     bucket name
-     * @param objectName 目录全路径（可能是多级路径）
+     * @param folder 目录全路径（可能是多级路径）
      */
-    void createFolder(String bucket, String objectName);
+    void createFolder(String bucket, String folder);
 
     /**
      * 获取 Object
