@@ -112,9 +112,11 @@ public class ObjectServiceImpl implements IObjectService {
     @Override
     public String create(String bucket, MultipartFile file, String acl, String filePath) throws IOException {
         // 校验path 规范
-        Matcher matcher = Constants.FILE_PATH_PATTERN.matcher(filePath);
-        if (!DEFAULT_FILE_PATH.equals(filePath) && !matcher.find()) {
-            throw new UploadException("403", "当前上传文件目录不正确！");
+        if (!DEFAULT_FILE_PATH.equals(filePath)){
+            Matcher matcher = Constants.FILE_PATH_PATTERN.matcher(filePath.substring(1));
+            if(!filePath.startsWith(DEFAULT_FILE_PATH) || !matcher.find()){
+                throw new UploadException("403", "当前上传文件目录不正确！");
+            }
         }
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
 
@@ -137,14 +139,12 @@ public class ObjectServiceImpl implements IObjectService {
 
         // 校验通过
         String fileName = file.getOriginalFilename();
-        // 补充 path 前缀 '/'
-        String path = DEFAULT_FILE_PATH.equals(filePath) ? DEFAULT_FILE_PATH : DEFAULT_FILE_PATH + filePath;
 
         // 检查该 bucket 及 path 下 同名文件是否存在
         QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_id", currentUser.getId());
         queryWrapper.eq("bucket_id", bucketInfo.getId());
-        queryWrapper.eq("file_path", path);
+        queryWrapper.eq("file_path", filePath);
         queryWrapper.eq("file_name", fileName);
         ObjectInfo one = objectInfoDaoService.getOne(queryWrapper);
         if (one != null) {
@@ -156,7 +156,7 @@ public class ObjectServiceImpl implements IObjectService {
 
         // 检查文件路径，非 / 则需要创建目录
         if (!DEFAULT_FILE_PATH.equals(filePath)) {
-            String[] objectArr = filePath.split("/");
+            String[] objectArr = filePath.substring(1).split("/");
             createFolderIgnore(currentUser.getId(), bucketInfo.getId(), objectArr);
         }
 
@@ -171,7 +171,7 @@ public class ObjectServiceImpl implements IObjectService {
         }
         // 保存上传信息
 
-        saveObjectInfo(bucketInfo.getId(), acl, hash, fileSize, fileName, path, fileId);
+        saveObjectInfo(bucketInfo.getId(), acl, hash, fileSize, fileName, filePath, fileId);
         return msg;
     }
 
@@ -338,12 +338,13 @@ public class ObjectServiceImpl implements IObjectService {
         try (SqlSession session = sqlSessionTemplate.getSqlSessionFactory().openSession(ExecutorType.BATCH, false)) {
             ObjectInfoMapper mapper = session.getMapper(ObjectInfoMapper.class);
             for (String item : objectArray) {
-                String fileName = item;
+                int lastSepIndex = item.lastIndexOf("/");
+                String fileName = item.substring(lastSepIndex + 1);
                 String path = DEFAULT_FILE_PATH;
-                if (item.contains("/")) {
-                    path = item.substring(0, item.lastIndexOf("/"));
-                    fileName = item.substring(item.lastIndexOf("/") + 1);
+                if (lastSepIndex > 0 ){
+                    path = item.substring(0, lastSepIndex);
                 }
+
                 QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<>();
                 queryWrapper.eq("bucket_id", bucketInfo.getId());
                 queryWrapper.eq("user_id", currentUser.getId());
