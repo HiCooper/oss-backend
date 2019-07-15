@@ -8,8 +8,8 @@ spring:
     active: dev
   servlet:
     multipart:
-      maxFileSize: "4096MB"
-      maxRequestSize: "4096MB"
+      maxFileSize: "2048MB"
+      maxRequestSize: "2048MB"
   mvc:
     favicon:
       enabled: false

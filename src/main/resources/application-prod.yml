@@ -7,25 +7,25 @@ spring:
     type: com.alibaba.druid.pool.DruidDataSource
     platform: mysql
 
-  redis:
-    database: 0
-    # Redis服务器地址
-    host: 127.0.0.1
-    # Redis服务器连接端口
-    port: 6379
-    # Redis服务器连接密码（默认为空）
-    password: your_redis_passwd
-    jedis:
-      pool:
-        # 连接池最大连接数（使用负值表示没有限制）
-        max-active: 8
-        # 连接池最大阻塞等待时间（使用负值表示没有限制）
-        max-wait: -1ms
-        # 连接池中的最大空闲连接
-        max-idle: 8
-        # 连接池中的最小空闲连接
-        min-idle: 0
-    timeout: 2000ms
+#  redis:
+#    database: 0
+#    # Redis服务器地址
+#    host: 127.0.0.1
+#    # Redis服务器连接端口
+#    port: 6379
+#    # Redis服务器连接密码（默认为空）
+#    password: your_redis_passwd
+#    jedis:
+#      pool:
+#        # 连接池最大连接数（使用负值表示没有限制）
+#        max-active: 8
+#        # 连接池最大阻塞等待时间（使用负值表示没有限制）
+#        max-wait: -1ms
+#        # 连接池中的最大空闲连接
+#        max-idle: 8
+#        # 连接池中的最小空闲连接
+#        min-idle: 0
+#    timeout: 2000ms
 
 #  cloud:
 #    consul:
