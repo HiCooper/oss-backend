@@ -197,7 +197,7 @@ public class ObjectServiceImpl implements IObjectService {
         if (currentUser != null && currentUser.getId() != null) {
             // 用户请求头中带有密钥口令，无需url验证
             // 1. 检查当前用户 是否拥有对 所请求bucket的访问权限，通过后 可获取对该bucket的完全权限,跳过 url 校验
-            skipCheckAuth = authService.checkUserHaveAccessToBucket(currentUser.getId(), bucket, objectPath);
+            skipCheckAuth = authService.checkUserHaveAccessToBucketObject(currentUser, bucket, objectPath);
         }
 
         // 检查bucket

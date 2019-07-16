@@ -1,5 +1,7 @@
 package com.berry.oss.core.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
@@ -9,7 +11,7 @@ import java.sql.Timestamp;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author HiCooper
@@ -25,12 +27,18 @@ public class PolicyInfo implements Serializable {
     /**
      * 主键id
      */
-    private Integer id;
+    @TableId(value = "id", type = IdType.ID_WORKER_STR)
+    private String id;
 
     /**
      * 授权类型 1-只读，2-读写，3-完全控制，4-拒绝访问
      */
     private Integer actionType;
+
+    /**
+     * 禁止或允许访问，禁止优先级高于允许Deny/Allow
+     */
+    private String effect;
 
     /**
      * 授权资源
@@ -56,11 +64,5 @@ public class PolicyInfo implements Serializable {
      * bucket 名称
      */
     private String bucket;
-
-    /**
-     * 用户id
-     */
-    private Integer userId;
-
 
 }

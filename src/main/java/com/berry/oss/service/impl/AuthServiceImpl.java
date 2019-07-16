@@ -1,9 +1,14 @@
 package com.berry.oss.service.impl;
 
+import com.berry.oss.module.vo.PolicyListVo;
+import com.berry.oss.security.dto.UserInfoDTO;
 import com.berry.oss.service.IAuthService;
 import com.berry.oss.service.IBucketService;
+import com.berry.oss.service.IPolicyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -17,14 +22,33 @@ import org.springframework.stereotype.Service;
 public class AuthServiceImpl implements IAuthService {
 
     private final IBucketService bucketService;
+    private final IPolicyService policyService;
 
     @Autowired
-    public AuthServiceImpl(IBucketService bucketService) {
+    public AuthServiceImpl(IBucketService bucketService, IPolicyService policyService) {
         this.bucketService = bucketService;
+        this.policyService = policyService;
     }
 
     @Override
-    public Boolean checkUserHaveAccessToBucket(Integer userId, String bucket, String objectPath) {
-        return bucketService.checkUserHaveBucket(userId, bucket);
+    public Boolean checkUserHaveAccessToBucketObject(UserInfoDTO user, String bucket, String objectPath) {
+        if (bucketService.checkUserHaveBucket(user.getId(), bucket)){
+            // bucket 拥有者
+            return true;
+        }
+        // cooper/test/*
+        // cooper/tesat/a.jpg
+        String requestResource = bucket + objectPath;
+
+        // 获取该 bucket 授权策略
+        List<PolicyListVo> policy = policyService.getPolicy(bucket);
+        policy.forEach(item -> {
+            List<String> principal = item.getPrincipal();
+            if (principal.stream().findAny().filter(name -> name.equals(user.getUsername())).orElse(null) != null){
+                List<String> resource = item.getResource();
+                // todo 授权资源匹配
+            }
+        });
+        return false;
     }
 }
