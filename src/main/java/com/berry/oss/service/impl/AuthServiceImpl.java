@@ -32,23 +32,46 @@ public class AuthServiceImpl implements IAuthService {
 
     @Override
     public Boolean checkUserHaveAccessToBucketObject(UserInfoDTO user, String bucket, String objectPath) {
-        if (bucketService.checkUserHaveBucket(user.getId(), bucket)){
+        if (bucketService.checkUserHaveBucket(user.getId(), bucket)) {
             // bucket 拥有者
             return true;
         }
         // cooper/test/*
         // cooper/tesat/a.jpg
-        String requestResource = bucket + objectPath;
+        String targetResource = bucket + objectPath;
 
         // 获取该 bucket 授权策略
         List<PolicyListVo> policy = policyService.getPolicy(bucket);
-        policy.forEach(item -> {
+        return policy.stream().anyMatch(item -> {
             List<String> principal = item.getPrincipal();
-            if (principal.stream().findAny().filter(name -> name.equals(user.getUsername())).orElse(null) != null){
+            if (principal.stream().findAny().filter(name -> name.equals(user.getUsername())).orElse(null) != null) {
                 List<String> resource = item.getResource();
-                // todo 授权资源匹配
+                return checkHaveAccess(resource, targetResource);
+            }
+            return false;
+        });
+    }
+
+    /**
+     * 检查目标资源 是否在授权范围内
+     *
+     * @param resourcePatterns 授权策略列表
+     *                         eg.
+     *                         cooper/*
+     *                         cooper/test/*
+     * @param targetResource   目标资源
+     *                         eg.
+     *                         cooper/test/timg.png
+     * @return true or false
+     */
+    private static boolean checkHaveAccess(List<String> resourcePatterns, String targetResource) {
+        return resourcePatterns.stream().anyMatch(pattern -> {
+            if (pattern.endsWith("*")) {
+                pattern = pattern.replace("*", ".*");
+                return targetResource.matches(pattern);
+            } else {
+                return pattern.equals(targetResource);
             }
         });
-        return false;
     }
 }
