@@ -197,7 +197,7 @@ public class ObjectServiceImpl implements IObjectService {
         if (currentUser != null && currentUser.getId() != null) {
             // 用户请求头中带有密钥口令，无需url验证
             // 1. 检查当前用户 是否拥有对 所请求bucket的访问权限，通过后 可获取对该bucket的完全权限,跳过 url 校验
-            skipCheckAuth = authService.checkUserHaveAccessToBucketObject(currentUser, bucket, objectPath);
+            skipCheckAuth = authService.checkUserHaveAccessToBucketObject(currentUser, bucket, "/" + objectPath);
         }
 
         // 检查bucket
@@ -461,14 +461,14 @@ public class ObjectServiceImpl implements IObjectService {
     /**
      * 处理对象读取响应
      *
-     * @param objectName 对象全路径
+     * @param objectName 对象全路径 如：/test.jpg
      * @param response   响应
      * @param request    请求
      * @param objectInfo 对象信息
      * @param download   是否是下载
      * @throws IOException IO 异常
      */
-    private void handlerResponse(String objectName, HttpServletResponse response, WebRequest request, ObjectInfo objectInfo, Boolean download) throws IOException {
+    private void handlerResponse(String objectPath, HttpServletResponse response, WebRequest request, ObjectInfo objectInfo, Boolean download) throws IOException {
         if (download != null && download) {
             ObjectResource object = dataService.getObject(objectInfo.getFileId());
             if (object == null || object.getInputStream() == null) {
@@ -481,7 +481,7 @@ public class ObjectServiceImpl implements IObjectService {
         }
 
         long lastModified = objectInfo.getUpdateTime().toEpochSecond(OffsetDateTime.now().getOffset()) * 1000;
-        String eTag = "\"" + DigestUtils.md5DigestAsHex(objectName.getBytes()) + "\"";
+        String eTag = "\"" + DigestUtils.md5DigestAsHex(objectPath.getBytes()) + "\"";
         if (request.checkNotModified(eTag, lastModified)) {
             response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
         } else {

@@ -14,12 +14,12 @@ public interface IAuthService {
 
     /**
      * 检查用户 是否拥有权限访问 bucket
-     * todo 目前没有设置用户组授权，仅检验该 bucket 是否属于 该用户
-     * 后续加入用户组授权 以及 bucket 其他账户授权，该用户继承用户组权限，并且 获得 特定 账户授予的 特定 bucket(对象/目录) 访问权限
+     * 1. 用户组授权，该用户继承用户组权限，
+     * 2. bucket 其他账户授权,授予特定 bucket(对象/目录) 的访问权限
      *
      * @param user 用户
      * @param bucket bucket name
-     * @param objectPath bucket objectPath
+     * @param objectPath 对象全路径 如 /test/a.png
      * @return 是 or 否
      */
     Boolean checkUserHaveAccessToBucketObject(UserInfoDTO user, String bucket, String objectPath);
