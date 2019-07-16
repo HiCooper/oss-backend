@@ -57,7 +57,6 @@ public class PolicyServiceImpl implements IPolicyService {
 
     @Override
     public List<PolicyListVo> getPolicy(String bucket) {
-        bucketService.checkUserHaveBucket(bucket);
         List<PolicyInfo> policyInfoList = policyInfoDaoService.list(new QueryWrapper<PolicyInfo>().eq("bucket", bucket));
         List<PolicyListVo> voList = new ArrayList<>();
         policyInfoList.forEach(policy -> {
