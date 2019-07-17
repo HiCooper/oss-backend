@@ -10,6 +10,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.UnsupportedEncodingException;
 
 /**
  * Created with IntelliJ IDEA.
@@ -30,7 +31,7 @@ public class AccessInterceptor implements HandlerInterceptor {
     }
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws IllegalAccessException {
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws IllegalAccessException, UnsupportedEncodingException {
         String requestUrl = request.getRequestURI();
         if (Constants.WRITE_LIST.stream().noneMatch(requestUrl::matches)) {
             // sdk 通用请求拦截器,sdk token 验证后将不验证 upload token

@@ -21,6 +21,8 @@ import javax.annotation.Resource;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -76,14 +78,14 @@ public class AccessProvider {
         Auth.verifyUploadToken(credentials.split(":"), userInfoDTO.getAccessKeySecret(), requestUrl);
     }
 
-    void validateSdkAuthentication(HttpServletRequest request) throws IllegalAccessException {
+    void validateSdkAuthentication(HttpServletRequest request) throws IllegalAccessException, UnsupportedEncodingException {
         UserInfoDTO userInfoDTO = SecurityUtils.getCurrentUser();
         String credentials = SecurityUtils.getCurrentCredentials();
         String path = request.getRequestURI();
         String query = request.getQueryString();
         String urlStr = StringUtils.isBlank(query) ? path : path + "?" + query;
         // 校验 token 签名
-        Auth.validRequest(credentials, urlStr,  userInfoDTO.getAccessKeyId(), userInfoDTO.getAccessKeySecret());
+        Auth.validRequest(credentials, URLDecoder.decode(urlStr, "utf-8"),  userInfoDTO.getAccessKeyId(), userInfoDTO.getAccessKeySecret());
     }
 
     private Authentication getAuthentication(String ossAuth, String accessKeyId) {
