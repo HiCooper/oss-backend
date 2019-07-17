@@ -41,7 +41,7 @@ public class AuthServiceImpl implements IAuthService {
         String targetResource = bucket + objectPath;
 
         // 获取该 bucket 授权策略
-        List<PolicyListVo> policy = policyService.getPolicy(bucket);
+        List<PolicyListVo> policy = policyService.getPolicyNoCheck(bucket);
         boolean result = false;
         for (PolicyListVo item : policy) {
             // 遍历该用户相关的所有策略，DENY 优先级最高

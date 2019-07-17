@@ -7,8 +7,6 @@ import java.util.List;
 /**
  * Title IPolicyService
  * Description
- * Copyright (c) 2019
- * Company  上海思贤信息技术股份有限公司
  *
  * @author berry_cooper
  * @version 1.0
@@ -33,6 +31,13 @@ public interface IPolicyService {
      * @return data
      */
     List<PolicyListVo> getPolicy(String bucket);
+
+    /**
+     * 获取 bucket 的 授权策略 ，系统调用，无需检查权限
+     * @param bucket bucket name
+     * @return data
+     */
+    List<PolicyListVo> getPolicyNoCheck(String bucket);
 
     /**
      * 删除策略

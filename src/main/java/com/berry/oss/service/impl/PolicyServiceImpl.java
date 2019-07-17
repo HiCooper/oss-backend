@@ -18,8 +18,6 @@ import java.util.List;
 /**
  * Title PolicyServiceImpl
  * Description
- * Copyright (c) 2019
- * Company  上海思贤信息技术股份有限公司
  *
  * @author berry_cooper
  * @version 1.0
@@ -57,6 +55,16 @@ public class PolicyServiceImpl implements IPolicyService {
 
     @Override
     public List<PolicyListVo> getPolicy(String bucket) {
+        bucketService.checkUserHaveBucket(bucket);
+        return getPolicyListVos(bucket);
+    }
+
+    @Override
+    public List<PolicyListVo> getPolicyNoCheck(String bucket) {
+        return getPolicyListVos(bucket);
+    }
+
+    private List<PolicyListVo> getPolicyListVos(String bucket) {
         List<PolicyInfo> policyInfoList = policyInfoDaoService.list(new QueryWrapper<PolicyInfo>().eq("bucket", bucket));
         List<PolicyListVo> voList = new ArrayList<>();
         policyInfoList.forEach(policy -> {

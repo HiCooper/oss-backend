@@ -9,8 +9,6 @@ import java.util.List;
 /**
  * Title AddPolicyMo
  * Description
- * Copyright (c) 2019
- * Company  上海思贤信息技术股份有限公司
  *
  * @author berry_cooper
  * @version 1.0
