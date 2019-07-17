@@ -1,7 +1,6 @@
 package com.berry.oss.security.interceptor;
 
 import com.berry.oss.common.constant.Constants;
-import com.berry.oss.common.exceptions.BaseException;
 import com.berry.oss.common.utils.Auth;
 import com.berry.oss.common.utils.StringUtils;
 import com.berry.oss.core.service.IAccessKeyInfoDaoService;
@@ -18,9 +17,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.List;
@@ -85,7 +82,7 @@ public class AccessProvider {
         String query = request.getQueryString();
         String urlStr = StringUtils.isBlank(query) ? path : path + "?" + query;
         // 校验 token 签名
-        Auth.validRequest(credentials, URLDecoder.decode(urlStr, "utf-8"),  userInfoDTO.getAccessKeyId(), userInfoDTO.getAccessKeySecret());
+        Auth.validRequest(credentials, URLDecoder.decode(urlStr, "utf-8"), userInfoDTO.getAccessKeyId(), userInfoDTO.getAccessKeySecret());
     }
 
     private Authentication getAuthentication(String ossAuth, String accessKeyId) {

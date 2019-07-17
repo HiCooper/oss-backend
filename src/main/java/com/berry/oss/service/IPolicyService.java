@@ -34,6 +34,7 @@ public interface IPolicyService {
 
     /**
      * 获取 bucket 的 授权策略 ，系统调用，无需检查权限
+     *
      * @param bucket bucket name
      * @return data
      */
@@ -42,7 +43,7 @@ public interface IPolicyService {
     /**
      * 删除策略
      *
-     * @param bucket   bucket name
+     * @param bucket    bucket name
      * @param policyIds 策略id
      * @return 成功与否
      */

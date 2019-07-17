@@ -88,6 +88,7 @@ public class BucketController {
         //list: [] //白名单
         return ResultFactory.wrapper();
     }
+
     @PostMapping("update_referer.json")
     @ApiOperation("更新 Bucket 防盗链设置")
     public Result updateReferer(@RequestParam("bucket") String bucket) {
@@ -109,6 +110,7 @@ public class BucketController {
     public Result getLastThirtyDayHotData() {
         return ResultFactory.wrapper();
     }
+
     @ApiOperation("30天文件访问统计")
     @GetMapping("get_last_thirty_day_file_access_data.json")
     public Result getLastThirtyDayFileAccessData() {

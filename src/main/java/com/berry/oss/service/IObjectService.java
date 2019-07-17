@@ -39,7 +39,7 @@ public interface IObjectService {
     /**
      * 新建目录
      *
-     * @param bucket     bucket name
+     * @param bucket bucket name
      * @param folder 目录全路径（可能是多级路径）
      */
     void createFolder(String bucket, String folder);
@@ -109,8 +109,9 @@ public interface IObjectService {
 
     /**
      * 生成批量下载url
-     * @param bucket bucket name
-     * @param objectPath  对象全路径
+     *
+     * @param bucket     bucket name
+     * @param objectPath 对象全路径
      * @return url list
      */
     List<String> generateDownloadUrl(String bucket, List<String> objectPath) throws Exception;

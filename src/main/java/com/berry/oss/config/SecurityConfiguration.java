@@ -2,8 +2,8 @@ package com.berry.oss.config;
 
 import com.berry.oss.security.AuthoritiesConstants;
 import com.berry.oss.security.FilterConfigurer;
-import com.berry.oss.security.interceptor.AccessProvider;
 import com.berry.oss.security.filter.TokenProvider;
+import com.berry.oss.security.interceptor.AccessProvider;
 import org.springframework.beans.factory.BeanInitializationException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

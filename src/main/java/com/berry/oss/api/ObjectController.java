@@ -59,10 +59,9 @@ public class ObjectController {
     }
 
     /**
-     *
-     * @param bucket bucket name
-     * @param file file
-     * @param acl acl
+     * @param bucket   bucket name
+     * @param file     file
+     * @param acl      acl
      * @param filePath 所在路径  以 / 开头
      * @return msg
      * @throws IOException io exception
@@ -116,7 +115,7 @@ public class ObjectController {
     @ApiOperation("生成对象临时下载url 60s 有效")
     @PostMapping("generate_download_url.json")
     public Result generateDownloadUrl(@Validated @RequestBody GenerateDownloadUrlMo mo) throws Exception {
-       return ResultFactory.wrapper(objectService.generateDownloadUrl(mo.getBucket(), mo.getObjectPath()));
+        return ResultFactory.wrapper(objectService.generateDownloadUrl(mo.getBucket(), mo.getObjectPath()));
     }
 
     @GetMapping(value = "{bucket}/**")

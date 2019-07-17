@@ -46,15 +46,15 @@ public final class CommonConstant {
         private final int code;
         private final String desc;
 
-        ActionType(int code , String desc) {
+        ActionType(int code, String desc) {
             this.code = code;
             this.desc = desc;
         }
 
-        private static Map<Integer,String> data =new HashMap<>(4);
+        private static Map<Integer, String> data = new HashMap<>(4);
 
         static {
-            for(ActionType item : ActionType.values()) {
+            for (ActionType item : ActionType.values()) {
                 data.put(item.code, item.desc);
             }
         }

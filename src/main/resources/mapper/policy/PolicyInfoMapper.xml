@@ -4,14 +4,14 @@
 
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.berry.oss.core.entity.PolicyInfo">
-        <id column="id" property="id" />
-        <result column="action_type" property="actionType" />
-        <result column="resource" property="resource" />
-        <result column="principal" property="principal" />
-        <result column="create_time" property="createTime" />
-        <result column="update_time" property="updateTime" />
-        <result column="bucket" property="bucket" />
-        <result column="user_id" property="userId" />
+        <id column="id" property="id"/>
+        <result column="action_type" property="actionType"/>
+        <result column="resource" property="resource"/>
+        <result column="principal" property="principal"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="bucket" property="bucket"/>
+        <result column="user_id" property="userId"/>
     </resultMap>
 
     <!-- 通用查询结果列 -->

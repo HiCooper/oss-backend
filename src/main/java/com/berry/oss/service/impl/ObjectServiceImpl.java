@@ -112,9 +112,9 @@ public class ObjectServiceImpl implements IObjectService {
     @Override
     public String create(String bucket, MultipartFile file, String acl, String filePath) throws IOException {
         // 校验path 规范
-        if (!DEFAULT_FILE_PATH.equals(filePath)){
+        if (!DEFAULT_FILE_PATH.equals(filePath)) {
             Matcher matcher = Constants.FILE_PATH_PATTERN.matcher(filePath.substring(1));
-            if(!filePath.startsWith(DEFAULT_FILE_PATH) || !matcher.find()){
+            if (!filePath.startsWith(DEFAULT_FILE_PATH) || !matcher.find()) {
                 throw new UploadException("403", "当前上传文件目录不正确！");
             }
         }
@@ -342,7 +342,7 @@ public class ObjectServiceImpl implements IObjectService {
                 int lastSepIndex = item.lastIndexOf("/");
                 String fileName = item.substring(lastSepIndex + 1);
                 String path = DEFAULT_FILE_PATH;
-                if (lastSepIndex > 0 ){
+                if (lastSepIndex > 0) {
                     path = item.substring(0, lastSepIndex);
                 }
 

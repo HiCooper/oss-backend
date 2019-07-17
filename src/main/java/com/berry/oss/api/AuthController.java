@@ -117,7 +117,7 @@ public class AuthController {
     }
 
     @Data
-    private static class UserInfo{
+    private static class UserInfo {
         private Integer id;
         private String username;
 
