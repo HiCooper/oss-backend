@@ -21,7 +21,7 @@ import java.util.List;
 @Service
 public class AuthServiceImpl implements IAuthService {
 
-    private static final String DENY = "DENY";
+    private static final String DENY = "Deny";
 
     private final IBucketService bucketService;
     private final IPolicyService policyService;
