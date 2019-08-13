@@ -31,8 +31,7 @@ public final class Json {
 
     public static StringMap decode(String json) {
         // CHECKSTYLE:OFF
-        Type t = new TypeToken<Map<String, Object>>() {
-        }.getType();
+        Type t = new TypeToken<Map<String, Object>>() {}.getType();
         // CHECKSTYLE:ON
         Map<String, Object> x = new Gson().fromJson(json, t);
         return new StringMap(x);
