@@ -60,7 +60,7 @@ public class ObjectController {
 
     /**
      * @param bucket   bucket name
-     * @param file     file
+     * @param files     file
      * @param acl      acl
      * @param filePath 所在路径  以 / 开头
      * @return msg
