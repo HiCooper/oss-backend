@@ -61,6 +61,8 @@ import static com.berry.oss.common.constant.Constants.DEFAULT_FILE_PATH;
 @Service
 public class ObjectServiceImpl implements IObjectService {
 
+    private static int UPLOAD_PER_SIZE_LIMIT = 100;
+
     @Resource
     private SqlSessionTemplate sqlSessionTemplate;
 
@@ -110,13 +112,17 @@ public class ObjectServiceImpl implements IObjectService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public String create(String bucket, MultipartFile file, String acl, String filePath) throws IOException {
+    public String create(String bucket, MultipartFile[] files, String acl, String filePath) throws IOException {
         // 校验path 规范
         if (!DEFAULT_FILE_PATH.equals(filePath)) {
             Matcher matcher = Constants.FILE_PATH_PATTERN.matcher(filePath.substring(1));
             if (!filePath.startsWith(DEFAULT_FILE_PATH) || !matcher.find()) {
                 throw new UploadException("403", "当前上传文件目录不正确！");
             }
+        }
+        // 批量上传最多100个文件
+        if (files.length > UPLOAD_PER_SIZE_LIMIT) {
+            throw new UploadException("403", "最多同时上传100个文件！");
         }
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
 
@@ -129,49 +135,50 @@ public class ObjectServiceImpl implements IObjectService {
             throw new UploadException("404", "bucket not exist");
         }
 
-        // 计算文件 hash，获取文件大小
-        String hash = SHA256.hash(file.getBytes());
-        long fileSize = file.getSize();
-        // 1. 获取请求头中，文件大小，文件hash
-        if (fileSize > Integer.MAX_VALUE) {
-            throw new UploadException("403", "文件大小不能超过2G");
-        }
-
-        // 校验通过
-        String fileName = file.getOriginalFilename();
-
-        // 检查该 bucket 及 path 下 同名文件是否存在
-        QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_id", currentUser.getId());
-        queryWrapper.eq("bucket_id", bucketInfo.getId());
-        queryWrapper.eq("file_path", filePath);
-        queryWrapper.eq("file_name", fileName);
-        ObjectInfo one = objectInfoDaoService.getOne(queryWrapper);
-        if (one != null) {
-            // 同名文件存在，覆盖旧的（旧记录删除）
-            objectInfoDaoService.removeById(one.getId());
-            // 相关数据文件引用 -1
-            objectHashService.decreaseRefCountByHash(one.getHash());
-        }
-
-        // 检查文件路径，非 / 则需要创建目录
-        if (!DEFAULT_FILE_PATH.equals(filePath)) {
-            String[] objectArr = filePath.substring(1).split("/");
-            createFolderIgnore(currentUser.getId(), bucketInfo.getId(), objectArr);
-        }
-
         String msg = "极速上传成功!";
-        // 尝试快速上传
-        String fileId = objectHashService.checkExist(hash, fileSize);
-        if (StringUtils.isBlank(fileId)) {
-            msg = "上传成功";
-            // 快速上传失败，
-            // 调用存储数据服务，保存对象，返回24位对象id,
-            fileId = dataService.saveObject(file.getInputStream(), fileSize, hash, fileName, bucketInfo, currentUser.getUsername());
-        }
-        // 保存上传信息
+        for (MultipartFile file : files) {
+            // 计算文件 hash，获取文件大小
+            String hash = SHA256.hash(file.getBytes());
+            long fileSize = file.getSize();
+            // 1. 获取请求头中，文件大小，文件hash
+            if (fileSize > Integer.MAX_VALUE) {
+                throw new UploadException("403", "文件大小不能超过2G");
+            }
 
-        saveObjectInfo(bucketInfo.getId(), acl, hash, fileSize, fileName, filePath, fileId);
+            // 校验通过
+            String fileName = file.getOriginalFilename();
+
+            // 检查该 bucket 及 path 下 同名文件是否存在
+            QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("user_id", currentUser.getId());
+            queryWrapper.eq("bucket_id", bucketInfo.getId());
+            queryWrapper.eq("file_path", filePath);
+            queryWrapper.eq("file_name", fileName);
+            ObjectInfo one = objectInfoDaoService.getOne(queryWrapper);
+            if (one != null) {
+                // 同名文件存在，覆盖旧的（旧记录删除）
+                objectInfoDaoService.removeById(one.getId());
+                // 相关数据文件引用 -1
+                objectHashService.decreaseRefCountByHash(one.getHash());
+            }
+
+            // 检查文件路径，非 / 则需要创建目录
+            if (!DEFAULT_FILE_PATH.equals(filePath)) {
+                String[] objectArr = filePath.substring(1).split("/");
+                createFolderIgnore(currentUser.getId(), bucketInfo.getId(), objectArr);
+            }
+
+            // 尝试快速上传
+            String fileId = objectHashService.checkExist(hash, fileSize);
+            if (StringUtils.isBlank(fileId)) {
+                msg = "上传成功";
+                // 快速上传失败，
+                // 调用存储数据服务，保存对象，返回24位对象id,
+                fileId = dataService.saveObject(file.getInputStream(), fileSize, hash, fileName, bucketInfo, currentUser.getUsername());
+            }
+            // 保存上传信息
+            saveObjectInfo(bucketInfo.getId(), acl, hash, fileSize, fileName, filePath, fileId);
+        }
         return msg;
     }
 
@@ -239,7 +246,7 @@ public class ObjectServiceImpl implements IObjectService {
             // 2. 过期验证
             if (StringUtils.isNumeric(expiresTime)) {
                 // 时间戳字符串转时间,expiresTime 是秒单位
-                Date date = new Date(Long.valueOf(expiresTime) * 1000);
+                Date date = new Date(Long.parseLong(expiresTime) * 1000);
                 if (date.before(new Date())) {
                     throw new XmlResponseException(new AccessDenied("Request has expired."));
                 }
@@ -461,7 +468,7 @@ public class ObjectServiceImpl implements IObjectService {
     /**
      * 处理对象读取响应
      *
-     * @param objectName 对象全路径 如：/test.jpg
+     * @param objectPath 对象全路径 如：/test.jpg
      * @param response   响应
      * @param request    请求
      * @param objectInfo 对象信息

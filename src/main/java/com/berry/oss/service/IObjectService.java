@@ -28,13 +28,13 @@ public interface IObjectService {
      * 上传 Object
      *
      * @param bucket   bucket name
-     * @param file     待上传 file
+     * @param files    待上传 file
      * @param acl      文件acl
      * @param filePath 相对路径
      * @return 响应结果
      * @throws IOException 获取文件流IO异常
      */
-    String create(String bucket, MultipartFile file, String acl, String filePath) throws IOException;
+    String create(String bucket, MultipartFile[] files, String acl, String filePath) throws IOException;
 
     /**
      * 新建目录

@@ -70,10 +70,10 @@ public class ObjectController {
     @ApiOperation("创建对象")
     public Result<String> create(
             @RequestParam("bucket") String bucket,
-            @RequestParam("file") MultipartFile file,
+            @RequestParam("file") MultipartFile[] files,
             @RequestParam(value = "acl") String acl,
             @RequestParam(value = "filePath", defaultValue = DEFAULT_FILE_PATH) String filePath) throws IOException {
-        return ResultFactory.wrapper(objectService.create(bucket, file, acl, filePath));
+        return ResultFactory.wrapper(objectService.create(bucket, files, acl, filePath));
     }
 
     @GetMapping("detail.json")
