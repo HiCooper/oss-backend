@@ -24,7 +24,7 @@ import javax.servlet.http.HttpServletResponse;
  */
 @ControllerAdvice
 @ResponseBody
-public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+public class GlobalExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 

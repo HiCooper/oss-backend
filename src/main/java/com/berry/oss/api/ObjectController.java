@@ -83,7 +83,8 @@ public class ObjectController {
      * @return 结果
      */
     @PostMapping("upload_byte.json")
-    public Result upload(@RequestBody UploadObjectByteMo uploadObjectByteMo) throws IOException {
+    @ApiOperation("以字节数组格式创建对")
+    public Result upload(@Validated @RequestBody UploadObjectByteMo uploadObjectByteMo) throws IOException {
         objectService.upload(
                 uploadObjectByteMo.getBucket(),
                 uploadObjectByteMo.getFilePath(),

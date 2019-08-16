@@ -1,7 +1,5 @@
 package com.berry.oss.module.mo;
 
-import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
-import lombok.Builder;
 import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
