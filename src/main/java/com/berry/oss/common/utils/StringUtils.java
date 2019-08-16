@@ -118,13 +118,13 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
     public static String requestToStr(HttpServletRequest request) {
         String requestStr = null;
         try {
-            InputStream inStream = null;
+            InputStream inStream;
             inStream = request.getInputStream();
             int bufferSize = 1024;
             if (inStream != null) {
                 ByteArrayOutputStream outStream = new ByteArrayOutputStream();
                 byte[] tempBytes = new byte[bufferSize];
-                int count = -1;
+                int count;
                 while ((count = inStream.read(tempBytes, 0, bufferSize)) != -1) {
                     outStream.write(tempBytes, 0, count);
                 }
