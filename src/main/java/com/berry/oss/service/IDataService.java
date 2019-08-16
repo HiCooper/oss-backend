@@ -31,6 +31,20 @@ public interface IDataService {
     String saveObject(InputStream inputStream, long size, String hash, String fileName, BucketInfo bucketInfo, String username) throws IOException;
 
     /**
+     * 保存对象（字节数组）
+     *
+     * @param data       data
+     * @param size       size
+     * @param hash       hash
+     * @param fileName   文件名
+     * @param bucketInfo 存储空间
+     * @param username   用户名
+     * @return fileId 对象唯一id
+     * @throws IOException IO
+     */
+    String saveObject(byte[] data, long size, String hash, String fileName, BucketInfo bucketInfo, String username) throws IOException;
+
+    /**
      * 获取对象
      *
      * @param objectId 对象id

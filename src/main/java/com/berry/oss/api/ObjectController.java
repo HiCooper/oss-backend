@@ -60,7 +60,7 @@ public class ObjectController {
 
     /**
      * @param bucket   bucket name
-     * @param files     file
+     * @param files    file
      * @param acl      acl
      * @param filePath 所在路径  以 / 开头
      * @return msg
@@ -74,6 +74,24 @@ public class ObjectController {
             @RequestParam(value = "acl") String acl,
             @RequestParam(value = "filePath", defaultValue = DEFAULT_FILE_PATH) String filePath) throws IOException {
         return ResultFactory.wrapper(objectService.create(bucket, files, acl, filePath));
+    }
+
+    /**
+     * 以字节数组格式创建对象，文件名必须
+     *
+     * @param uploadObjectByteMo 请求对象
+     * @return 结果
+     */
+    @PostMapping("upload_byte.json")
+    public Result upload(@RequestBody UploadObjectByteMo uploadObjectByteMo) throws IOException {
+        objectService.upload(
+                uploadObjectByteMo.getBucket(),
+                uploadObjectByteMo.getFilePath(),
+                uploadObjectByteMo.getFileName(),
+                uploadObjectByteMo.getData(),
+                uploadObjectByteMo.getAcl()
+        );
+        return ResultFactory.wrapper();
     }
 
     @GetMapping("detail.json")

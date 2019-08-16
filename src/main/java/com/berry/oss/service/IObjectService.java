@@ -113,6 +113,19 @@ public interface IObjectService {
      * @param bucket     bucket name
      * @param objectPath 对象全路径
      * @return url list
+     * @throws Exception 编码异常，密钥生成异常
      */
     List<String> generateDownloadUrl(String bucket, List<String> objectPath) throws Exception;
+
+    /**
+     * byte 类型对象创建
+     *
+     * @param bucket   bucket name
+     * @param filePath 保存路径
+     * @param fileName 对象名
+     * @param data     对象数据体
+     * @param acl      ACL
+     * @throws IOException 编码异常，密钥生成异常
+     */
+    void upload(String bucket, String filePath, String fileName, byte[] data, String acl) throws IOException;
 }

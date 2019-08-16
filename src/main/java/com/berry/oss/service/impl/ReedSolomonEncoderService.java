@@ -63,6 +63,17 @@ public class ReedSolomonEncoderService {
         this.regionInfoDaoService = regionInfoDaoService;
     }
 
+    public String writeData(byte[] data, String fileName, BucketInfo bucketInfo, String username) throws IOException {
+        final int fileSize = data.length;
+
+        // 计算每个数据分片大小.  (文件大小 + 4个数据分片头) 除以 4 向上取整
+        final int storedSize = fileSize + BYTES_IN_INT;
+        final int shardSize = (storedSize + DATA_SHARDS - 1) / DATA_SHARDS;
+
+        List<WriteShardResponse> result = getWriteShardResponses(fileName, bucketInfo, username, shardSize, data);
+        return JSON.toJSONString(result);
+    }
+
     /**
      * 将输入流，分片 4+2 保存
      *
@@ -97,6 +108,12 @@ public class ReedSolomonEncoderService {
         }
         inputStream.close();
 
+        List<WriteShardResponse> result = getWriteShardResponses(fileName, bucketInfo, username, shardSize, allBytes);
+
+        return JSON.toJSONString(result);
+    }
+
+    private List<WriteShardResponse> getWriteShardResponses(String fileName, BucketInfo bucketInfo, String username, int shardSize, byte[] allBytes) {
         // 创建二维字节数组，将 文件字节数组 （allBytes）copy到该数组（shards）
         byte[][] shards = new byte[TOTAL_SHARDS][shardSize];
 
@@ -136,6 +153,6 @@ public class ReedSolomonEncoderService {
             }
             result.add(new WriteShardResponse(basePath + "/data/read", writePath));
         }
-        return JSON.toJSONString(result);
+        return result;
     }
 }

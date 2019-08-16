@@ -68,14 +68,24 @@ public class DataServiceImpl implements IDataService {
             json = reedSolomonEncoderService.writeData(inputStream, fileName, bucketInfo, username);
         }
         // 保存对象信息
-        ShardInfo shardInfo = new ShardInfo();
-        shardInfo.setFileId(fileId);
-        shardInfo.setSingleton(singleton);
-        shardInfo.setHash(hash);
-        shardInfo.setFileName(fileName);
-        shardInfo.setShardJson(json);
-        shardInfo.setSize(size);
-        shardInfoDaoService.save(shardInfo);
+        saveShardInfo(size, hash, fileName, fileId, singleton, json);
+        return fileId;
+    }
+
+    @Override
+    public String saveObject(byte[] data, long size, String hash, String fileName, BucketInfo bucketInfo, String username) throws IOException {
+        String fileId = ObjectId.get();
+        boolean singleton = globalProperties.isSingleton();
+        String json;
+        if (singleton) {
+            // 单机模式 分片信息仅保存本地路径
+            json = shardSaveService.writeShard(username, bucketInfo.getName(), fileName, data);
+        } else {
+            // 分布式模式
+            json = reedSolomonEncoderService.writeData(data, fileName, bucketInfo, username);
+        }
+        // 保存对象信息
+        saveShardInfo(size, hash, fileName, fileId, singleton, json);
         return fileId;
     }
 
@@ -114,5 +124,16 @@ public class DataServiceImpl implements IDataService {
                 .setFileSize(shardInfo.getSize())
                 .setHash(shardInfo.getHash())
                 .setInputStream(inputStream);
+    }
+
+    private void saveShardInfo(long size, String hash, String fileName, String fileId, boolean singleton, String json) {
+        ShardInfo shardInfo = new ShardInfo();
+        shardInfo.setFileId(fileId);
+        shardInfo.setSingleton(singleton);
+        shardInfo.setHash(hash);
+        shardInfo.setFileName(fileName);
+        shardInfo.setShardJson(json);
+        shardInfo.setSize(size);
+        shardInfoDaoService.save(shardInfo);
     }
 }

@@ -182,6 +182,62 @@ public class ObjectServiceImpl implements IObjectService {
         return msg;
     }
 
+    @Override
+    public void upload(String bucket, String filePath, String fileName, byte[] data, String acl) throws IOException {
+        // 校验path 规范
+        if (!DEFAULT_FILE_PATH.equals(filePath)) {
+            Matcher matcher = Constants.FILE_PATH_PATTERN.matcher(filePath.substring(1));
+            if (!filePath.startsWith(DEFAULT_FILE_PATH) || !matcher.find()) {
+                throw new UploadException("403", "当前上传文件目录不正确！");
+            }
+        }
+
+        UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
+
+        // 检查bucket
+        BucketInfo bucketInfo = bucketInfoDaoService.getOne(new QueryWrapper<BucketInfo>()
+                .eq("name", bucket)
+                .eq("user_id", currentUser.getId())
+        );
+        if (bucketInfo == null) {
+            throw new UploadException("404", "bucket not exist");
+        }
+        // 计算数据hash
+        String hash = SHA256.hash(data);
+        // 大小
+        long size = data.length;
+
+        // 检查该 bucket 及 path 下 同名文件是否存在
+        QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_id", currentUser.getId());
+        queryWrapper.eq("bucket_id", bucketInfo.getId());
+        queryWrapper.eq("file_path", filePath);
+        queryWrapper.eq("file_name", fileName);
+        ObjectInfo one = objectInfoDaoService.getOne(queryWrapper);
+        if (one != null) {
+            // 同名文件存在，覆盖旧的（旧记录删除）
+            objectInfoDaoService.removeById(one.getId());
+            // 相关数据文件引用 -1
+            objectHashService.decreaseRefCountByHash(one.getHash());
+        }
+
+        // 检查文件路径，非 / 则需要创建目录
+        if (!DEFAULT_FILE_PATH.equals(filePath)) {
+            String[] objectArr = filePath.substring(1).split("/");
+            createFolderIgnore(currentUser.getId(), bucketInfo.getId(), objectArr);
+        }
+
+        // 尝试快速上传
+        String fileId = objectHashService.checkExist(hash, size);
+        if (StringUtils.isBlank(fileId)) {
+            // 快速上传失败，
+            // 调用存储数据服务，保存对象，返回24位对象id,
+            fileId = dataService.saveObject(data, size, hash, fileName, bucketInfo, currentUser.getUsername());
+        }
+        // 保存上传信息
+        saveObjectInfo(bucketInfo.getId(), acl, hash, size, fileName, filePath, fileId);
+    }
+
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void createFolder(String bucket, String folder) {
