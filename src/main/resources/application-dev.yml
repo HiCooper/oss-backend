@@ -84,5 +84,5 @@ global:
 
 log:
   # 运行日志存储跟路径
-  path: ./logs
+  path: /var/logs/oss
 
