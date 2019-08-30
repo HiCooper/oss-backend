@@ -96,7 +96,7 @@ public class ObjectController {
         return ResultFactory.wrapper();
     }
 
-    @PostMapping("upload_base64_str.json")
+    @PostMapping("upload_base64.json")
     @ApiOperation("以base64字符串格式创建对象")
     public Result uploadByBase64Str(@Validated @RequestBody UploadObjectBase64Mo uploadObjectBase64Mo) throws IOException {
         objectService.uploadByBase64Str(
