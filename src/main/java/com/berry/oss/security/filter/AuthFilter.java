@@ -45,12 +45,12 @@ public class AuthFilter extends GenericFilterBean {
         String requestUrl = httpServletRequest.getRequestURI();
         if (Constants.WRITE_LIST.stream().noneMatch(requestUrl::matches)) {
             String jwt = resolveToken(httpServletRequest);
-            String ip = NetworkUtils.getRequestIpAddress(httpServletRequest);
             if (StringUtils.isNotBlank(jwt) && this.tokenProvider.validateToken(jwt)) {
                 // 验证jwt 设置授权信息到该线程上下文
                 Authentication authentication = this.tokenProvider.getAuthentication(jwt);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } else {
+                String ip = NetworkUtils.getRequestIpAddress(httpServletRequest);
                 String ossAuth = httpServletRequest.getHeader(Constants.OSS_SDK_AUTH_HEAD_NAME);
                 if (StringUtils.isNotBlank(ossAuth)) {
                     // 只验证 token 格式 尝试设置用户信息

@@ -15,10 +15,13 @@ import javax.validation.constraints.NotNull;
  * Use：
  */
 @Data
-public class UploadObjectByteMo {
+public class UploadObjectBase64Mo {
     @NotBlank
     String bucket;
 
+    /**
+     * 不带后缀名（系统自动判断）
+     */
     @NotBlank
     String fileName;
 
@@ -27,5 +30,5 @@ public class UploadObjectByteMo {
     String acl = CommonConstant.AclType.PRIVATE.name();
 
     @NotNull
-    byte[] data;
+    String data;
 }

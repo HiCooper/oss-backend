@@ -127,5 +127,17 @@ public interface IObjectService {
      * @param acl      ACL
      * @throws IOException 编码异常，密钥生成异常
      */
-    void upload(String bucket, String filePath, String fileName, byte[] data, String acl) throws IOException;
+    void uploadByte(String bucket, String filePath, String fileName, byte[] data, String acl) throws IOException;
+
+    /**
+     * base64 字符串类型 创建对象
+     *
+     * @param bucket   bucket name
+     * @param filePath 保存路径
+     * @param fileName 对象名
+     * @param data     对象数据体
+     * @param acl      ACL
+     * @throws IOException 编码异常，密钥生成异常
+     */
+    void uploadByBase64Str(String bucket, String filePath, String fileName, String data, String acl) throws IOException;
 }

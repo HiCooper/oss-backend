@@ -32,11 +32,12 @@ import java.util.Map;
  * @date 2019/6/4 15:34
  */
 @RestController
-@RequestMapping("ajax/bucket/file")
+@RequestMapping("ajax/bucket")
 @Api(tags = "对象管理")
 public class ObjectController {
 
     private static final String DEFAULT_FILE_PATH = "/";
+    private static final String PRIVATE = "PRIVATE";
 
     private final IObjectInfoDaoService objectInfoDaoService;
 
@@ -71,7 +72,7 @@ public class ObjectController {
     public Result<String> create(
             @RequestParam("bucket") String bucket,
             @RequestParam("file") MultipartFile[] files,
-            @RequestParam(value = "acl") String acl,
+            @RequestParam(value = "acl", defaultValue = PRIVATE) String acl,
             @RequestParam(value = "filePath", defaultValue = DEFAULT_FILE_PATH) String filePath) throws IOException {
         return ResultFactory.wrapper(objectService.create(bucket, files, acl, filePath));
     }
@@ -83,14 +84,27 @@ public class ObjectController {
      * @return 结果
      */
     @PostMapping("upload_byte.json")
-    @ApiOperation("以字节数组格式创建对")
-    public Result upload(@Validated @RequestBody UploadObjectByteMo uploadObjectByteMo) throws IOException {
-        objectService.upload(
+    @ApiOperation("以字节数组格式创建对象")
+    public Result uploadByte(@Validated @RequestBody UploadObjectByteMo uploadObjectByteMo) throws IOException {
+        objectService.uploadByte(
                 uploadObjectByteMo.getBucket(),
                 uploadObjectByteMo.getFilePath(),
                 uploadObjectByteMo.getFileName(),
                 uploadObjectByteMo.getData(),
                 uploadObjectByteMo.getAcl()
+        );
+        return ResultFactory.wrapper();
+    }
+
+    @PostMapping("upload_base64_str.json")
+    @ApiOperation("以base64字符串格式创建对象")
+    public Result uploadByBase64Str(@Validated @RequestBody UploadObjectBase64Mo uploadObjectBase64Mo) throws IOException {
+        objectService.uploadByBase64Str(
+                uploadObjectBase64Mo.getBucket(),
+                uploadObjectBase64Mo.getFilePath(),
+                uploadObjectBase64Mo.getFileName(),
+                uploadObjectBase64Mo.getData(),
+                uploadObjectBase64Mo.getAcl()
         );
         return ResultFactory.wrapper();
     }
@@ -137,7 +151,7 @@ public class ObjectController {
         return ResultFactory.wrapper(objectService.generateDownloadUrl(mo.getBucket(), mo.getObjectPath()));
     }
 
-    @GetMapping(value = "{bucket}/**")
+    @GetMapping(value = "file/{bucket}/**")
     @ApiOperation("获取对象(私有对象，需要临时口令，且限时访问；公开对象，直接访问，** 为对象相对根路径的全路径，包含对象名)")
     public void getObject(
             @PathVariable("bucket") String bucket,

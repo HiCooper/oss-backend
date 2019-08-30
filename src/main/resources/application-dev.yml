@@ -67,7 +67,6 @@ mybatis-plus:
 
 #log
 logging:
-  config: classpath:logback/logback.xml
   level:
     ROOT: INFO
     org.springframework.web: ERROR

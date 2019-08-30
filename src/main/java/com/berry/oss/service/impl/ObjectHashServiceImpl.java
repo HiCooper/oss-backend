@@ -33,18 +33,16 @@ public class ObjectHashServiceImpl implements IObjectHashService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public String checkExist(String hash, Long contentLength) {
-        QueryWrapper<ObjectHash> queryWrapper = new QueryWrapper<ObjectHash>()
-                .eq("hash", hash)
-                .eq("size", contentLength);
+    public String checkExist(String hash, Long dataLength) {
+        QueryWrapper<ObjectHash> queryWrapper = new QueryWrapper<ObjectHash>().eq("hash", hash);
         int count = objectHashDaoService.count(queryWrapper);
         if (count == 0) {
             return null;
         }
         ObjectHash one = objectHashDaoService.getOne(queryWrapper);
         if (count > 1) {
-            // 数据库建立了 hash 唯一索引，以及 hash + size 联合唯一索引，理论上不可能出现
-            logger.error("hash：{}，size: {}, 出现 {} 次", hash, contentLength, count);
+            // 数据库建立了 hash 唯一索引，理论上不可能出现
+            logger.error("hash：{}，出现 {} 次", hash, count);
             // 触发清理,将id较大的删除
             queryWrapper.gt("id", one.getId());
             objectHashDaoService.remove(queryWrapper);
@@ -57,8 +55,7 @@ public class ObjectHashServiceImpl implements IObjectHashService {
     public Boolean increaseRefCountByHash(String hash, String fileId, Long size) {
         QueryWrapper<ObjectHash> queryWrapper = new QueryWrapper<ObjectHash>()
                 .eq("hash", hash)
-                .eq("file_id", fileId)
-                .eq("size", size);
+                .eq("file_id", fileId);
         ObjectHash one = objectHashDaoService.getOne(queryWrapper);
         if (one == null) {
             one = new ObjectHash()
@@ -79,7 +76,8 @@ public class ObjectHashServiceImpl implements IObjectHashService {
         if (one == null) {
             throw new BaseException(ResultCode.DATA_NOT_EXIST);
         }
-        one.setReferenceCount(one.getReferenceCount() - 1);
+        int newCount = Math.max(one.getReferenceCount() - 1, 0);
+        one.setReferenceCount(newCount);
         // 引用为 0  的索引，由定时任务程序去扫描整理删除 对应的数据和引用
         return objectHashDaoService.updateById(one);
     }

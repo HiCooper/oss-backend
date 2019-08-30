@@ -10,7 +10,7 @@ import java.util.Map;
  * @date 2018-03-26
  * Description 公共常量
  */
-public final class CommonConstant {
+public class CommonConstant {
 
     public enum AclType {
         /**
