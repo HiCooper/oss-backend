@@ -611,6 +611,10 @@ public class ObjectServiceImpl implements IObjectService {
 
     private String getPublicObjectUrl(String bucket, String filePath, String fileName) {
         String ip = globalProperties.getServerIp();
-        return "http://" + ip + ":" + port + "/ajax/bucket/file/" + bucket + filePath + "/" + fileName;
+        String objectPath = filePath + "/" + fileName;
+        if (filePath.equals(DEFAULT_FILE_PATH)) {
+            objectPath = "/" + fileName;
+        }
+        return "http://" + ip + ":" + port + "/ajax/bucket/file/" + bucket + objectPath;
     }
 }
