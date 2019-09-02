@@ -6,10 +6,10 @@ export LANG="en_US.UTF-8"
 #----------------------------------------------------------------------
 
 # 远程服务器 ip
-remote_server_ip='10.50.12.38'
+remote_server_ip='47.101.42.169'
 username='root'
 # !确保远程文件夹 /home/jar-service 存在
-jar_store_dir='/home/jar-service/oss/backend'
+jar_store_dir='/home/jar-task/backend-service'
 
 #----------------------------------------------------------------------
 # 脚本
