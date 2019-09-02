@@ -75,7 +75,8 @@ public class ObjectController {
             @RequestParam("file") MultipartFile[] files,
             @RequestParam(value = "acl", defaultValue = PRIVATE) String acl,
             @RequestParam(value = "filePath", defaultValue = DEFAULT_FILE_PATH) String filePath) throws Exception {
-        return ResultFactory.wrapper(objectService.create(bucket, files, acl, filePath));
+        List<ObjectInfoVo> objectInfoVos = objectService.create(bucket, files, acl, filePath);
+        return ResultFactory.wrapper(objectInfoVos);
     }
 
     /**
