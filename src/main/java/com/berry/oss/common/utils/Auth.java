@@ -78,7 +78,7 @@ public final class Auth {
         if (deadDate.before(new Date())) {
             throw new IllegalAccessException("口令已过期");
         }
-        // 验证 目标访问url 必须是 'UPLOAD_URL'
+        // 验证 目标访问url 必须是 ACCESS_TOKEN_CAN_REQUEST_API 列表中的地址
         if (ACCESS_TOKEN_CAN_REQUEST_API.stream().noneMatch(requestUrl::matches)) {
             throw new IllegalAccessException("非授权访问url");
         }
