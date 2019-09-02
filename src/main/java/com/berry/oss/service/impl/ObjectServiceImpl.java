@@ -18,12 +18,14 @@ import com.berry.oss.core.service.IBucketInfoDaoService;
 import com.berry.oss.core.service.IObjectInfoDaoService;
 import com.berry.oss.module.dto.ObjectResource;
 import com.berry.oss.module.vo.GenerateUrlWithSignedVo;
+import com.berry.oss.module.vo.ObjectInfoVo;
 import com.berry.oss.security.SecurityUtils;
 import com.berry.oss.security.dto.UserInfoDTO;
 import com.berry.oss.service.*;
 import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
 import org.mybatis.spring.SqlSessionTemplate;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -43,7 +45,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.time.LocalTime;
-import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -113,14 +114,9 @@ public class ObjectServiceImpl implements IObjectService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public String create(String bucket, MultipartFile[] files, String acl, String filePath) throws IOException {
+    public List<ObjectInfoVo> create(String bucket, MultipartFile[] files, String acl, String filePath) throws IOException {
         // 校验path 规范
-        if (!DEFAULT_FILE_PATH.equals(filePath)) {
-            Matcher matcher = Constants.FILE_PATH_PATTERN.matcher(filePath.substring(1));
-            if (!filePath.startsWith(DEFAULT_FILE_PATH) || !matcher.find()) {
-                throw new UploadException("403", "当前上传文件目录不正确！");
-            }
-        }
+        checkPath(filePath);
         // 批量上传最多100个文件
         if (files.length > UPLOAD_PER_SIZE_LIMIT) {
             throw new UploadException("403", "最多同时上传100个文件！");
@@ -128,15 +124,9 @@ public class ObjectServiceImpl implements IObjectService {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
 
         // 检查bucket
-        BucketInfo bucketInfo = bucketInfoDaoService.getOne(new QueryWrapper<BucketInfo>()
-                .eq("name", bucket)
-                .eq("user_id", currentUser.getId())
-        );
-        if (bucketInfo == null) {
-            throw new UploadException("404", "bucket not exist");
-        }
+        BucketInfo bucketInfo = getBucketInfo(bucket, currentUser);
 
-        String msg = "极速上传成功!";
+        List<ObjectInfoVo> objectInfoVos = new ArrayList<>(16);
         for (MultipartFile file : files) {
             // 计算文件 hash，获取文件大小
             String hash = SHA256.hash(file.getBytes());
@@ -150,40 +140,33 @@ public class ObjectServiceImpl implements IObjectService {
             String fileName = file.getOriginalFilename();
             checkFile(filePath, currentUser, bucketInfo, fileName);
 
+            ObjectInfoVo vo = new ObjectInfoVo();
+
             // 尝试快速上传
             String fileId = objectHashService.checkExist(hash, fileSize);
             if (StringUtils.isBlank(fileId)) {
-                msg = "上传成功";
+                vo.setUploadType(false);
                 // 快速上传失败，
                 // 调用存储数据服务，保存对象，返回24位对象id,
                 fileId = dataService.saveObject(file.getInputStream(), fileSize, hash, fileName, bucketInfo, currentUser.getUsername());
             }
             // 保存上传信息
-            saveObjectInfo(bucketInfo.getId(), acl, hash, fileSize, fileName, filePath, fileId);
+            ObjectInfo objectInfo = saveObjectInfo(bucketInfo.getId(), acl, hash, fileSize, fileName, filePath, fileId);
+            BeanUtils.copyProperties(objectInfo, vo);
+            objectInfoVos.add(vo);
         }
-        return msg;
+        return objectInfoVos;
     }
 
     @Override
-    public void uploadByte(String bucket, String filePath, String fileName, byte[] data, String acl) throws IOException {
-        // 校验path 规范
-        if (!DEFAULT_FILE_PATH.equals(filePath)) {
-            Matcher matcher = Constants.FILE_PATH_PATTERN.matcher(filePath.substring(1));
-            if (!filePath.startsWith(DEFAULT_FILE_PATH) || !matcher.find()) {
-                throw new UploadException("403", "当前上传文件目录不正确！");
-            }
-        }
+    public ObjectInfoVo uploadByte(String bucket, String filePath, String fileName, byte[] data, String acl) throws IOException {
+        checkPath(filePath);
 
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
 
         // 检查bucket
-        BucketInfo bucketInfo = bucketInfoDaoService.getOne(new QueryWrapper<BucketInfo>()
-                .eq("name", bucket)
-                .eq("user_id", currentUser.getId())
-        );
-        if (bucketInfo == null) {
-            throw new UploadException("404", "bucket not exist");
-        }
+        BucketInfo bucketInfo = getBucketInfo(bucket, currentUser);
+
         // 计算数据hash
         String hash = SHA256.hash(data);
         // 大小
@@ -192,37 +175,32 @@ public class ObjectServiceImpl implements IObjectService {
         // 检查该 bucket 及 path 下 同名文件是否存在
         checkFile(filePath, currentUser, bucketInfo, fileName);
 
+        ObjectInfoVo vo = new ObjectInfoVo();
+
         // 尝试快速上传
         String fileId = objectHashService.checkExist(hash, size);
         if (StringUtils.isBlank(fileId)) {
             // 快速上传失败，
+            vo.setUploadType(false);
             // 调用存储数据服务，保存对象，返回24位对象id,
             fileId = dataService.saveObject(data, size, hash, fileName, bucketInfo, currentUser.getUsername());
         }
         // 保存上传信息
-        saveObjectInfo(bucketInfo.getId(), acl, hash, size, fileName, filePath, fileId);
+        ObjectInfo objectInfo = saveObjectInfo(bucketInfo.getId(), acl, hash, size, fileName, filePath, fileId);
+        BeanUtils.copyProperties(objectInfo, vo);
+        return vo;
     }
 
     @Override
-    public void uploadByBase64Str(String bucket, String filePath, String fileName, String data, String acl) throws IOException {
+    public ObjectInfoVo uploadByBase64Str(String bucket, String filePath, String fileName, String data, String acl) throws IOException {
         // 校验path 规范
-        if (!DEFAULT_FILE_PATH.equals(filePath)) {
-            Matcher matcher = Constants.FILE_PATH_PATTERN.matcher(filePath.substring(1));
-            if (!filePath.startsWith(DEFAULT_FILE_PATH) || !matcher.find()) {
-                throw new UploadException("403", "当前上传文件目录不正确！");
-            }
-        }
+        checkPath(filePath);
 
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
 
         // 检查bucket
-        BucketInfo bucketInfo = bucketInfoDaoService.getOne(new QueryWrapper<BucketInfo>()
-                .eq("name", bucket)
-                .eq("user_id", currentUser.getId())
-        );
-        if (bucketInfo == null) {
-            throw new UploadException("404", "bucket not exist");
-        }
+        BucketInfo bucketInfo = getBucketInfo(bucket, currentUser);
+
         String[] dataArr = data.split("base64,");
         if (dataArr.length != 2 || dataArr[0].matches("data:image/[a-z];")) {
             throw new UploadException("403", "非法base64数据");
@@ -236,19 +214,20 @@ public class ObjectServiceImpl implements IObjectService {
         // 检查该 bucket 及 path 下 同名文件是否存在
         checkFile(filePath, currentUser, bucketInfo, fileName + fileType);
 
+        ObjectInfoVo vo = new ObjectInfoVo();
+
         // 尝试快速上传
         String fileId = objectHashService.checkExist(hash, size);
         if (StringUtils.isBlank(fileId)) {
             // 快速上传失败，
+            vo.setUploadType(false);
             // 调用存储数据服务，保存对象，返回24位对象id,
             fileId = dataService.saveObject(byteData, size, hash, fileName + fileType, bucketInfo, currentUser.getUsername());
         }
         // 保存上传信息
-        saveObjectInfo(bucketInfo.getId(), acl, hash, size, fileName + fileType, filePath, fileId);
-    }
-
-    private static String getFileType(String dataPrefix) {
-        return "." + dataPrefix.substring(dataPrefix.lastIndexOf("/") + 1, dataPrefix.length() - 1);
+        ObjectInfo objectInfo = saveObjectInfo(bucketInfo.getId(), acl, hash, size, fileName + fileType, filePath, fileId);
+        BeanUtils.copyProperties(objectInfo, vo);
+        return vo;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -466,7 +445,7 @@ public class ObjectServiceImpl implements IObjectService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void saveObjectInfo(String bucketId, String acl, String hash, Long contentLength, String fileName, String filePath, String fileId) {
+    public ObjectInfo saveObjectInfo(String bucketId, String acl, String hash, Long contentLength, String fileName, String filePath, String fileId) {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
         // 添加 该账号 该文件记录
         ObjectInfo objectInfo = new ObjectInfo()
@@ -485,6 +464,32 @@ public class ObjectServiceImpl implements IObjectService {
 
         // 引用+1
         objectHashService.increaseRefCountByHash(hash, fileId, contentLength);
+        return objectInfo;
+    }
+
+    private BucketInfo getBucketInfo(String bucket, UserInfoDTO currentUser) {
+        BucketInfo bucketInfo = bucketInfoDaoService.getOne(new QueryWrapper<BucketInfo>()
+                .eq("name", bucket)
+                .eq("user_id", currentUser.getId())
+        );
+        if (bucketInfo == null) {
+            throw new UploadException("404", "bucket not exist");
+        }
+        return bucketInfo;
+    }
+
+    private static String getFileType(String dataPrefix) {
+        return "." + dataPrefix.substring(dataPrefix.lastIndexOf("/") + 1, dataPrefix.length() - 1);
+    }
+
+    private void checkPath(String filePath) {
+        // 校验path 规范
+        if (!DEFAULT_FILE_PATH.equals(filePath)) {
+            Matcher matcher = Constants.FILE_PATH_PATTERN.matcher(filePath.substring(1));
+            if (!filePath.startsWith(DEFAULT_FILE_PATH) || !matcher.find()) {
+                throw new UploadException("403", "当前上传文件目录不正确！");
+            }
+        }
     }
 
     private void checkFile(String filePath, UserInfoDTO currentUser, BucketInfo bucketInfo, String fileName) {
@@ -578,7 +583,8 @@ public class ObjectServiceImpl implements IObjectService {
             return;
         }
 
-        long lastModified = objectInfo.getUpdateTime().toEpochSecond(OffsetDateTime.now().getOffset()) * 1000;
+//        long lastModified = objectInfo.getUpdateTime().toEpochSecond(OffsetDateTime.now().getOffset()) * 1000;
+        long lastModified = objectInfo.getUpdateTime().getTime();
         String eTag = "\"" + DigestUtils.md5DigestAsHex(objectPath.getBytes()) + "\"";
         if (request.checkNotModified(eTag, lastModified)) {
             response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);

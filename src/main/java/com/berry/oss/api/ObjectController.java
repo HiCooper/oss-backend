@@ -7,6 +7,7 @@ import com.berry.oss.core.entity.ObjectInfo;
 import com.berry.oss.core.service.IObjectInfoDaoService;
 import com.berry.oss.module.mo.*;
 import com.berry.oss.module.vo.GenerateUrlWithSignedVo;
+import com.berry.oss.module.vo.ObjectInfoVo;
 import com.berry.oss.service.IObjectService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -69,7 +70,7 @@ public class ObjectController {
      */
     @PostMapping("create")
     @ApiOperation("创建对象")
-    public Result<String> create(
+    public Result create(
             @RequestParam("bucket") String bucket,
             @RequestParam("file") MultipartFile[] files,
             @RequestParam(value = "acl", defaultValue = PRIVATE) String acl,
@@ -86,27 +87,27 @@ public class ObjectController {
     @PostMapping("upload_byte.json")
     @ApiOperation("以字节数组格式创建对象")
     public Result uploadByte(@Validated @RequestBody UploadObjectByteMo uploadObjectByteMo) throws IOException {
-        objectService.uploadByte(
+        ObjectInfoVo objectInfoVo = objectService.uploadByte(
                 uploadObjectByteMo.getBucket(),
                 uploadObjectByteMo.getFilePath(),
                 uploadObjectByteMo.getFileName(),
                 uploadObjectByteMo.getData(),
                 uploadObjectByteMo.getAcl()
         );
-        return ResultFactory.wrapper();
+        return ResultFactory.wrapper(objectInfoVo);
     }
 
     @PostMapping("upload_base64.json")
     @ApiOperation("以base64字符串格式创建对象")
     public Result uploadByBase64Str(@Validated @RequestBody UploadObjectBase64Mo uploadObjectBase64Mo) throws IOException {
-        objectService.uploadByBase64Str(
+        ObjectInfoVo objectInfoVo = objectService.uploadByBase64Str(
                 uploadObjectBase64Mo.getBucket(),
                 uploadObjectBase64Mo.getFilePath(),
                 uploadObjectBase64Mo.getFileName(),
                 uploadObjectBase64Mo.getData(),
                 uploadObjectBase64Mo.getAcl()
         );
-        return ResultFactory.wrapper();
+        return ResultFactory.wrapper(objectInfoVo);
     }
 
     @GetMapping("detail.json")

@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.Set;
 
 /**
@@ -39,12 +39,12 @@ public class UserDTO implements Serializable {
     /**
      * 创建时间
      */
-    private LocalDateTime createTime;
+    private Date createTime;
 
     /**
      * 上次修改时间
      */
-    private LocalDateTime updateTime;
+    private Date updateTime;
 
     @JsonIgnore
     private Set<Role> roleSet;

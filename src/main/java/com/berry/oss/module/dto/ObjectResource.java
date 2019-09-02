@@ -4,7 +4,7 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 
 import java.io.InputStream;
-import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * Title ObjectResource
@@ -29,5 +29,5 @@ public class ObjectResource {
 
     private String hash;
 
-    private LocalDateTime createTime;
+    private Date createTime;
 }

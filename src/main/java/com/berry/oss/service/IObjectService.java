@@ -2,6 +2,7 @@ package com.berry.oss.service;
 
 import com.berry.oss.core.entity.ObjectInfo;
 import com.berry.oss.module.vo.GenerateUrlWithSignedVo;
+import com.berry.oss.module.vo.ObjectInfoVo;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,10 +32,10 @@ public interface IObjectService {
      * @param files    待上传 file
      * @param acl      文件acl
      * @param filePath 相对路径
-     * @return 响应结果
+     * @return list
      * @throws IOException 获取文件流IO异常
      */
-    String create(String bucket, MultipartFile[] files, String acl, String filePath) throws IOException;
+    List<ObjectInfoVo> create(String bucket, MultipartFile[] files, String acl, String filePath) throws IOException;
 
     /**
      * 新建目录
@@ -125,9 +126,10 @@ public interface IObjectService {
      * @param fileName 对象名
      * @param data     对象数据体
      * @param acl      ACL
+     * @return object info
      * @throws IOException 编码异常，密钥生成异常
      */
-    void uploadByte(String bucket, String filePath, String fileName, byte[] data, String acl) throws IOException;
+    ObjectInfoVo uploadByte(String bucket, String filePath, String fileName, byte[] data, String acl) throws IOException;
 
     /**
      * base64 字符串类型 创建对象
@@ -137,7 +139,8 @@ public interface IObjectService {
      * @param fileName 对象名
      * @param data     对象数据体
      * @param acl      ACL
+     * @return object info
      * @throws IOException 编码异常，密钥生成异常
      */
-    void uploadByBase64Str(String bucket, String filePath, String fileName, String data, String acl) throws IOException;
+    ObjectInfoVo uploadByBase64Str(String bucket, String filePath, String fileName, String data, String acl) throws IOException;
 }

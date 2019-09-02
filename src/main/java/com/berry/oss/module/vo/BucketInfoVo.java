@@ -2,7 +2,7 @@ package com.berry.oss.module.vo;
 
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * Title BucketInfoVo
@@ -37,10 +37,10 @@ public class BucketInfoVo {
     /**
      * 创建时间
      */
-    private LocalDateTime createTime;
+    private Date createTime;
 
     /**
      * 更新时间
      */
-    private LocalDateTime updateTime;
+    private Date updateTime;
 }

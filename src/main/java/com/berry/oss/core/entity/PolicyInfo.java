@@ -7,7 +7,7 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
 import java.io.Serializable;
-import java.sql.Timestamp;
+import java.util.Date;
 
 /**
  * <p>
@@ -53,12 +53,12 @@ public class PolicyInfo implements Serializable {
     /**
      * 创建时间
      */
-    private Timestamp createTime;
+    private Date createTime;
 
     /**
      * 更新时间
      */
-    private Timestamp updateTime;
+    private Date updateTime;
 
     /**
      * bucket 名称
