@@ -9,7 +9,7 @@ export LANG="en_US.UTF-8"
 remote_server_ip='10.50.12.38'
 username='root'
 # !确保远程文件夹 /home/jar-service 存在
-jar_store_dir='/home/jar-service/oss'
+jar_store_dir='/home/jar-service/oss/backend'
 
 #----------------------------------------------------------------------
 # 脚本
@@ -29,7 +29,7 @@ echo "构建成功"
 # shellcheck disable=SC2144
 if [ -f build/libs/*.jar ]; then
   echo "正在上传 jar 包..."
-  cp run.sh build/libs/
+#  cp run.sh build/libs/
   scp -r build/libs/ ${username}@${remote_server_ip}:${jar_store_dir}
   # shellcheck disable=SC2181
   if [ $? != 0 ]; then
