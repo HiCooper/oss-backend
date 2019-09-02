@@ -29,7 +29,7 @@ public class ObjectInfoVo {
     private String filePath;
 
     /**
-     * 访问url
+     * 访问url， 不带签名
      */
     private String url;
 
