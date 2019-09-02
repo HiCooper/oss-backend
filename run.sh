@@ -18,27 +18,27 @@ function checkParams() {
 }
 
 function getPid() {
-  tpid=$(ps -ef | grep java | grep ${APP_NAME} | grep -v grep | grep -v kill | awk '{print $2}')
-  echo ${tpid}
+  task_pid=$(ps -ef | grep java | grep "${APP_NAME}" | grep -v grep | grep -v kill | awk '{print $2}')
+  echo "${task_pid}"
 }
 
 function start() {
   checkParams
-  tpid=$(getPid)
-  if [[ -n ${tpid} ]]; then
+  task_pid=$(getPid)
+  if [[ -n ${task_pid} ]]; then
     echo "progress is running... try restart?"
   else
-    nohup java -jar ${APP_NAME} &
+    nohup java -jar "${APP_NAME}" > /dev/null 2>&1 &
     echo ">>> start successed PID=$! <<<"
   fi
 }
 
 function stop() {
   checkParams
-  tpid=$(getPid)
-  if [[ -n ${tpid} ]]; then
-    echo "Kill Process! PID:${tpid}"
-    kill -9 ${tpid}
+  task_pid=$(getPid)
+  if [[ -n ${task_pid} ]]; then
+    echo "Kill Process! PID:${task_pid}"
+    kill -9 "${task_pid}"
     echo 'Stop Success!'
   else
     echo "Not Running!"
@@ -47,10 +47,11 @@ function stop() {
 
 function halt() {
   checkParams
-  tpid=$(getPid)
-  if [[ -n ${tpid} ]]; then
-    echo "Kill Process! PID:${tpid}"
-    kill -9 ${tpid}
+  task_pid=$(getPid)
+  if [[ -n ${task_pid} ]]; then
+    echo "Stop Process! PID:${task_pid} Gracefully"
+    kill -15 "${task_pid}"
+    echo 'Stop Success!'
   else
     echo "Not Running!"
   fi
@@ -58,8 +59,8 @@ function halt() {
 
 function status() {
   checkParams
-  tpid=$(getPid)
-  if [[ -n ${tpid} ]]; then
+  task_pid=$(getPid)
+  if [[ -n ${task_pid} ]]; then
     echo "Running..."
   else
     echo "NOT running."

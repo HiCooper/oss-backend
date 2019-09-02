@@ -35,7 +35,7 @@ public interface IObjectService {
      * @return list
      * @throws IOException 获取文件流IO异常
      */
-    List<ObjectInfoVo> create(String bucket, MultipartFile[] files, String acl, String filePath) throws IOException;
+    List<ObjectInfoVo> create(String bucket, MultipartFile[] files, String acl, String filePath) throws Exception;
 
     /**
      * 新建目录
@@ -129,7 +129,7 @@ public interface IObjectService {
      * @return object info
      * @throws IOException 编码异常，密钥生成异常
      */
-    ObjectInfoVo uploadByte(String bucket, String filePath, String fileName, byte[] data, String acl) throws IOException;
+    ObjectInfoVo uploadByte(String bucket, String filePath, String fileName, byte[] data, String acl) throws Exception;
 
     /**
      * base64 字符串类型 创建对象
@@ -142,5 +142,5 @@ public interface IObjectService {
      * @return object info
      * @throws IOException 编码异常，密钥生成异常
      */
-    ObjectInfoVo uploadByBase64Str(String bucket, String filePath, String fileName, String data, String acl) throws IOException;
+    ObjectInfoVo uploadByBase64Str(String bucket, String filePath, String fileName, String data, String acl) throws Exception;
 }

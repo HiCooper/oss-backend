@@ -29,6 +29,11 @@ public class ObjectInfoVo {
     private String filePath;
 
     /**
+     * 访问url
+     */
+    private String url;
+
+    /**
      * 读写权限
      */
     private String acl;

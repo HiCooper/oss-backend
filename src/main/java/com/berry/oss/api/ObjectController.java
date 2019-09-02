@@ -74,7 +74,7 @@ public class ObjectController {
             @RequestParam("bucket") String bucket,
             @RequestParam("file") MultipartFile[] files,
             @RequestParam(value = "acl", defaultValue = PRIVATE) String acl,
-            @RequestParam(value = "filePath", defaultValue = DEFAULT_FILE_PATH) String filePath) throws IOException {
+            @RequestParam(value = "filePath", defaultValue = DEFAULT_FILE_PATH) String filePath) throws Exception {
         return ResultFactory.wrapper(objectService.create(bucket, files, acl, filePath));
     }
 
@@ -86,7 +86,7 @@ public class ObjectController {
      */
     @PostMapping("upload_byte.json")
     @ApiOperation("以字节数组格式创建对象")
-    public Result uploadByte(@Validated @RequestBody UploadObjectByteMo uploadObjectByteMo) throws IOException {
+    public Result uploadByte(@Validated @RequestBody UploadObjectByteMo uploadObjectByteMo) throws Exception {
         ObjectInfoVo objectInfoVo = objectService.uploadByte(
                 uploadObjectByteMo.getBucket(),
                 uploadObjectByteMo.getFilePath(),
@@ -99,7 +99,7 @@ public class ObjectController {
 
     @PostMapping("upload_base64.json")
     @ApiOperation("以base64字符串格式创建对象")
-    public Result uploadByBase64Str(@Validated @RequestBody UploadObjectBase64Mo uploadObjectBase64Mo) throws IOException {
+    public Result uploadByBase64Str(@Validated @RequestBody UploadObjectBase64Mo uploadObjectBase64Mo) throws Exception {
         ObjectInfoVo objectInfoVo = objectService.uploadByBase64Str(
                 uploadObjectBase64Mo.getBucket(),
                 uploadObjectBase64Mo.getFilePath(),
