@@ -153,8 +153,8 @@ public class ObjectServiceImpl implements IObjectService {
             // 保存上传信息
             ObjectInfo objectInfo = saveObjectInfo(bucketInfo.getId(), acl, hash, fileSize, fileName, filePath, fileId);
             BeanUtils.copyProperties(objectInfo, vo);
-            GenerateUrlWithSignedVo generateUrlWithSignedVo = generateUrlWithSigned(bucket, filePath, 3600);
-            vo.setUrl(generateUrlWithSignedVo.getUrl() + "?" + generateUrlWithSignedVo.getSignature());
+            String url = getPublicObjectUrl(bucket, filePath, fileName);
+            vo.setUrl(url);
             objectInfoVos.add(vo);
         }
         return objectInfoVos;
@@ -190,8 +190,8 @@ public class ObjectServiceImpl implements IObjectService {
         // 保存上传信息
         ObjectInfo objectInfo = saveObjectInfo(bucketInfo.getId(), acl, hash, size, fileName, filePath, fileId);
         BeanUtils.copyProperties(objectInfo, vo);
-        GenerateUrlWithSignedVo generateUrlWithSignedVo = generateUrlWithSigned(bucket, filePath, 3600);
-        vo.setUrl(generateUrlWithSignedVo.getUrl() + "?" + generateUrlWithSignedVo.getSignature());
+        String url = getPublicObjectUrl(bucket, filePath, fileName);
+        vo.setUrl(url);
         return vo;
     }
 
@@ -231,8 +231,7 @@ public class ObjectServiceImpl implements IObjectService {
         // 保存上传信息
         ObjectInfo objectInfo = saveObjectInfo(bucketInfo.getId(), acl, hash, size, fileName + fileType, filePath, fileId);
         BeanUtils.copyProperties(objectInfo, vo);
-        GenerateUrlWithSignedVo generateUrlWithSignedVo = generateUrlWithSigned(bucket, filePath, 3600);
-        vo.setUrl(generateUrlWithSignedVo.getUrl() + "?" + generateUrlWithSignedVo.getSignature());
+        String url = getPublicObjectUrl(bucket, filePath, fileName);
         return vo;
     }
 
@@ -608,5 +607,10 @@ public class ObjectServiceImpl implements IObjectService {
             StreamUtils.copy(object.getInputStream(), response.getOutputStream());
             response.flushBuffer();
         }
+    }
+
+    private String getPublicObjectUrl(String bucket, String filePath, String fileName) {
+        String ip = globalProperties.getServerIp();
+        return "http://" + ip + ":" + port + "/ajax/bucket/file/" + bucket + filePath + "/" + fileName;
     }
 }
