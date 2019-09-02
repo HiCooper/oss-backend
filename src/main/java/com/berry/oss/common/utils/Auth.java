@@ -9,7 +9,9 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.net.URI;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -25,10 +27,7 @@ public final class Auth {
      * 加密json 中 请求ip key
      */
     private static final String ENCODE_JSON_REQUEST_IP_KEY = "requestIp";
-    /**
-     * 授权token 可访问的唯一 地址
-     */
-    private static final String UPLOAD_URL = "/ajax/bucket/file/create";
+
     /**
      * 加密json 中 token过期时间 key
      */
@@ -44,6 +43,15 @@ public final class Auth {
     private Auth(String accessKeyId, SecretKeySpec secretKeySpec) {
         this.accessKeyId = accessKeyId;
         this.secretKeySpec = secretKeySpec;
+    }
+
+    private static final List<String> ACCESS_TOKEN_CAN_REQUEST_API = new ArrayList<>(8);
+
+    // 上传 access_token 可以访问的 api 列表
+    static {
+        ACCESS_TOKEN_CAN_REQUEST_API.add("/ajax/bucket/create");
+        ACCESS_TOKEN_CAN_REQUEST_API.add("/ajax/bucket/upload_byte.json");
+        ACCESS_TOKEN_CAN_REQUEST_API.add("/ajax/bucket/upload_base64.json");
     }
 
     /**
@@ -71,7 +79,7 @@ public final class Auth {
             throw new IllegalAccessException("口令已过期");
         }
         // 验证 目标访问url 必须是 'UPLOAD_URL'
-        if (!requestUrl.equals(UPLOAD_URL)) {
+        if (ACCESS_TOKEN_CAN_REQUEST_API.stream().noneMatch(requestUrl::matches)) {
             throw new IllegalAccessException("非授权访问url");
         }
         logger.info("来源IP：{}，成功通过AccessKeyId:{},访问URL:{}", object.getString(ENCODE_JSON_REQUEST_IP_KEY), accessKeyId, requestUrl);

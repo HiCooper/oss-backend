@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:mysql://127.0.0.1:3306/db_oss_service?characterEncoding=utf8&useSSL=false&useUnicode=true&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://10.50.12.38:3306/db_pdsc?characterEncoding=utf8&useSSL=false&useUnicode=true&allowPublicKeyRetrieval=true
     username: root
-    password: root123!
+    password: 3edcvfr4
     driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.alibaba.druid.pool.DruidDataSource
     platform: mysql
@@ -78,4 +78,4 @@ global:
 
 log:
   # 运行日志存储跟路径
-  path: ./logs
+  path: /var/logs/oss
