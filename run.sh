@@ -28,7 +28,7 @@ function start() {
   if [[ -n ${task_pid} ]]; then
     echo "progress is running... try restart?"
   else
-    nohup java -jar "${APP_NAME}" --spring.profiles.active=cc > /dev/null 2>&1 &
+    nohup java -jar "${APP_NAME}" --spring.profiles.active=cc &
     echo ">>> start successed PID=$! <<<"
   fi
 }
