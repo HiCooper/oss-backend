@@ -2,6 +2,7 @@ package com.berry.oss.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.berry.oss.common.ResultCode;
+import com.berry.oss.common.constant.CommonConstant;
 import com.berry.oss.common.constant.Constants;
 import com.berry.oss.common.exceptions.BaseException;
 import com.berry.oss.common.exceptions.UploadException;
@@ -115,6 +116,10 @@ public class ObjectServiceImpl implements IObjectService {
     @Transactional(rollbackFor = Exception.class)
     @Override
     public List<ObjectInfoVo> create(String bucket, MultipartFile[] files, String acl, String filePath) throws Exception {
+        // 验证acl 规范
+        if (!CommonConstant.AclType.ALL_NAME.contains(acl)) {
+            throw new UploadException("403", "不支持的ACL 可选值 [PRIVATE, PUBLIC_READ, PUBLIC_READ_WRITE]");
+        }
         // 校验path 规范
         checkPath(filePath);
         // 批量上传最多100个文件
@@ -162,6 +167,10 @@ public class ObjectServiceImpl implements IObjectService {
 
     @Override
     public ObjectInfoVo uploadByte(String bucket, String filePath, String fileName, byte[] data, String acl) throws Exception {
+        // 验证acl 规范
+        if (!CommonConstant.AclType.ALL_NAME.contains(acl)) {
+            throw new UploadException("403", "不支持的ACL 可选值 [PRIVATE, PUBLIC_READ, PUBLIC_READ_WRITE]");
+        }
         checkPath(filePath);
 
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
@@ -197,6 +206,10 @@ public class ObjectServiceImpl implements IObjectService {
 
     @Override
     public ObjectInfoVo uploadByBase64Str(String bucket, String filePath, String fileName, String data, String acl) throws Exception {
+        // 验证acl 规范
+        if (!CommonConstant.AclType.ALL_NAME.contains(acl)) {
+            throw new UploadException("403", "不支持的ACL 可选值 [PRIVATE, PUBLIC_READ, PUBLIC_READ_WRITE]");
+        }
         // 校验path 规范
         checkPath(filePath);
 
