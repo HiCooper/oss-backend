@@ -245,6 +245,7 @@ public class ObjectServiceImpl implements IObjectService {
         ObjectInfo objectInfo = saveObjectInfo(bucketInfo.getId(), acl, hash, size, fileName + fileType, filePath, fileId);
         BeanUtils.copyProperties(objectInfo, vo);
         String url = getPublicObjectUrl(bucket, filePath, fileName);
+        vo.setUrl(url);
         return vo;
     }
 
