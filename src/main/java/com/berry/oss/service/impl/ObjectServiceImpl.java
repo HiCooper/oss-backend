@@ -279,7 +279,7 @@ public class ObjectServiceImpl implements IObjectService {
         );
         if (objectInfo == null) {
 //             资源不存在;
-            throw new XmlResponseException(new AccessDenied());
+            throw new XmlResponseException(new NotFound());
         }
 
         if (!objectInfo.getAcl().startsWith("PUBLIC") && !skipCheckAuth) {

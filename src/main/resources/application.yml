@@ -13,6 +13,10 @@ spring:
   mvc:
     favicon:
       enabled: false
+  jackson:
+    # 输出为指定格式字符串
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
   task:
     execution:
       thread-name-prefix: task-pool-

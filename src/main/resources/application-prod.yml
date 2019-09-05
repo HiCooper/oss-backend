@@ -64,8 +64,12 @@ mybatis-plus:
 logging:
   config: classpath:logback/logback.xml
   level:
-    ROOT: INFO
-    com.berry.oss.dao.mapper: DEBUG
+    root: INFO
+    com.berry.oss: DEBUG
+  path: ./log
+  file:
+    max-size: 100MB
+    max-history: 90
 
 global:
   # 单机模式(单机模式没用数据冗余)
@@ -75,7 +79,3 @@ global:
   mail:
     from: berry_cooper@163.com
     base-url: http://127.0.0.1:8080
-
-log:
-  # 运行日志存储跟路径
-  path: /var/logs/oss

@@ -65,13 +65,6 @@ mybatis-plus:
   global-config:
     sql-parser-cache: true
 
-#log
-logging:
-  level:
-    ROOT: INFO
-    org.springframework.web: ERROR
-    com.berry.oss: DEBUG
-
 global:
   # 单机模式(单机模式没用数据冗余)
   singleton: true
