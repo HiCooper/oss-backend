@@ -158,7 +158,7 @@ public class ObjectServiceImpl implements IObjectService {
         BeanUtils.copyProperties(objectInfo, vo);
         String url = getPublicObjectUrl(bucket, filePath, fileName);
         vo.setUrl(url);
-        return objectInfo;
+        return vo;
     }
 
     @Override
