@@ -103,12 +103,6 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
         return sb.toString();
     }
 
-    public static void main(String[] args) {
-        for (int i = 0; i < 20; i++) {
-            System.out.println(getRandomStr(22));
-        }
-    }
-
     /**
      * 将请求参数流转为字符串
      *
@@ -149,6 +143,16 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
         // String   regEx  =  "[^a-zA-Z0-9]";
         // 清除掉所有特殊字符
         String regEx = "[`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？\"]";
+        Pattern p = Pattern.compile(regEx);
+        Matcher m = p.matcher(str);
+        return m.replaceAll("").trim();
+    }
+
+    public static String filterUnsafeUrlCharts(String str) {
+        if(StringUtils.isBlank(str)) {
+            return str;
+        }
+        String regEx = "[<>\"#%{}^\\[\\]`\\s\\\\]";
         Pattern p = Pattern.compile(regEx);
         Matcher m = p.matcher(str);
         return m.replaceAll("").trim();

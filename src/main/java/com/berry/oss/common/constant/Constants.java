@@ -1,6 +1,7 @@
 package com.berry.oss.common.constant;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -29,7 +30,7 @@ public final class Constants {
     /**
      * 所有都是UTF-8编码
      */
-    public static final Charset UTF_8 = Charset.forName("UTF-8");
+    public static final Charset UTF_8 = StandardCharsets.UTF_8;
 
     /**
      * 心跳检查url

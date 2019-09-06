@@ -115,54 +115,50 @@ public class ObjectServiceImpl implements IObjectService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public List<ObjectInfoVo> create(String bucket, MultipartFile[] files, String acl, String filePath) throws Exception {
+    public ObjectInfoVo create(String bucket, MultipartFile file, String acl, String filePath) throws Exception {
         // 验证acl 规范
         if (!CommonConstant.AclType.ALL_NAME.contains(acl)) {
             throw new UploadException("403", "不支持的ACL 可选值 [PRIVATE, PUBLIC_READ, PUBLIC_READ_WRITE]");
         }
         // 校验path 规范
         checkPath(filePath);
-        // 批量上传最多100个文件
-        if (files.length > UPLOAD_PER_SIZE_LIMIT) {
-            throw new UploadException("403", "最多同时上传100个文件！");
-        }
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
 
         // 检查bucket
         BucketInfo bucketInfo = getBucketInfo(bucket, currentUser);
 
-        List<ObjectInfoVo> objectInfoVos = new ArrayList<>(16);
-        for (MultipartFile file : files) {
-            // 计算文件 hash，获取文件大小
-            String hash = SHA256.hash(file.getBytes());
-            long fileSize = file.getSize();
-            // 1. 获取请求头中，文件大小，文件hash
-            if (fileSize > Integer.MAX_VALUE) {
-                throw new UploadException("403", "文件大小不能超过2G");
-            }
-
-            // 校验通过
-            String fileName = file.getOriginalFilename();
-            checkFile(filePath, currentUser, bucketInfo, fileName);
-
-            ObjectInfoVo vo = new ObjectInfoVo();
-
-            // 尝试快速上传
-            String fileId = objectHashService.checkExist(hash, fileSize);
-            if (StringUtils.isBlank(fileId)) {
-                vo.setUploadType(false);
-                // 快速上传失败，
-                // 调用存储数据服务，保存对象，返回24位对象id,
-                fileId = dataService.saveObject(file.getInputStream(), fileSize, hash, fileName, bucketInfo, currentUser.getUsername());
-            }
-            // 保存上传信息
-            ObjectInfo objectInfo = saveObjectInfo(bucketInfo.getId(), acl, hash, fileSize, fileName, filePath, fileId);
-            BeanUtils.copyProperties(objectInfo, vo);
-            String url = getPublicObjectUrl(bucket, filePath, fileName);
-            vo.setUrl(url);
-            objectInfoVos.add(vo);
+        // 计算文件 hash，获取文件大小
+        String hash = SHA256.hash(file.getBytes());
+        long fileSize = file.getSize();
+        // 1. 获取请求头中，文件大小，文件hash
+        if (fileSize > Integer.MAX_VALUE) {
+            throw new UploadException("403", "文件大小不能超过2G");
         }
-        return objectInfoVos;
+
+        // 校验通过
+        String fileName = file.getOriginalFilename();
+        if (StringUtils.isNotBlank(fileName)) {
+            // 过滤文件名特殊字符
+            fileName = StringUtils.filterUnsafeUrlCharts(fileName);
+        }
+        checkFile(filePath, currentUser, bucketInfo, fileName);
+
+        ObjectInfoVo vo = new ObjectInfoVo();
+
+        // 尝试快速上传
+        String fileId = objectHashService.checkExist(hash, fileSize);
+        if (StringUtils.isBlank(fileId)) {
+            vo.setUploadType(false);
+            // 快速上传失败，
+            // 调用存储数据服务，保存对象，返回24位对象id,
+            fileId = dataService.saveObject(file.getInputStream(), fileSize, hash, fileName, bucketInfo, currentUser.getUsername());
+        }
+        // 保存上传信息
+        ObjectInfo objectInfo = saveObjectInfo(bucketInfo.getId(), acl, hash, fileSize, fileName, filePath, fileId);
+        BeanUtils.copyProperties(objectInfo, vo);
+        String url = getPublicObjectUrl(bucket, filePath, fileName);
+        vo.setUrl(url);
+        return objectInfo;
     }
 
     @Override
@@ -171,6 +167,9 @@ public class ObjectServiceImpl implements IObjectService {
         if (!CommonConstant.AclType.ALL_NAME.contains(acl)) {
             throw new UploadException("403", "不支持的ACL 可选值 [PRIVATE, PUBLIC_READ, PUBLIC_READ_WRITE]");
         }
+        // 过滤文件名特殊字符
+        fileName = StringUtils.filterUnsafeUrlCharts(fileName);
+
         checkPath(filePath);
 
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
@@ -210,6 +209,9 @@ public class ObjectServiceImpl implements IObjectService {
         if (!CommonConstant.AclType.ALL_NAME.contains(acl)) {
             throw new UploadException("403", "不支持的ACL 可选值 [PRIVATE, PUBLIC_READ, PUBLIC_READ_WRITE]");
         }
+        // 过滤文件名特殊字符
+        fileName = StringUtils.filterUnsafeUrlCharts(fileName);
+
         // 校验path 规范
         checkPath(filePath);
 

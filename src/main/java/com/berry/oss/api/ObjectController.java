@@ -62,7 +62,7 @@ public class ObjectController {
 
     /**
      * @param bucket   bucket name
-     * @param files    file
+     * @param file    file
      * @param acl      acl
      * @param filePath 所在路径  以 / 开头
      * @return msg
@@ -72,11 +72,11 @@ public class ObjectController {
     @ApiOperation("创建对象")
     public Result create(
             @RequestParam("bucket") String bucket,
-            @RequestParam("file") MultipartFile[] files,
+            @RequestParam("file") MultipartFile file,
             @RequestParam(value = "acl", defaultValue = PRIVATE) String acl,
             @RequestParam(value = "filePath", defaultValue = DEFAULT_FILE_PATH) String filePath) throws Exception {
-        List<ObjectInfoVo> objectInfoVos = objectService.create(bucket, files, acl, filePath);
-        return ResultFactory.wrapper(objectInfoVos);
+        ObjectInfoVo objectInfoVo = objectService.create(bucket, file, acl, filePath);
+        return ResultFactory.wrapper(objectInfoVo);
     }
 
     /**

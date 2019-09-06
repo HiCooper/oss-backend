@@ -29,13 +29,13 @@ public interface IObjectService {
      * 上传 Object
      *
      * @param bucket   bucket name
-     * @param files    待上传 file
+     * @param file    待上传 file
      * @param acl      文件acl
      * @param filePath 相对路径
-     * @return list
-     * @throws IOException 获取文件流IO异常
+     * @return obj
+     * @throws Exception 获取文件流IO异常
      */
-    List<ObjectInfoVo> create(String bucket, MultipartFile[] files, String acl, String filePath) throws Exception;
+    ObjectInfoVo create(String bucket, MultipartFile file, String acl, String filePath) throws Exception;
 
     /**
      * 新建目录
