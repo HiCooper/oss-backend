@@ -62,7 +62,7 @@ public class ObjectController {
 
     /**
      * @param bucket   bucket name
-     * @param file    file
+     * @param files    file
      * @param acl      acl
      * @param filePath 所在路径  以 / 开头
      * @return msg
@@ -72,10 +72,10 @@ public class ObjectController {
     @ApiOperation("创建对象")
     public Result create(
             @RequestParam("bucket") String bucket,
-            @RequestParam("file") MultipartFile file,
+            @RequestParam("file") MultipartFile[] files,
             @RequestParam(value = "acl", defaultValue = PRIVATE) String acl,
             @RequestParam(value = "filePath", defaultValue = DEFAULT_FILE_PATH) String filePath) throws Exception {
-        ObjectInfoVo objectInfoVo = objectService.create(bucket, file, acl, filePath);
+        List<ObjectInfoVo> objectInfoVo = objectService.create(bucket, files, acl, filePath);
         return ResultFactory.wrapper(objectInfoVo);
     }
 
@@ -175,7 +175,7 @@ public class ObjectController {
     @PostMapping("delete_objects.json")
     @ApiOperation("删除对象或文件夹")
     public Result delete(@Validated @RequestBody DeleteObjectsMo mo) {
-        objectService.delete(mo.getBucket(), mo.getObjects());
+        objectService.delete(mo.getBucket(), mo.getObjectIds());
         return ResultFactory.wrapper();
     }
 

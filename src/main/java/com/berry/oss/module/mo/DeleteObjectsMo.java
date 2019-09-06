@@ -18,8 +18,8 @@ public class DeleteObjectsMo {
     @NotBlank
     String bucket;
     /**
-     * 对象全路径,多个用 英文逗号隔开
+     * 对象id,多个用 英文逗号隔开
      */
     @NotBlank
-    String objects;
+    String objectIds;
 }

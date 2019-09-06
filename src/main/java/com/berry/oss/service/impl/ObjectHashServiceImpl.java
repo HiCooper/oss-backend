@@ -8,6 +8,7 @@ import com.berry.oss.core.service.IObjectHashDaoService;
 import com.berry.oss.service.IObjectHashService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,7 +53,8 @@ public class ObjectHashServiceImpl implements IObjectHashService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public Boolean increaseRefCountByHash(String hash, String fileId, Long size) {
+    @Async("taskExecutor")
+    public void increaseRefCountByHash(String hash, String fileId, Long size) {
         QueryWrapper<ObjectHash> queryWrapper = new QueryWrapper<ObjectHash>()
                 .eq("hash", hash)
                 .eq("file_id", fileId);
@@ -65,12 +67,13 @@ public class ObjectHashServiceImpl implements IObjectHashService {
                     .setReferenceCount(0);
         }
         one.setReferenceCount(one.getReferenceCount() + 1);
-        return objectHashDaoService.saveOrUpdate(one);
+        objectHashDaoService.saveOrUpdate(one);
     }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public Boolean decreaseRefCountByHash(String hash) {
+    @Async("taskExecutor")
+    public void decreaseRefCountByHash(String hash) {
         QueryWrapper<ObjectHash> queryWrapper = new QueryWrapper<ObjectHash>().eq("hash", hash);
         ObjectHash one = objectHashDaoService.getOne(queryWrapper);
         if (one == null) {
@@ -79,6 +82,6 @@ public class ObjectHashServiceImpl implements IObjectHashService {
         int newCount = Math.max(one.getReferenceCount() - 1, 0);
         one.setReferenceCount(newCount);
         // 引用为 0  的索引，由定时任务程序去扫描整理删除 对应的数据和引用
-        return objectHashDaoService.updateById(one);
+        objectHashDaoService.updateById(one);
     }
 }

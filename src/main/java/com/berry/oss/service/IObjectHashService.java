@@ -25,15 +25,13 @@ public interface IObjectHashService {
      * @param hash   hash值
      * @param fileId fileId
      * @param size   size
-     * @return
      */
-    Boolean increaseRefCountByHash(String hash, String fileId, Long size);
+    void increaseRefCountByHash(String hash, String fileId, Long size);
 
     /**
      * 减少 哈希引用计算
      *
      * @param hash
-     * @return
      */
-    Boolean decreaseRefCountByHash(String hash);
+    void decreaseRefCountByHash(String hash);
 }

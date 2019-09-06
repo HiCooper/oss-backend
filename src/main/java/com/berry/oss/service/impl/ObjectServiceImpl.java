@@ -50,6 +50,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.regex.Matcher;
+import java.util.stream.Collectors;
 
 import static com.berry.oss.common.constant.Constants.DEFAULT_FILE_PATH;
 
@@ -115,7 +116,7 @@ public class ObjectServiceImpl implements IObjectService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public ObjectInfoVo create(String bucket, MultipartFile file, String acl, String filePath) throws Exception {
+    public List<ObjectInfoVo> create(String bucket, MultipartFile[] files, String acl, String filePath) throws Exception {
         // 验证acl 规范
         if (!CommonConstant.AclType.ALL_NAME.contains(acl)) {
             throw new UploadException("403", "不支持的ACL 可选值 [PRIVATE, PUBLIC_READ, PUBLIC_READ_WRITE]");
@@ -127,38 +128,43 @@ public class ObjectServiceImpl implements IObjectService {
         // 检查bucket
         BucketInfo bucketInfo = getBucketInfo(bucket, currentUser);
 
-        // 计算文件 hash，获取文件大小
-        String hash = SHA256.hash(file.getBytes());
-        long fileSize = file.getSize();
-        // 1. 获取请求头中，文件大小，文件hash
-        if (fileSize > Integer.MAX_VALUE) {
-            throw new UploadException("403", "文件大小不能超过2G");
-        }
+        List<ObjectInfoVo> vos = new ArrayList<>();
+        for (MultipartFile file : files) {
+            // 计算文件 hash，获取文件大小
+            String hash = SHA256.hash(file.getBytes());
+            long fileSize = file.getSize();
+            // 1. 获取请求头中，文件大小，文件hash
+            if (fileSize > Integer.MAX_VALUE) {
+                throw new UploadException("403", "文件大小不能超过2G");
+            }
 
-        // 校验通过
-        String fileName = file.getOriginalFilename();
-        if (StringUtils.isNotBlank(fileName)) {
-            // 过滤文件名特殊字符
-            fileName = StringUtils.filterUnsafeUrlCharts(fileName);
-        }
-        checkFile(filePath, currentUser, bucketInfo, fileName);
+            // 校验通过
+            String fileName = file.getOriginalFilename();
+            if (StringUtils.isNotBlank(fileName)) {
+                // 过滤文件名特殊字符
+                fileName = StringUtils.filterUnsafeUrlCharts(fileName);
+            }
+            boolean replace = checkFileReplace(filePath, currentUser, bucketInfo, fileName);
 
-        ObjectInfoVo vo = new ObjectInfoVo();
+            ObjectInfoVo vo = new ObjectInfoVo();
+            vo.setReplace(replace);
 
-        // 尝试快速上传
-        String fileId = objectHashService.checkExist(hash, fileSize);
-        if (StringUtils.isBlank(fileId)) {
-            vo.setUploadType(false);
-            // 快速上传失败，
-            // 调用存储数据服务，保存对象，返回24位对象id,
-            fileId = dataService.saveObject(file.getInputStream(), fileSize, hash, fileName, bucketInfo, currentUser.getUsername());
+            // 尝试快速上传
+            String fileId = objectHashService.checkExist(hash, fileSize);
+            if (StringUtils.isBlank(fileId)) {
+                vo.setUploadType(false);
+                // 快速上传失败，
+                // 调用存储数据服务，保存对象，返回24位对象id,
+                fileId = dataService.saveObject(file.getInputStream(), fileSize, hash, fileName, bucketInfo, currentUser.getUsername());
+            }
+            // 保存上传信息
+            ObjectInfo objectInfo = saveObjectInfo(bucketInfo.getId(), acl, hash, fileSize, fileName, filePath, fileId);
+            BeanUtils.copyProperties(objectInfo, vo);
+            String url = getPublicObjectUrl(bucket, filePath, fileName);
+            vo.setUrl(url);
+            vos.add(vo);
         }
-        // 保存上传信息
-        ObjectInfo objectInfo = saveObjectInfo(bucketInfo.getId(), acl, hash, fileSize, fileName, filePath, fileId);
-        BeanUtils.copyProperties(objectInfo, vo);
-        String url = getPublicObjectUrl(bucket, filePath, fileName);
-        vo.setUrl(url);
-        return vo;
+        return vos;
     }
 
     @Override
@@ -183,9 +189,10 @@ public class ObjectServiceImpl implements IObjectService {
         long size = data.length;
 
         // 检查该 bucket 及 path 下 同名文件是否存在
-        checkFile(filePath, currentUser, bucketInfo, fileName);
+        boolean replace = checkFileReplace(filePath, currentUser, bucketInfo, fileName);
 
         ObjectInfoVo vo = new ObjectInfoVo();
+        vo.setReplace(replace);
 
         // 尝试快速上传
         String fileId = objectHashService.checkExist(hash, size);
@@ -231,9 +238,10 @@ public class ObjectServiceImpl implements IObjectService {
         long size = dataArr[1].length();
 
         // 检查该 bucket 及 path 下 同名文件是否存在
-        checkFile(filePath, currentUser, bucketInfo, fileName + fileType);
+        boolean replace = checkFileReplace(filePath, currentUser, bucketInfo, fileName + fileType);
 
         ObjectInfoVo vo = new ObjectInfoVo();
+        vo.setReplace(replace);
 
         // 尝试快速上传
         String fileId = objectHashService.checkExist(hash, size);
@@ -404,46 +412,31 @@ public class ObjectServiceImpl implements IObjectService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void delete(String bucket, String objects) {
+    public void delete(String bucket, String objectIds) {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
 
         // 检查bucket
         BucketInfo bucketInfo = bucketService.checkUserHaveBucket(bucket);
 
-        String[] objectArray = objects.split(",");
+        String[] objectIdArray = objectIds.split(",");
 
-        try (SqlSession session = sqlSessionTemplate.getSqlSessionFactory().openSession(ExecutorType.BATCH, false)) {
-            ObjectInfoMapper mapper = session.getMapper(ObjectInfoMapper.class);
-            for (String item : objectArray) {
-                int lastSepIndex = item.lastIndexOf("/");
-                String fileName = item.substring(lastSepIndex + 1);
-                String path = DEFAULT_FILE_PATH;
-                if (lastSepIndex > 0) {
-                    path = item.substring(0, lastSepIndex);
-                }
+        List<ObjectInfo> objectInfos = new ArrayList<>(objectInfoDaoService.listByIds(Arrays.asList(objectIdArray)));
 
-                QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<>();
-                queryWrapper.eq("bucket_id", bucketInfo.getId());
-                queryWrapper.eq("user_id", currentUser.getId());
-                queryWrapper.eq("file_path", path);
-                queryWrapper.eq("file_name", fileName);
-                ObjectInfo objectInfo = mapper.selectOne(queryWrapper);
-                if (objectInfo != null) {
-                    // 删除该对象引用关系
-                    mapper.deleteById(objectInfo.getId());
-                    if (objectInfo.getIsDir()) {
-                        // 如果是文件夹，则删除该文件夹下所有的子项
-                        mapper.delete(new QueryWrapper<ObjectInfo>().eq("file_path", item));
-                    } else {
-                        // 对象hash引用 计数 -1
-                        objectHashService.decreaseRefCountByHash(objectInfo.getHash());
-                    }
-                }
-            }
-            session.commit();
-            // 清理缓存，防止溢出
-            session.clearCache();
-        }
+        List<ObjectInfo> files = objectInfos.stream().filter(info -> !info.getIsDir()).collect(Collectors.toList());
+        objectInfoDaoService.removeByIds(files.stream().map(ObjectInfo::getId).collect(Collectors.toList()));
+        files.forEach(file -> {
+            // 对象hash引用 计数 -1
+            objectHashService.decreaseRefCountByHash(file.getHash());
+        });
+
+        List<ObjectInfo> dirs = objectInfos.stream().filter(ObjectInfo::getIsDir).collect(Collectors.toList());
+        dirs.forEach(dir -> {
+            // 如果是文件夹，则删除该文件夹下所有的子项
+            objectInfoDaoService.remove(new QueryWrapper<ObjectInfo>()
+                    .eq("bucket_id", bucketInfo.getId())
+                    .eq("file_path", dir.getFilePath())
+                    .eq("user_id", currentUser.getId()));
+        });
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -513,7 +506,13 @@ public class ObjectServiceImpl implements IObjectService {
         }
     }
 
-    private void checkFile(String filePath, UserInfoDTO currentUser, BucketInfo bucketInfo, String fileName) {
+    /**
+     * 检查文件是否存在 返回是否替换
+     *
+     * @return true or false
+     */
+    private boolean checkFileReplace(String filePath, UserInfoDTO currentUser, BucketInfo bucketInfo, String fileName) {
+        boolean result = false;
         // 检查该 bucket 及 path 下 同名文件是否存在
         QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_id", currentUser.getId());
@@ -526,6 +525,7 @@ public class ObjectServiceImpl implements IObjectService {
             objectInfoDaoService.removeById(one.getId());
             // 相关数据文件引用 -1
             objectHashService.decreaseRefCountByHash(one.getHash());
+            result = true;
         }
 
         // 检查文件路径，非 / 则需要创建目录
@@ -533,6 +533,7 @@ public class ObjectServiceImpl implements IObjectService {
             String[] objectArr = filePath.substring(1).split("/");
             createFolderIgnore(currentUser.getId(), bucketInfo.getId(), objectArr);
         }
+        return result;
     }
 
     /**

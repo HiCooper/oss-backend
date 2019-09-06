@@ -52,4 +52,9 @@ public class ObjectInfoVo {
      * 上传类型，false-普通上传，true-极速上传
      */
     private Boolean uploadType = true;
+
+    /**
+     * 已覆盖旧文件
+     */
+    private Boolean replace;
 }
