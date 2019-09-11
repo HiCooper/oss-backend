@@ -8,6 +8,11 @@
         <result column="username" property="username"/>
         <result column="password" property="password"/>
         <result column="activated" property="activated"/>
+        <result column="nick_name" property="nickName"/>
+        <result column="email" property="email"/>
+        <result column="enabled" property="enabled"/>
+        <result column="locked" property="locked"/>
+        <result column="expired" property="expired"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
     </resultMap>
@@ -18,6 +23,11 @@
         ,
         username,
         password,
+        email,
+        nick_name,
+        enabled,
+        locked,
+        expired,
         activated,
         create_time,
         update_time

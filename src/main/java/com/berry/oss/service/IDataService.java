@@ -1,6 +1,6 @@
 package com.berry.oss.service;
 
-import com.berry.oss.core.entity.BucketInfo;
+import com.berry.oss.dao.entity.BucketInfo;
 import com.berry.oss.module.dto.ObjectResource;
 
 import java.io.IOException;

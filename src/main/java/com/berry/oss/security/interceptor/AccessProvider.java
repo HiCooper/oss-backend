@@ -3,7 +3,7 @@ package com.berry.oss.security.interceptor;
 import com.berry.oss.common.constant.Constants;
 import com.berry.oss.common.utils.Auth;
 import com.berry.oss.common.utils.StringUtils;
-import com.berry.oss.core.service.IAccessKeyInfoDaoService;
+import com.berry.oss.dao.service.IAccessKeyInfoDaoService;
 import com.berry.oss.security.SecurityUtils;
 import com.berry.oss.security.core.entity.Role;
 import com.berry.oss.security.core.service.IUserDaoService;

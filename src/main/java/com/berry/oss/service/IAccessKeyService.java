@@ -1,6 +1,6 @@
 package com.berry.oss.service;
 
-import com.berry.oss.core.entity.AccessKeyInfo;
+import com.berry.oss.dao.entity.AccessKeyInfo;
 import com.berry.oss.module.vo.CreateAccessKeyVo;
 
 import java.util.List;

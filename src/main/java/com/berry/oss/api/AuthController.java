@@ -1,10 +1,15 @@
 package com.berry.oss.api;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.berry.oss.common.Result;
 import com.berry.oss.common.ResultCode;
+import com.berry.oss.common.ResultFactory;
 import com.berry.oss.common.exceptions.BaseException;
+import com.berry.oss.module.mo.UserRegisterMo;
 import com.berry.oss.security.core.entity.User;
+import com.berry.oss.security.core.entity.UserRole;
 import com.berry.oss.security.core.service.IUserDaoService;
+import com.berry.oss.security.core.service.IUserRoleDaoService;
 import com.berry.oss.security.filter.AuthFilter;
 import com.berry.oss.security.filter.TokenProvider;
 import com.berry.oss.security.vm.LoginVM;
@@ -20,6 +25,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,6 +35,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.util.Date;
 
 /**
  * @author Berry_Cooper.
@@ -46,6 +53,9 @@ public class AuthController {
 
     @Autowired
     private IUserDaoService userDaoService;
+
+    @Autowired
+    private IUserRoleDaoService userRoleDaoService;
 
     @Autowired
     private TokenProvider tokenProvider;
@@ -91,6 +101,33 @@ public class AuthController {
         return new ResponseEntity<>(HttpStatus.OK);
 
     }
+
+
+    @ApiOperation("注册")
+    @PostMapping("register")
+    public Result register(@Validated @RequestBody UserRegisterMo mo) {
+        // 1. 用户名是否存在
+        User user = userDaoService.findOneByUsername(mo.getUsername()).orElse(null);
+        if (user != null) {
+            throw new BaseException(ResultCode.USERNAME_EXIST);
+        }
+        user = new User()
+                .setActivated(false)
+                .setCreateTime(new Date())
+                .setUsername(mo.getUsername())
+                .setNickName(mo.getNickName())
+                .setEmail(mo.getEmail())
+                .setPassword(new BCryptPasswordEncoder().encode(mo.getPassword()));
+        if (userDaoService.save(user)) {
+            UserRole userRole = new UserRole();
+            userRole.setUserId(user.getId());
+            // 默认普通角色，没有角色管理-。-
+            userRole.setRoleId(2);
+            userRoleDaoService.save(userRole);
+        }
+        return ResultFactory.wrapper();
+    }
+
 
     /**
      * Object to return as body in JWT Authentication.
