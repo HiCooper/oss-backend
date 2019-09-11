@@ -2,9 +2,9 @@
 
 <configuration>
 
-    <springProperty scope="context" name="logPath" source="logging.path" defaultValue="l./ogs"/>
+    <springProperty scope="context" name="logPath" source="logging.path" defaultValue="./log"/>
     <springProperty scope="context" name="fileMaxSize" source="logging.file.max-size" defaultValue="100M"/>
-    <springProperty scope="context" name="fileMaxHistory" source="logging.file.max-history" defaultValue="60"/>
+    <springProperty scope="context" name="fileMaxHistory" source="logging.file.max-history" defaultValue="30"/>
     <springProperty scope="context" name="rootLevel" source="logging.level.root" defaultValue="INFO"/>
 
     <appender name="BASE_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
