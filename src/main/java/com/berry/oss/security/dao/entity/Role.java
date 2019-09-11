@@ -1,4 +1,4 @@
-package com.berry.oss.security.core.entity;
+package com.berry.oss.security.dao.entity;
 
 import lombok.Data;
 

@@ -1,8 +1,8 @@
-package com.berry.oss.security.core.service;
+package com.berry.oss.security.dao.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.berry.oss.security.core.entity.Role;
-import com.berry.oss.security.core.entity.User;
+import com.berry.oss.security.dao.entity.Role;
+import com.berry.oss.security.dao.entity.User;
 
 import java.util.Optional;
 import java.util.Set;

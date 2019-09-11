@@ -1,9 +1,9 @@
 package com.berry.oss.security;
 
 import com.berry.oss.common.exceptions.BaseException;
-import com.berry.oss.security.core.entity.Role;
-import com.berry.oss.security.core.entity.User;
-import com.berry.oss.security.core.service.IUserDaoService;
+import com.berry.oss.security.dao.entity.Role;
+import com.berry.oss.security.dao.entity.User;
+import com.berry.oss.security.dao.service.IUserDaoService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.GrantedAuthority;

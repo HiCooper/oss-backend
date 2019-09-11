@@ -1,9 +1,9 @@
-package com.berry.oss.security.core.service.impl;
+package com.berry.oss.security.dao.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.berry.oss.security.core.entity.Role;
-import com.berry.oss.security.core.mapper.RoleMapper;
-import com.berry.oss.security.core.service.IRoleDaoService;
+import com.berry.oss.security.dao.entity.Role;
+import com.berry.oss.security.dao.mapper.RoleMapper;
+import com.berry.oss.security.dao.service.IRoleDaoService;
 import org.springframework.stereotype.Service;
 
 /**

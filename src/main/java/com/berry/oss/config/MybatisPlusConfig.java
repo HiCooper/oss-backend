@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  */
 @EnableTransactionManagement
 @Configuration
-@MapperScan({"com.berry.oss.core.mapper", "com.berry.oss.security.core.mapper"})
+@MapperScan({"com.berry.oss.dao.mapper", "com.berry.oss.security.dao.mapper"})
 public class MybatisPlusConfig {
 
     /**

@@ -1,6 +1,6 @@
 package com.berry.oss.security.dto;
 
-import com.berry.oss.security.core.entity.Role;
+import com.berry.oss.security.dao.entity.Role;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
