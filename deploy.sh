@@ -19,7 +19,7 @@ jar_store_dir='/home/jar-task/backend-service'
 echo "正在构建..."
 gradle build -x test
 
-if [[ $? != 0 ]]; then
+if [ $? != 0 ]; then
   echo "构建失败"
   exit 1
 fi
@@ -27,7 +27,7 @@ echo "构建成功"
 
 # 将jar 包 scp 值目标服务器指定目录下
 # shellcheck disable=SC2144
-if [[ -f ./build/libs/*.jar ]]; then
+if [ -f ./build/libs/*.jar ]; then
   echo "正在上传 jar 包..."
 #  cp run.sh build/libs/
   scp ./build/libs/*.jar ${username}@${remote_server_ip}:${jar_store_dir}
