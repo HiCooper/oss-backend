@@ -422,21 +422,29 @@ public class ObjectServiceImpl implements IObjectService {
 
         List<ObjectInfo> objectInfos = new ArrayList<>(objectInfoDaoService.listByIds(Arrays.asList(objectIdArray)));
 
-        List<ObjectInfo> files = objectInfos.stream().filter(info -> !info.getIsDir()).collect(Collectors.toList());
-        objectInfoDaoService.removeByIds(files.stream().map(ObjectInfo::getId).collect(Collectors.toList()));
-        files.forEach(file -> {
-            // 对象hash引用 计数 -1
-            objectHashService.decreaseRefCountByHash(file.getHash());
-        });
+        if (objectInfos.size() > 0) {
+            List<ObjectInfo> files = objectInfos.stream().filter(info -> !info.getIsDir()).collect(Collectors.toList());
 
-        List<ObjectInfo> dirs = objectInfos.stream().filter(ObjectInfo::getIsDir).collect(Collectors.toList());
-        dirs.forEach(dir -> {
-            // 如果是文件夹，则删除该文件夹下所有的子项
-            objectInfoDaoService.remove(new QueryWrapper<ObjectInfo>()
-                    .eq("bucket_id", bucketInfo.getId())
-                    .eq("file_path", dir.getFilePath())
-                    .eq("user_id", currentUser.getId()));
-        });
+            if (files.size() > 0) {
+                objectInfoDaoService.removeByIds(files.stream().map(ObjectInfo::getId).collect(Collectors.toList()));
+                files.forEach(file -> {
+                    // 对象hash引用 计数 -1
+                    objectHashService.decreaseRefCountByHash(file.getHash());
+                });
+            }
+
+            List<ObjectInfo> dirs = objectInfos.stream().filter(ObjectInfo::getIsDir).collect(Collectors.toList());
+
+            if (dirs.size() > 0) {
+                dirs.forEach(dir -> {
+                    // 如果是文件夹，则删除该文件夹下所有的子项
+                    objectInfoDaoService.remove(new QueryWrapper<ObjectInfo>()
+                            .eq("bucket_id", bucketInfo.getId())
+                            .eq("file_path", dir.getFilePath())
+                            .eq("user_id", currentUser.getId()));
+                });
+            }
+        }
     }
 
     @Transactional(rollbackFor = Exception.class)
