@@ -1,8 +1,9 @@
 package com.berry.oss.security;
 
-import com.berry.oss.security.core.entity.Role;
-import com.berry.oss.security.core.entity.User;
-import com.berry.oss.security.core.service.IUserDaoService;
+import com.berry.oss.common.exceptions.BaseException;
+import com.berry.oss.security.dao.entity.Role;
+import com.berry.oss.security.dao.entity.User;
+import com.berry.oss.security.dao.service.IUserDaoService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.GrantedAuthority;
@@ -13,10 +14,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -65,11 +63,14 @@ public class UserDetailServiceImpl implements UserDetailsService {
             throw new UserNotActivatedException("User " + username + " was not activated");
         }
         Set<Role> roleList = userDaoService.findRoleListByUserId(user.getId());
+        if (roleList == null) {
+            throw new BaseException("403", "用户尚未分配角色");
+        }
         List<GrantedAuthority> grantedAuthorities = roleList.stream()
                 .map(role -> new SimpleGrantedAuthority(role.getName()))
                 .collect(Collectors.toList());
         return new org.springframework.security.core.userdetails.User(user.getUsername(),
-                user.getPassword(),
+                user.getPassword(), user.isEnabled(), user.getExpired() ==null || user.getExpired().after(new Date()), true, !user.isLocked(),
                 grantedAuthorities);
     }
 }

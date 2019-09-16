@@ -1,6 +1,6 @@
 package com.berry.oss.service;
 
-import com.berry.oss.core.entity.ObjectInfo;
+import com.berry.oss.dao.entity.ObjectInfo;
 import com.berry.oss.module.vo.GenerateUrlWithSignedVo;
 import com.berry.oss.module.vo.ObjectInfoVo;
 import org.springframework.web.context.request.WebRequest;

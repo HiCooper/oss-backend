@@ -23,6 +23,7 @@ public enum ResultCode implements IMessageEnum {
     ACCOUNT_NOT_EXIST("D404", "账户不存在"),
     BUCKET_NOT_EXIST("B404", "Bucket 不存在"),
     USERNAME_OR_PASSWORD_ERROR("D404", "用户名或密码错误"),
+    USERNAME_EXIST("D403", "用户名已存在"),
     ACCOUNT_DISABLE("D40401", "账户不可用"),
     ACCOUNT_LOCKED("D40402", "账户已被锁定"),
     ACCESS_KEY_LIMIT_THREE("403", "账户最多能创建3个密钥对"),

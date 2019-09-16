@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:mysql://10.50.12.38:3306/db_pdsc?characterEncoding=utf8&useSSL=false&useUnicode=true&allowPublicKeyRetrieval=true
-    username: root
-    password: 3edcvfr4
+    url: jdbc:mysql://localhost:3306/db_oss_service?characterEncoding=utf8&useSSL=false&useUnicode=true&allowPublicKeyRetrieval=true
+    username: berry
+    password: okmnji123
     driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.alibaba.druid.pool.DruidDataSource
     platform: mysql
@@ -51,7 +51,7 @@ server:
 mybatis-plus:
   mapper-locations: classpath:mapper/**/*.xml
   #实体扫描，多个package用逗号或者分号分隔
-  typeAliasesPackage: com.berry.oss.core.entity
+  typeAliasesPackage: com.berry.oss.core.entity,com.berry.oss.security.core.entity
   configuration:
     map-underscore-to-camel-case: true
     cache-enabled: false
@@ -69,13 +69,14 @@ logging:
   path: ./log
   file:
     max-size: 100MB
-    max-history: 90
+    max-history: 30
 
 global:
   # 单机模式(单机模式没用数据冗余)
   singleton: true
   data-path: ./
-  server-ip: 192.168.2.195
+  # 本级对外ip
+  server-ip: 47.101.42.169
   mail:
     from: berry_cooper@163.com
     base-url: http://127.0.0.1:8080
