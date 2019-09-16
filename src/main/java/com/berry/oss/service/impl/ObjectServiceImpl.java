@@ -436,11 +436,14 @@ public class ObjectServiceImpl implements IObjectService {
             List<ObjectInfo> dirs = objectInfos.stream().filter(ObjectInfo::getIsDir).collect(Collectors.toList());
 
             if (dirs.size() > 0) {
+                // 删除文件夹本身
+                objectInfoDaoService.removeByIds(dirs.stream().map(ObjectInfo::getId).collect(Collectors.toList()));
+                // 删除文件夹的子目录
                 dirs.forEach(dir -> {
                     // 如果是文件夹，则删除该文件夹下所有的子项
                     objectInfoDaoService.remove(new QueryWrapper<ObjectInfo>()
                             .eq("bucket_id", bucketInfo.getId())
-                            .eq("file_path", dir.getFilePath())
+                            .eq("file_path", dir.getFilePath() + dir.getFileName())
                             .eq("user_id", currentUser.getId()));
                 });
             }
