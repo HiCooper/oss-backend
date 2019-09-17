@@ -148,6 +148,11 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
         return m.replaceAll("").trim();
     }
 
+    /**
+     * 将特殊字符 替换为 '-'
+     * @param str
+     * @return
+     */
     public static String filterUnsafeUrlCharts(String str) {
         if(StringUtils.isBlank(str)) {
             return str;
@@ -155,7 +160,7 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
         String regEx = "[<>\"#%{}^\\[\\]`\\s\\\\]";
         Pattern p = Pattern.compile(regEx);
         Matcher m = p.matcher(str);
-        return m.replaceAll("").trim();
+        return m.replaceAll("-").trim();
     }
 
     /**
