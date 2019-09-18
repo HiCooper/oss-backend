@@ -7,7 +7,7 @@
     <springProperty scope="context" name="fileMaxHistory" source="logging.file.max-history" defaultValue="30"/>
     <springProperty scope="context" name="rootLevel" source="logging.level.root" defaultValue="INFO"/>
 
-    <appender name="WARN_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <appender name="WARM_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <maxHistory>${fileMaxHistory}</maxHistory>
             <fileNamePattern>${logPath}/warm/warm.%d{yyyyMMdd}.%i.log</fileNamePattern>
