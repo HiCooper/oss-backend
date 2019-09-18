@@ -22,10 +22,10 @@ import com.berry.oss.module.vo.ObjectInfoVo;
 import com.berry.oss.security.SecurityUtils;
 import com.berry.oss.security.dto.UserInfoDTO;
 import com.berry.oss.service.*;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.AntPathMatcher;
@@ -158,12 +158,16 @@ public class ObjectServiceImpl implements IObjectService {
                     fileId = dataService.saveObject(file.getInputStream(), fileSize, hash, fileName, bucketInfo, currentUser.getUsername());
                 }
                 // 保存上传信息
-                objectInfo = saveObjectInfo(bucketInfo.getId(), acl, hash, fileSize, fileName, filePath, fileId);
+                saveObjectInfo(bucketInfo.getId(), acl, hash, fileSize, fileName, filePath, fileId);
             } else {
                 objectInfo.setUpdateTime(new Date());
                 objectInfoDaoService.updateById(objectInfo);
             }
-            BeanUtils.copyProperties(objectInfo, vo);
+            vo.setAcl(acl);
+            vo.setFileName(fileName);
+            vo.setFilePath(filePath);
+            vo.setSize(fileSize);
+            vo.setFormattedSize(StringUtils.getFormattedSize(fileSize));
             String url = getPublicObjectUrl(bucket, filePath, fileName);
             vo.setUrl(url);
             vos.add(vo);
@@ -210,13 +214,17 @@ public class ObjectServiceImpl implements IObjectService {
                 fileId = dataService.saveObject(data, size, hash, fileName, bucketInfo, currentUser.getUsername());
             }
             // 保存上传信息
-            objectInfo = saveObjectInfo(bucketInfo.getId(), acl, hash, size, fileName, filePath, fileId);
+            saveObjectInfo(bucketInfo.getId(), acl, hash, size, fileName, filePath, fileId);
         } else {
             objectInfo.setUpdateTime(new Date());
             objectInfoDaoService.updateById(objectInfo);
         }
 
-        BeanUtils.copyProperties(objectInfo, vo);
+        vo.setAcl(acl);
+        vo.setFileName(fileName);
+        vo.setFilePath(filePath);
+        vo.setSize(size);
+        vo.setFormattedSize(StringUtils.getFormattedSize(size));
         String url = getPublicObjectUrl(bucket, filePath, fileName);
         vo.setUrl(url);
         return vo;
@@ -268,14 +276,18 @@ public class ObjectServiceImpl implements IObjectService {
                 fileId = dataService.saveObject(byteData, size, hash, fileName + fileType, bucketInfo, currentUser.getUsername());
             }
             // 保存上传信息
-            objectInfo = saveObjectInfo(bucketInfo.getId(), acl, hash, size, fileName + fileType, filePath, fileId);
+            saveObjectInfo(bucketInfo.getId(), acl, hash, size, fileName + fileType, filePath, fileId);
         } else {
             // 已存在：更新时间
             objectInfo.setUpdateTime(new Date());
             objectInfoDaoService.updateById(objectInfo);
         }
 
-        BeanUtils.copyProperties(objectInfo, vo);
+        vo.setAcl(acl);
+        vo.setFileName(fileName);
+        vo.setFilePath(filePath);
+        vo.setSize(size);
+        vo.setFormattedSize(StringUtils.getFormattedSize(size));
         String url = getPublicObjectUrl(bucket, filePath, fileName);
         vo.setUrl(url + fileType);
         return vo;
@@ -493,7 +505,8 @@ public class ObjectServiceImpl implements IObjectService {
         return objectInfoDaoService.updateById(objectInfo);
     }
 
-    private ObjectInfo saveObjectInfo(String bucketId, String acl, String hash, Long contentLength, String fileName, String filePath, String fileId) {
+    @Async("taskExecutor")
+    public void saveObjectInfo(String bucketId, String acl, String hash, Long contentLength, String fileName, String filePath, String fileId) {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
         List<ObjectInfo> newObject = new ArrayList<>();
         // 添加 该账号 该文件记录
@@ -524,7 +537,6 @@ public class ObjectServiceImpl implements IObjectService {
 
         // 引用+1
         objectHashService.increaseRefCountByHash(hash, fileId, contentLength);
-        return objectInfo;
     }
 
     private BucketInfo getBucketInfo(String bucket, UserInfoDTO currentUser) {

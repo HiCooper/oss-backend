@@ -76,7 +76,7 @@ global:
   singleton: true
   data-path: ./
   # 本级对外ip
-  server-ip: 10.50.12.38
+  server-ip: 127.0.0.1
   mail:
     from: berry_cooper@163.com
     base-url: http://127.0.0.1:8080
