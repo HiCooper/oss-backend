@@ -507,14 +507,20 @@ public class ObjectServiceImpl implements IObjectService {
         return "." + dataPrefix.substring(dataPrefix.lastIndexOf("/") + 1, dataPrefix.length() - 1);
     }
 
-    private void checkPath(String filePath) {
+    private static void checkPath(String filePath) {
         // 校验path 规范
         if (!DEFAULT_FILE_PATH.equals(filePath)) {
-            Matcher matcher = Constants.FILE_PATH_PATTERN.matcher(filePath.substring(1));
-            if (!filePath.startsWith(DEFAULT_FILE_PATH) || !matcher.find()) {
+            String substring = filePath.substring(1);
+            System.out.println(substring);
+            boolean matches = substring.matches(Constants.FILE_PATH_PATTERN);
+            if (!filePath.startsWith(DEFAULT_FILE_PATH) || !matches) {
                 throw new UploadException("403", "当前上传文件目录不正确！");
             }
         }
+    }
+
+    public static void main(String[] args) {
+        checkPath("/310115-077-17/20190917100734");
     }
 
     /**
