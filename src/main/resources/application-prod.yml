@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/db_oss_service?characterEncoding=utf8&useSSL=false&useUnicode=true&allowPublicKeyRetrieval=true
-    username: berry
-    password: okmnji123
+    url: jdbc:mysql://10.50.12.38:3306/db_oss_service?characterEncoding=utf8&useSSL=false&useUnicode=true&allowPublicKeyRetrieval=true
+    username: root
+    password: 3edcvfr4
     driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.alibaba.druid.pool.DruidDataSource
     platform: mysql
@@ -76,7 +76,7 @@ global:
   singleton: true
   data-path: ./
   # 本级对外ip
-  server-ip: 47.101.42.169
+  server-ip: 10.50.12.38
   mail:
     from: berry_cooper@163.com
     base-url: http://127.0.0.1:8080

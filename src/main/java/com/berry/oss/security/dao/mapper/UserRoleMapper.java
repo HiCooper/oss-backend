@@ -1,7 +1,7 @@
 package com.berry.oss.security.dao.mapper;
 
-import com.berry.oss.security.dao.entity.UserRole;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.berry.oss.security.dao.entity.UserRole;
 
 /**
  * <p>

@@ -27,7 +27,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.Base64Utils;
@@ -106,7 +105,7 @@ public class ObjectServiceImpl implements IObjectService {
         return objectInfoDaoService.list(queryWrapper);
     }
 
-    @Transactional(rollbackFor = Exception.class, isolation = Isolation.SERIALIZABLE)
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public List<ObjectInfoVo> create(String bucket, MultipartFile[] files, String acl, String filePath) throws Exception {
 
@@ -141,21 +140,29 @@ public class ObjectServiceImpl implements IObjectService {
                 // 过滤文件名特殊字符
                 fileName = StringUtils.filterUnsafeUrlCharts(fileName);
             }
-            boolean replace = checkFileReplace(filePath, currentUser, bucketInfo, fileName);
+
+            // 检查 该用户 同目录 同名 同bucket 下 文件是否已经存在
+            ObjectInfo objectInfo = checkFileExist(filePath, currentUser, bucketInfo, fileName);
+            boolean exist = objectInfo != null;
 
             ObjectInfoVo vo = new ObjectInfoVo();
-            vo.setReplace(replace);
+            vo.setReplace(exist);
 
-            // 尝试快速上传
-            String fileId = objectHashService.checkExist(hash, fileSize);
-            if (StringUtils.isBlank(fileId)) {
-                vo.setUploadType(false);
-                // 快速上传失败，
-                // 调用存储数据服务，保存对象，返回24位对象id,
-                fileId = dataService.saveObject(file.getInputStream(), fileSize, hash, fileName, bucketInfo, currentUser.getUsername());
+            if (!exist) {
+                // 尝试快速上传
+                String fileId = objectHashService.checkExist(hash, fileSize);
+                if (StringUtils.isBlank(fileId)) {
+                    vo.setUploadType(false);
+                    // 快速上传失败，
+                    // 调用存储数据服务，保存对象，返回24位对象id,
+                    fileId = dataService.saveObject(file.getInputStream(), fileSize, hash, fileName, bucketInfo, currentUser.getUsername());
+                }
+                // 保存上传信息
+                objectInfo = saveObjectInfo(bucketInfo.getId(), acl, hash, fileSize, fileName, filePath, fileId);
+            } else {
+                objectInfo.setUpdateTime(new Date());
+                objectInfoDaoService.updateById(objectInfo);
             }
-            // 保存上传信息
-            ObjectInfo objectInfo = saveObjectInfo(bucketInfo.getId(), acl, hash, fileSize, fileName, filePath, fileId);
             BeanUtils.copyProperties(objectInfo, vo);
             String url = getPublicObjectUrl(bucket, filePath, fileName);
             vo.setUrl(url);
@@ -165,6 +172,7 @@ public class ObjectServiceImpl implements IObjectService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ObjectInfoVo uploadByte(String bucket, String filePath, String fileName, byte[] data, String acl) throws Exception {
         // 验证acl 规范
         if (!CommonConstant.AclType.ALL_NAME.contains(acl)) {
@@ -185,22 +193,29 @@ public class ObjectServiceImpl implements IObjectService {
         // 大小
         long size = data.length;
 
-        // 检查该 bucket 及 path 下 同名文件是否存在
-        boolean replace = checkFileReplace(filePath, currentUser, bucketInfo, fileName);
+        // 检查 该用户 同目录 同名 同bucket 下 文件是否已经存在
+        ObjectInfo objectInfo = checkFileExist(filePath, currentUser, bucketInfo, fileName);
+        boolean exist = objectInfo != null;
 
         ObjectInfoVo vo = new ObjectInfoVo();
-        vo.setReplace(replace);
+        vo.setReplace(exist);
 
-        // 尝试快速上传
-        String fileId = objectHashService.checkExist(hash, size);
-        if (StringUtils.isBlank(fileId)) {
-            // 快速上传失败，
-            vo.setUploadType(false);
-            // 调用存储数据服务，保存对象，返回24位对象id,
-            fileId = dataService.saveObject(data, size, hash, fileName, bucketInfo, currentUser.getUsername());
+        if (!exist) {
+            // 尝试快速上传
+            String fileId = objectHashService.checkExist(hash, size);
+            if (StringUtils.isBlank(fileId)) {
+                // 快速上传失败，
+                vo.setUploadType(false);
+                // 调用存储数据服务，保存对象，返回24位对象id,
+                fileId = dataService.saveObject(data, size, hash, fileName, bucketInfo, currentUser.getUsername());
+            }
+            // 保存上传信息
+            objectInfo = saveObjectInfo(bucketInfo.getId(), acl, hash, size, fileName, filePath, fileId);
+        } else {
+            objectInfo.setUpdateTime(new Date());
+            objectInfoDaoService.updateById(objectInfo);
         }
-        // 保存上传信息
-        ObjectInfo objectInfo = saveObjectInfo(bucketInfo.getId(), acl, hash, size, fileName, filePath, fileId);
+
         BeanUtils.copyProperties(objectInfo, vo);
         String url = getPublicObjectUrl(bucket, filePath, fileName);
         vo.setUrl(url);
@@ -208,6 +223,7 @@ public class ObjectServiceImpl implements IObjectService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ObjectInfoVo uploadByBase64Str(String bucket, String filePath, String fileName, String data, String acl) throws Exception {
         // 验证acl 规范
         if (!CommonConstant.AclType.ALL_NAME.contains(acl)) {
@@ -234,22 +250,31 @@ public class ObjectServiceImpl implements IObjectService {
         String hash = SHA256.hash(byteData);
         long size = dataArr[1].length();
 
-        // 检查该 bucket 及 path 下 同名文件是否存在
-        boolean replace = checkFileReplace(filePath, currentUser, bucketInfo, fileName + fileType);
+
+        // 检查 该用户 同目录 同名 同bucket 下 文件是否已经存在
+        ObjectInfo objectInfo = checkFileExist(filePath, currentUser, bucketInfo, fileName);
+        boolean exist = objectInfo != null;
 
         ObjectInfoVo vo = new ObjectInfoVo();
-        vo.setReplace(replace);
+        vo.setReplace(exist);
 
-        // 尝试快速上传
-        String fileId = objectHashService.checkExist(hash, size);
-        if (StringUtils.isBlank(fileId)) {
-            // 快速上传失败，
-            vo.setUploadType(false);
-            // 调用存储数据服务，保存对象，返回24位对象id,
-            fileId = dataService.saveObject(byteData, size, hash, fileName + fileType, bucketInfo, currentUser.getUsername());
+        if (!exist) {
+            // 不存在:尝试快速上传
+            String fileId = objectHashService.checkExist(hash, size);
+            if (StringUtils.isBlank(fileId)) {
+                // 快速上传失败，
+                vo.setUploadType(false);
+                // 调用存储数据服务，保存对象，返回24位对象id,
+                fileId = dataService.saveObject(byteData, size, hash, fileName + fileType, bucketInfo, currentUser.getUsername());
+            }
+            // 保存上传信息
+            objectInfo = saveObjectInfo(bucketInfo.getId(), acl, hash, size, fileName + fileType, filePath, fileId);
+        } else {
+            // 已存在：更新时间
+            objectInfo.setUpdateTime(new Date());
+            objectInfoDaoService.updateById(objectInfo);
         }
-        // 保存上传信息
-        ObjectInfo objectInfo = saveObjectInfo(bucketInfo.getId(), acl, hash, size, fileName + fileType, filePath, fileId);
+
         BeanUtils.copyProperties(objectInfo, vo);
         String url = getPublicObjectUrl(bucket, filePath, fileName);
         vo.setUrl(url + fileType);
@@ -264,7 +289,10 @@ public class ObjectServiceImpl implements IObjectService {
         // 检查bucket
         BucketInfo bucketInfo = bucketService.checkUserHaveBucket(bucket);
 
-        createFolderIgnore(currentUser.getId(), bucketInfo.getId(), folder);
+        List<ObjectInfo> infos = createFolderIgnore(currentUser.getId(), bucketInfo.getId(), folder);
+        if (infos.size() > 0) {
+            objectInfoDaoService.insertIgnoreBatch(infos);
+        }
     }
 
     @Override
@@ -465,11 +493,12 @@ public class ObjectServiceImpl implements IObjectService {
         return objectInfoDaoService.updateById(objectInfo);
     }
 
-    @Transactional(rollbackFor = Exception.class)
-    public ObjectInfo saveObjectInfo(String bucketId, String acl, String hash, Long contentLength, String fileName, String filePath, String fileId) {
+    private ObjectInfo saveObjectInfo(String bucketId, String acl, String hash, Long contentLength, String fileName, String filePath, String fileId) {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
+        List<ObjectInfo> newObject = new ArrayList<>();
         // 添加 该账号 该文件记录
         ObjectInfo objectInfo = new ObjectInfo()
+                .setId(ObjectId.get())
                 .setBucketId(bucketId)
                 .setCategory(StringUtils.getExtName(fileName))
                 .setFileId(fileId)
@@ -481,7 +510,17 @@ public class ObjectServiceImpl implements IObjectService {
                 .setHash(hash)
                 .setUserId(currentUser.getId())
                 .setFormattedSize(StringUtils.getFormattedSize(contentLength));
-        objectInfoDaoService.save(objectInfo);
+        newObject.add(objectInfo);
+        // 检查文件路径，非 / 则需要创建目录
+        if (!DEFAULT_FILE_PATH.equals(filePath)) {
+            List<ObjectInfo> infos = createFolderIgnore(currentUser.getId(), bucketId, filePath);
+            if (infos.size() > 0) {
+                // 添加目录信息
+                newObject.addAll(infos);
+            }
+        }
+        // 文件信息 和 目录信息同时 insert
+        objectInfoDaoService.insertIgnoreBatch(newObject);
 
         // 引用+1
         objectHashService.increaseRefCountByHash(hash, fileId, contentLength);
@@ -518,70 +557,49 @@ public class ObjectServiceImpl implements IObjectService {
      *
      * @return true or false
      */
-    private boolean checkFileReplace(String filePath, UserInfoDTO currentUser, BucketInfo bucketInfo, String fileName) {
-        boolean result = false;
+    private ObjectInfo checkFileExist(String filePath, UserInfoDTO currentUser, BucketInfo bucketInfo, String fileName) {
         // 检查该 bucket 及 path 下 同名文件是否存在
         QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_id", currentUser.getId());
         queryWrapper.eq("bucket_id", bucketInfo.getId());
         queryWrapper.eq("file_path", filePath);
         queryWrapper.eq("file_name", fileName);
-        ObjectInfo one = objectInfoDaoService.getOne(queryWrapper);
-        if (one != null) {
-            // 同名文件存在，覆盖旧的（旧记录删除）
-            objectInfoDaoService.removeById(one.getId());
-            // 相关数据文件引用 -1
-            objectHashService.decreaseRefCountByHash(one.getHash());
-            result = true;
-        }
-
-        // 检查文件路径，非 / 则需要创建目录
-        if (!DEFAULT_FILE_PATH.equals(filePath)) {
-            createFolderIgnore(currentUser.getId(), bucketInfo.getId(), filePath);
-        }
-        return result;
+        return objectInfoDaoService.getOne(queryWrapper);
     }
 
     /**
-     * 创建目录，存在则忽略
+     * 组装需要创建目录对象
      *
      * @param userId   用户id
      * @param bucketId bucketId
-     * @param folder   多级目录数组
+     * @param filePath 文件夹全路径
      */
-    private void createFolderIgnore(Integer userId, String bucketId, String folder) {
+    private List<ObjectInfo> createFolderIgnore(Integer userId, String bucketId, String filePath) {
         // 1. 检查路径是否存在
-        String filePath = folder.startsWith("/") ? folder : "/" + folder;
-        int count = objectInfoDaoService.count(new QueryWrapper<ObjectInfo>()
-                .eq("user_id", userId)
-                .eq("bucket_id", bucketId)
-                .eq("file_path", filePath));
-
-        if (count == 0) {
-            // 不存在则 进行创建
-            String[] objectArr = filePath.substring(1).split("/");
-            List<ObjectInfo> list = new ArrayList<>();
-            ObjectInfo objectInfo;
-            StringBuilder path = new StringBuilder("/");
-            for (String dirName : objectArr) {
-                if (StringUtils.isNotBlank(dirName)) {
-                    objectInfo = new ObjectInfo();
-                    objectInfo.setId(ObjectId.get());
-                    objectInfo.setIsDir(true);
-                    objectInfo.setFileName(dirName);
-                    objectInfo.setFilePath(path.toString());
-                    objectInfo.setUserId(userId);
-                    objectInfo.setBucketId(bucketId);
-                    if ("/".equals(path.toString())) {
-                        path.append(dirName);
-                    } else {
-                        path.append("/").append(dirName);
-                    }
-                    list.add(objectInfo);
+        String folder = filePath.startsWith("/") ? filePath.substring(1) : filePath;
+        // 不存在则 进行创建
+        String[] objectArr = folder.split("/");
+        List<ObjectInfo> list = new ArrayList<>();
+        ObjectInfo objectInfo;
+        StringBuilder path = new StringBuilder("/");
+        for (String dirName : objectArr) {
+            if (StringUtils.isNotBlank(dirName)) {
+                objectInfo = new ObjectInfo();
+                objectInfo.setId(ObjectId.get());
+                objectInfo.setIsDir(true);
+                objectInfo.setFileName(dirName);
+                objectInfo.setFilePath(path.toString());
+                objectInfo.setUserId(userId);
+                objectInfo.setBucketId(bucketId);
+                if ("/".equals(path.toString())) {
+                    path.append(dirName);
+                } else {
+                    path.append("/").append(dirName);
                 }
+                list.add(objectInfo);
             }
-            objectInfoDaoService.insertIgnoreBatch(list);
         }
+        return list;
     }
 
     /**

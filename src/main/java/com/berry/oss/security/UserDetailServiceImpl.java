@@ -70,7 +70,7 @@ public class UserDetailServiceImpl implements UserDetailsService {
                 .map(role -> new SimpleGrantedAuthority(role.getName()))
                 .collect(Collectors.toList());
         return new org.springframework.security.core.userdetails.User(user.getUsername(),
-                user.getPassword(), user.isEnabled(), user.getExpired() ==null || user.getExpired().after(new Date()), true, !user.isLocked(),
+                user.getPassword(), user.isEnabled(), user.getExpired() == null || user.getExpired().after(new Date()), true, !user.isLocked(),
                 grantedAuthorities);
     }
 }

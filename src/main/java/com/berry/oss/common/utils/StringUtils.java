@@ -150,11 +150,12 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
 
     /**
      * 将特殊字符 替换为 '-'
+     *
      * @param str
      * @return
      */
     public static String filterUnsafeUrlCharts(String str) {
-        if(StringUtils.isBlank(str)) {
+        if (StringUtils.isBlank(str)) {
             return str;
         }
         String regEx = "[<>\"#%{}^\\[\\]`\\s\\\\]";

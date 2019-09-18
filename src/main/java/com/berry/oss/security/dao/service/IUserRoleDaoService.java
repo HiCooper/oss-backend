@@ -1,7 +1,7 @@
 package com.berry.oss.security.dao.service;
 
-import com.berry.oss.security.dao.entity.UserRole;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.berry.oss.security.dao.entity.UserRole;
 
 /**
  * <p>

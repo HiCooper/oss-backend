@@ -29,7 +29,7 @@ public interface IObjectService {
      * 上传 Object
      *
      * @param bucket   bucket name
-     * @param files   待上传 file
+     * @param files    待上传 file
      * @param acl      文件acl
      * @param filePath 相对路径
      * @return obj
@@ -92,7 +92,7 @@ public interface IObjectService {
     /**
      * 删除 object
      *
-     * @param bucket  bucket name
+     * @param bucket    bucket name
      * @param objectIds 对象id，多个用英文逗号隔开
      */
     void delete(String bucket, String objectIds);
