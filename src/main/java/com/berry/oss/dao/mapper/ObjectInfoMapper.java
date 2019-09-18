@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.berry.oss.dao.entity.ObjectInfo;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * <p>
  * Mapper 接口
@@ -20,4 +22,11 @@ public interface ObjectInfoMapper extends BaseMapper<ObjectInfo> {
      * @param objectInfo 实体信息
      */
     void insertIgnore(@Param("objectInfo") ObjectInfo objectInfo);
+
+    /**
+     * 批量 忽略插入
+     *
+     * @param objectInfoList list
+     */
+    void insertIgnoreBatch(@Param("objectInfoList") List<ObjectInfo> objectInfoList);
 }

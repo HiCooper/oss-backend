@@ -14,7 +14,6 @@ import com.berry.oss.common.utils.*;
 import com.berry.oss.config.GlobalProperties;
 import com.berry.oss.dao.entity.BucketInfo;
 import com.berry.oss.dao.entity.ObjectInfo;
-import com.berry.oss.dao.mapper.ObjectInfoMapper;
 import com.berry.oss.dao.service.IBucketInfoDaoService;
 import com.berry.oss.dao.service.IObjectInfoDaoService;
 import com.berry.oss.module.dto.ObjectResource;
@@ -23,14 +22,12 @@ import com.berry.oss.module.vo.ObjectInfoVo;
 import com.berry.oss.security.SecurityUtils;
 import com.berry.oss.security.dto.UserInfoDTO;
 import com.berry.oss.service.*;
-import org.apache.ibatis.session.ExecutorType;
-import org.apache.ibatis.session.SqlSession;
-import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.Base64Utils;
@@ -40,7 +37,6 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.HandlerMapping;
 
-import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -49,7 +45,6 @@ import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 import static com.berry.oss.common.constant.Constants.DEFAULT_FILE_PATH;
@@ -65,10 +60,7 @@ import static com.berry.oss.common.constant.Constants.DEFAULT_FILE_PATH;
 @Service
 public class ObjectServiceImpl implements IObjectService {
 
-    private static int UPLOAD_PER_SIZE_LIMIT = 100;
-
-    @Resource
-    private SqlSessionTemplate sqlSessionTemplate;
+    private static final int UPLOAD_PER_SIZE_LIMIT = 100;
 
     private final IObjectInfoDaoService objectInfoDaoService;
     private final IObjectHashService objectHashService;
@@ -114,9 +106,14 @@ public class ObjectServiceImpl implements IObjectService {
         return objectInfoDaoService.list(queryWrapper);
     }
 
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class, isolation = Isolation.SERIALIZABLE)
     @Override
     public List<ObjectInfoVo> create(String bucket, MultipartFile[] files, String acl, String filePath) throws Exception {
+
+        if (files.length > UPLOAD_PER_SIZE_LIMIT) {
+            throw new UploadException("403", "最多同时上传数量为100");
+        }
+
         // 验证acl 规范
         if (!CommonConstant.AclType.ALL_NAME.contains(acl)) {
             throw new UploadException("403", "不支持的ACL 可选值 [PRIVATE, PUBLIC_READ, PUBLIC_READ_WRITE]");
@@ -267,8 +264,7 @@ public class ObjectServiceImpl implements IObjectService {
         // 检查bucket
         BucketInfo bucketInfo = bucketService.checkUserHaveBucket(bucket);
 
-        String[] objectArr = folder.split("/");
-        createFolderIgnore(currentUser.getId(), bucketInfo.getId(), objectArr);
+        createFolderIgnore(currentUser.getId(), bucketInfo.getId(), folder);
     }
 
     @Override
@@ -510,9 +506,7 @@ public class ObjectServiceImpl implements IObjectService {
     private static void checkPath(String filePath) {
         // 校验path 规范
         if (!DEFAULT_FILE_PATH.equals(filePath)) {
-            String substring = filePath.substring(1);
-            System.out.println(substring);
-            boolean matches = substring.matches(Constants.FILE_PATH_PATTERN);
+            boolean matches = filePath.substring(1).matches(Constants.FILE_PATH_PATTERN);
             if (!filePath.startsWith(DEFAULT_FILE_PATH) || !matches) {
                 throw new UploadException("403", "当前上传文件目录不正确！");
             }
@@ -543,8 +537,7 @@ public class ObjectServiceImpl implements IObjectService {
 
         // 检查文件路径，非 / 则需要创建目录
         if (!DEFAULT_FILE_PATH.equals(filePath)) {
-            String[] objectArr = filePath.substring(1).split("/");
-            createFolderIgnore(currentUser.getId(), bucketInfo.getId(), objectArr);
+            createFolderIgnore(currentUser.getId(), bucketInfo.getId(), filePath);
         }
         return result;
     }
@@ -552,13 +545,22 @@ public class ObjectServiceImpl implements IObjectService {
     /**
      * 创建目录，存在则忽略
      *
-     * @param userId    用户id
-     * @param bucketId  bucketId
-     * @param objectArr 多级目录数组
+     * @param userId   用户id
+     * @param bucketId bucketId
+     * @param folder   多级目录数组
      */
-    private void createFolderIgnore(Integer userId, String bucketId, String[] objectArr) {
-        try (SqlSession session = sqlSessionTemplate.getSqlSessionFactory().openSession(ExecutorType.BATCH, false)) {
-            ObjectInfoMapper mapper = session.getMapper(ObjectInfoMapper.class);
+    private void createFolderIgnore(Integer userId, String bucketId, String folder) {
+        // 1. 检查路径是否存在
+        String filePath = folder.startsWith("/") ? folder : "/" + folder;
+        int count = objectInfoDaoService.count(new QueryWrapper<ObjectInfo>()
+                .eq("user_id", userId)
+                .eq("bucket_id", bucketId)
+                .eq("file_path", filePath));
+
+        if (count == 0) {
+            // 不存在则 进行创建
+            String[] objectArr = filePath.substring(1).split("/");
+            List<ObjectInfo> list = new ArrayList<>();
             ObjectInfo objectInfo;
             StringBuilder path = new StringBuilder("/");
             for (String dirName : objectArr) {
@@ -575,12 +577,10 @@ public class ObjectServiceImpl implements IObjectService {
                     } else {
                         path.append("/").append(dirName);
                     }
-                    mapper.insertIgnore(objectInfo);
+                    list.add(objectInfo);
                 }
             }
-            session.commit();
-            // 清理缓存，防止溢出
-            session.clearCache();
+            objectInfoDaoService.insertIgnoreBatch(list);
         }
     }
 

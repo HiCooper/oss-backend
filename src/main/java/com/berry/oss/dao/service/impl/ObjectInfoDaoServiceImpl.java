@@ -7,6 +7,9 @@ import com.berry.oss.dao.mapper.ObjectInfoMapper;
 import com.berry.oss.dao.service.IObjectInfoDaoService;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
+import java.util.List;
+
 /**
  * <p>
  * 服务实现类
@@ -18,9 +21,17 @@ import org.springframework.stereotype.Service;
 @Service
 public class ObjectInfoDaoServiceImpl extends ServiceImpl<ObjectInfoMapper, ObjectInfo> implements IObjectInfoDaoService {
 
+    @Resource
+    private ObjectInfoMapper mapper;
+
     @Override
     public boolean save(ObjectInfo entity) {
         entity.setId(ObjectId.get());
         return super.save(entity);
+    }
+
+    @Override
+    public void insertIgnoreBatch(List<ObjectInfo> list) {
+        mapper.insertIgnoreBatch(list);
     }
 }

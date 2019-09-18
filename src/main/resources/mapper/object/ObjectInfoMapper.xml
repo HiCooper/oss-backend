@@ -32,4 +32,14 @@
         )
     </insert>
 
+    <insert id="insertIgnoreBatch">
+        INSERT IGNORE INTO object_info (id, is_dir, file_name, file_path, user_id, bucket_id) VALUES
+        <foreach collection ="objectInfoList" item="objectInfo" index= "index" separator =",">
+            (
+            #{objectInfo.id}, #{objectInfo.isDir},  #{objectInfo.fileName},  #{objectInfo.filePath},
+            #{objectInfo.userId},  #{objectInfo.bucketId}
+            )
+       </foreach >
+    </insert>
+
 </mapper>
