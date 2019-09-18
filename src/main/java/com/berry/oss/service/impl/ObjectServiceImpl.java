@@ -519,10 +519,6 @@ public class ObjectServiceImpl implements IObjectService {
         }
     }
 
-    public static void main(String[] args) {
-        checkPath("/310115-077-17/20190917100734");
-    }
-
     /**
      * 检查文件是否存在 返回是否替换
      *
