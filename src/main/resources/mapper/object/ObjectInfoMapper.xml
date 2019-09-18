@@ -22,7 +22,7 @@
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, bucketId, user_id, file_name, file_path, file_id, hash, category, size,acl, formatted_size, is_dir, create_time, update_time
+        id, user_id, bucket_id, file_name, file_path, file_id, hash, category, size, acl, formatted_size, is_dir, create_time, update_time
     </sql>
 
     <insert id="insertIgnore">
@@ -33,13 +33,15 @@
     </insert>
 
     <insert id="insertIgnoreBatch">
-        INSERT IGNORE INTO object_info (id, is_dir, file_name, file_path, user_id, bucket_id) VALUES
-        <foreach collection ="objectInfoList" item="objectInfo" index= "index" separator =",">
+        INSERT IGNORE INTO object_info (id, bucket_id, user_id, file_name, file_path, file_id, hash, category, size,
+        acl, formatted_size, is_dir) VALUES
+        <foreach collection="objectInfoList" item="objectInfo" index="index" separator=",">
             (
-            #{objectInfo.id}, #{objectInfo.isDir},  #{objectInfo.fileName},  #{objectInfo.filePath},
-            #{objectInfo.userId},  #{objectInfo.bucketId}
+            #{objectInfo.id}, #{objectInfo.bucketId}, #{objectInfo.userId},
+            #{objectInfo.fileName}, #{objectInfo.filePath},#{objectInfo.fileId},#{objectInfo.hash},
+            #{objectInfo.category}, #{objectInfo.size}, #{objectInfo.acl}, #{objectInfo.formattedSize}, #{objectInfo.isDir}
             )
-       </foreach >
+        </foreach>
     </insert>
 
 </mapper>
