@@ -60,6 +60,7 @@ import static com.berry.oss.common.constant.Constants.DEFAULT_FILE_PATH;
 public class ObjectServiceImpl implements IObjectService {
 
     private static final int UPLOAD_PER_SIZE_LIMIT = 100;
+    private static final String BASE64_DATA_START_PATTERN = "data:image/[a-z];";
 
     private final IObjectInfoDaoService objectInfoDaoService;
     private final IObjectHashService objectHashService;
@@ -119,6 +120,7 @@ public class ObjectServiceImpl implements IObjectService {
         }
         // 校验path 规范
         checkPath(filePath);
+
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
 
         // 检查bucket
@@ -137,12 +139,12 @@ public class ObjectServiceImpl implements IObjectService {
             // 校验通过
             String fileName = file.getOriginalFilename();
             if (StringUtils.isNotBlank(fileName)) {
-                // 过滤文件名特殊字符
+                // 过滤替换文件名特殊字符
                 fileName = StringUtils.filterUnsafeUrlCharts(fileName);
             }
 
             // 检查 该用户 同目录 同名 同bucket 下 文件是否已经存在
-            ObjectInfo objectInfo = checkFileExist(filePath, currentUser, bucketInfo, fileName);
+            ObjectInfo objectInfo = getObjectInfo(filePath, currentUser.getId(), bucketInfo.getId(), fileName);
             boolean exist = objectInfo != null;
 
             ObjectInfoVo vo = new ObjectInfoVo();
@@ -163,13 +165,7 @@ public class ObjectServiceImpl implements IObjectService {
                 objectInfo.setUpdateTime(new Date());
                 objectInfoDaoService.updateById(objectInfo);
             }
-            vo.setAcl(acl);
-            vo.setFileName(fileName);
-            vo.setFilePath(filePath);
-            vo.setSize(fileSize);
-            vo.setFormattedSize(StringUtils.getFormattedSize(fileSize));
-            String url = getPublicObjectUrl(bucket, filePath, fileName);
-            vo.setUrl(url);
+            buildResponse(bucket, filePath, fileName, acl, "", fileSize, vo);
             vos.add(vo);
         }
         return vos;
@@ -178,14 +174,8 @@ public class ObjectServiceImpl implements IObjectService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ObjectInfoVo uploadByte(String bucket, String filePath, String fileName, byte[] data, String acl) throws Exception {
-        // 验证acl 规范
-        if (!CommonConstant.AclType.ALL_NAME.contains(acl)) {
-            throw new UploadException("403", "不支持的ACL 可选值 [PRIVATE, PUBLIC_READ, PUBLIC_READ_WRITE]");
-        }
-        // 过滤文件名特殊字符
-        fileName = StringUtils.filterUnsafeUrlCharts(fileName);
-
-        checkPath(filePath);
+        // 检查文件名，验证acl 规范
+        fileName = checkFilenameAndPath(filePath, fileName, acl);
 
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
 
@@ -197,99 +187,45 @@ public class ObjectServiceImpl implements IObjectService {
         // 大小
         long size = data.length;
 
-        // 检查 该用户 同目录 同名 同bucket 下 文件是否已经存在
-        ObjectInfo objectInfo = checkFileExist(filePath, currentUser, bucketInfo, fileName);
-        boolean exist = objectInfo != null;
-
+        // 返回对象
         ObjectInfoVo vo = new ObjectInfoVo();
-        vo.setReplace(exist);
 
-        if (!exist) {
-            // 尝试快速上传
-            String fileId = objectHashService.checkExist(hash, size);
-            if (StringUtils.isBlank(fileId)) {
-                // 快速上传失败，
-                vo.setUploadType(false);
-                // 调用存储数据服务，保存对象，返回24位对象id,
-                fileId = dataService.saveObject(data, size, hash, fileName, bucketInfo, currentUser.getUsername());
-            }
-            // 保存上传信息
-            saveObjectInfo(bucketInfo.getId(), acl, hash, size, fileName, filePath, fileId);
-        } else {
-            objectInfo.setUpdateTime(new Date());
-            objectInfoDaoService.updateById(objectInfo);
-        }
+        // 保存或更新改对象信息
+        saveOrUpdateObject(filePath, data, acl, currentUser, bucketInfo, hash, size, vo, fileName);
 
-        vo.setAcl(acl);
-        vo.setFileName(fileName);
-        vo.setFilePath(filePath);
-        vo.setSize(size);
-        vo.setFormattedSize(StringUtils.getFormattedSize(size));
-        String url = getPublicObjectUrl(bucket, filePath, fileName);
-        vo.setUrl(url);
+        buildResponse(bucket, filePath, fileName, acl, "", size, vo);
         return vo;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ObjectInfoVo uploadByBase64Str(String bucket, String filePath, String fileName, String data, String acl) throws Exception {
-        // 验证acl 规范
-        if (!CommonConstant.AclType.ALL_NAME.contains(acl)) {
-            throw new UploadException("403", "不支持的ACL 可选值 [PRIVATE, PUBLIC_READ, PUBLIC_READ_WRITE]");
-        }
-        // 过滤文件名特殊字符
-        fileName = StringUtils.filterUnsafeUrlCharts(fileName);
-
-        // 校验path 规范
-        checkPath(filePath);
+        fileName = checkFilenameAndPath(filePath, fileName, acl);
 
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
 
         // 检查bucket
         BucketInfo bucketInfo = getBucketInfo(bucket, currentUser);
 
+        // 检查数据格式
         String[] dataArr = data.split("base64,");
-        if (dataArr.length != 2 || dataArr[0].matches("data:image/[a-z];")) {
+        if (dataArr.length != 2 || dataArr[0].matches(BASE64_DATA_START_PATTERN)) {
             throw new UploadException("403", "非法base64数据");
         }
+
         String fileType = getFileType(dataArr[0]);
         // 计算数据hash
         byte[] byteData = Base64Utils.decodeFromString(dataArr[1]);
         String hash = SHA256.hash(byteData);
         long size = dataArr[1].length();
 
-
-        // 检查 该用户 同目录 同名 同bucket 下 文件是否已经存在
-        ObjectInfo objectInfo = checkFileExist(filePath, currentUser, bucketInfo, fileName);
-        boolean exist = objectInfo != null;
-
+        // 返回对象
         ObjectInfoVo vo = new ObjectInfoVo();
-        vo.setReplace(exist);
 
-        if (!exist) {
-            // 不存在:尝试快速上传
-            String fileId = objectHashService.checkExist(hash, size);
-            if (StringUtils.isBlank(fileId)) {
-                // 快速上传失败，
-                vo.setUploadType(false);
-                // 调用存储数据服务，保存对象，返回24位对象id,
-                fileId = dataService.saveObject(byteData, size, hash, fileName + fileType, bucketInfo, currentUser.getUsername());
-            }
-            // 保存上传信息
-            saveObjectInfo(bucketInfo.getId(), acl, hash, size, fileName + fileType, filePath, fileId);
-        } else {
-            // 已存在：更新时间
-            objectInfo.setUpdateTime(new Date());
-            objectInfoDaoService.updateById(objectInfo);
-        }
+        // 保存或更新改对象信息
+        saveOrUpdateObject(filePath, byteData, acl, currentUser, bucketInfo, hash, size, vo, fileName + fileType);
 
-        vo.setAcl(acl);
-        vo.setFileName(fileName);
-        vo.setFilePath(filePath);
-        vo.setSize(size);
-        vo.setFormattedSize(StringUtils.getFormattedSize(size));
-        String url = getPublicObjectUrl(bucket, filePath, fileName);
-        vo.setUrl(url + fileType);
+        buildResponse(bucket, filePath, fileName, acl, fileType, size, vo);
         return vo;
     }
 
@@ -301,7 +237,7 @@ public class ObjectServiceImpl implements IObjectService {
         // 检查bucket
         BucketInfo bucketInfo = bucketService.checkUserHaveBucket(bucket);
 
-        List<ObjectInfo> infos = createFolderIgnore(currentUser.getId(), bucketInfo.getId(), folder);
+        List<ObjectInfo> infos = getFolderInfoList(currentUser.getId(), bucketInfo.getId(), folder);
         if (infos.size() > 0) {
             objectInfoDaoService.insertIgnoreBatch(infos);
         }
@@ -526,7 +462,7 @@ public class ObjectServiceImpl implements IObjectService {
         newObject.add(objectInfo);
         // 检查文件路径，非 / 则需要创建目录
         if (!DEFAULT_FILE_PATH.equals(filePath)) {
-            List<ObjectInfo> infos = createFolderIgnore(currentUser.getId(), bucketId, filePath);
+            List<ObjectInfo> infos = getFolderInfoList(currentUser.getId(), bucketId, filePath);
             if (infos.size() > 0) {
                 // 添加目录信息
                 newObject.addAll(infos);
@@ -537,6 +473,54 @@ public class ObjectServiceImpl implements IObjectService {
 
         // 引用+1
         objectHashService.increaseRefCountByHash(hash, fileId, contentLength);
+    }
+
+    private void saveOrUpdateObject(String filePath, byte[] data, String acl, UserInfoDTO currentUser, BucketInfo bucketInfo, String hash, long size, ObjectInfoVo vo, String fullFileName) throws IOException {
+        // 检查 该用户 同目录 同名 同bucket 下 文件是否已经存在
+        ObjectInfo objectInfo = getObjectInfo(filePath, currentUser.getId(), bucketInfo.getId(), fullFileName);
+        boolean exist = objectInfo != null;
+
+        vo.setReplace(exist);
+
+        if (!exist) {
+            // 尝试快速上传
+            String fileId = objectHashService.checkExist(hash, size);
+            if (StringUtils.isBlank(fileId)) {
+                // 快速上传失败，
+                vo.setUploadType(false);
+                // 调用存储数据服务，保存对象，返回24位对象id,
+                fileId = dataService.saveObject(data, size, hash, fullFileName, bucketInfo, currentUser.getUsername());
+            }
+            // 保存上传信息
+            saveObjectInfo(bucketInfo.getId(), acl, hash, size, fullFileName, filePath, fileId);
+        } else {
+            objectInfo.setUpdateTime(new Date());
+            objectInfoDaoService.updateById(objectInfo);
+        }
+    }
+
+    private String checkFilenameAndPath(String filePath, String fileName, String acl) {
+        // 验证acl 规范
+        if (!CommonConstant.AclType.ALL_NAME.contains(acl)) {
+            throw new UploadException("403", "不支持的ACL 可选值 [PRIVATE, PUBLIC_READ, PUBLIC_READ_WRITE]");
+        }
+
+        // 过滤替换文件名特殊字符
+        fileName = StringUtils.filterUnsafeUrlCharts(fileName);
+
+        // 校验path 规范
+        checkPath(filePath);
+        return fileName;
+    }
+
+    private void buildResponse(String bucket, String filePath, String fileName, String acl, String fileType, long size, ObjectInfoVo vo) {
+        vo.setAcl(acl);
+        vo.setFileName(fileName);
+        vo.setFilePath(filePath);
+        vo.setSize(size);
+        vo.setFormattedSize(StringUtils.getFormattedSize(size));
+        String url = getPublicObjectUrl(bucket, filePath, fileName);
+        vo.setUrl(url + fileType);
     }
 
     private BucketInfo getBucketInfo(String bucket, UserInfoDTO currentUser) {
@@ -569,11 +553,11 @@ public class ObjectServiceImpl implements IObjectService {
      *
      * @return true or false
      */
-    private ObjectInfo checkFileExist(String filePath, UserInfoDTO currentUser, BucketInfo bucketInfo, String fileName) {
+    private ObjectInfo getObjectInfo(String filePath, Integer userId, String bucketId, String fileName) {
         // 检查该 bucket 及 path 下 同名文件是否存在
         QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_id", currentUser.getId());
-        queryWrapper.eq("bucket_id", bucketInfo.getId());
+        queryWrapper.eq("user_id", userId);
+        queryWrapper.eq("bucket_id", bucketId);
         queryWrapper.eq("file_path", filePath);
         queryWrapper.eq("file_name", fileName);
         return objectInfoDaoService.getOne(queryWrapper);
@@ -586,7 +570,7 @@ public class ObjectServiceImpl implements IObjectService {
      * @param bucketId bucketId
      * @param filePath 文件夹全路径
      */
-    private List<ObjectInfo> createFolderIgnore(Integer userId, String bucketId, String filePath) {
+    private List<ObjectInfo> getFolderInfoList(Integer userId, String bucketId, String filePath) {
         // 1. 检查路径是否存在
         String folder = filePath.startsWith("/") ? filePath.substring(1) : filePath;
         // 不存在则 进行创建
