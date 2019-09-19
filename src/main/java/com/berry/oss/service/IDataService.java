@@ -49,6 +49,7 @@ public interface IDataService {
      *
      * @param objectId 对象id
      * @return 资源对象
+     * @throws IOException IO
      */
     ObjectResource getObject(String objectId) throws IOException;
 }

@@ -110,6 +110,7 @@ public class DataServiceImpl implements IDataService {
             }
             inputStream = new ByteArrayInputStream(outputStream.toByteArray());
         } else {
+            // RS 分布式冗余模式
             inputStream = reedSolomonDecoderService.readData(shardJson);
         }
 
