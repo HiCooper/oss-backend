@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.berry.oss.dao.mapper.RefererInfoMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.berry.oss.dao.entity.RefererInfo">
+        <id column="id" property="id" />
+        <result column="bucket_id" property="bucketId" />
+        <result column="white_list" property="whiteList" />
+        <result column="black_list" property="blackList" />
+        <result column="allow_empty" property="allowEmpty" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, bucket_id, white_list, black_list, allow_empty, create_time, update_time
+    </sql>
+
+</mapper>

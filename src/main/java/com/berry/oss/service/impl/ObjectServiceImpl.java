@@ -14,8 +14,10 @@ import com.berry.oss.common.utils.*;
 import com.berry.oss.config.GlobalProperties;
 import com.berry.oss.dao.entity.BucketInfo;
 import com.berry.oss.dao.entity.ObjectInfo;
+import com.berry.oss.dao.entity.RefererInfo;
 import com.berry.oss.dao.service.IBucketInfoDaoService;
 import com.berry.oss.dao.service.IObjectInfoDaoService;
+import com.berry.oss.dao.service.IRefererInfoDaoService;
 import com.berry.oss.module.dto.ObjectResource;
 import com.berry.oss.module.vo.GenerateUrlWithSignedVo;
 import com.berry.oss.module.vo.ObjectInfoVo;
@@ -69,10 +71,10 @@ public class ObjectServiceImpl implements IObjectService {
     private final IBucketInfoDaoService bucketInfoDaoService;
     private final GlobalProperties globalProperties;
     private final IAuthService authService;
+    private final IRefererInfoDaoService refererInfoDaoService;
 
     @Value("${server.port}")
     private String port;
-
 
     ObjectServiceImpl(IObjectInfoDaoService objectInfoDaoService,
                       IObjectHashService objectHashService,
@@ -80,6 +82,7 @@ public class ObjectServiceImpl implements IObjectService {
                       IDataService dataService,
                       IBucketInfoDaoService bucketInfoDaoService,
                       GlobalProperties globalProperties,
+                      IRefererInfoDaoService refererInfoDaoService,
                       IAuthService authService) {
         this.objectInfoDaoService = objectInfoDaoService;
         this.objectHashService = objectHashService;
@@ -87,6 +90,7 @@ public class ObjectServiceImpl implements IObjectService {
         this.dataService = dataService;
         this.bucketInfoDaoService = bucketInfoDaoService;
         this.globalProperties = globalProperties;
+        this.refererInfoDaoService = refererInfoDaoService;
         this.authService = authService;
     }
 
@@ -248,18 +252,21 @@ public class ObjectServiceImpl implements IObjectService {
 
         String objectPath = extractPathFromPattern(servletRequest);
 
+        // 检查bucket
+        BucketInfo bucketInfo = bucketInfoDaoService.getOne(new QueryWrapper<BucketInfo>().eq("name", bucket));
+        if (null == bucketInfo) {
+            throw new XmlResponseException(new AccessDenied("bucket does not exist"));
+        }
+
         boolean skipCheckAuth = false;
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
         if (currentUser != null && currentUser.getId() != null) {
             // 用户请求头中带有密钥口令，无需url验证
             // 1. 检查当前用户 是否拥有对 所请求bucket的访问权限，通过后 可获取对该bucket的完全权限,跳过 url 校验
             skipCheckAuth = authService.checkUserHaveAccessToBucketObject(currentUser, bucket, "/" + objectPath);
-        }
-
-        // 检查bucket
-        BucketInfo bucketInfo = bucketInfoDaoService.getOne(new QueryWrapper<BucketInfo>().eq("name", bucket));
-        if (null == bucketInfo) {
-            throw new XmlResponseException(new AccessDenied("bucket does not exist"));
+        } else {
+            // 匿名访问，检查 referer
+            checkReferer(request, bucketInfo);
         }
 
         String fileName = objectPath;
@@ -274,7 +281,7 @@ public class ObjectServiceImpl implements IObjectService {
                 .eq("bucket_id", bucketInfo.getId())
         );
         if (objectInfo == null) {
-//             资源不存在;
+            // 资源不存在;
             throw new XmlResponseException(new NotFound());
         }
 
@@ -311,6 +318,46 @@ public class ObjectServiceImpl implements IObjectService {
         }
 
         handlerResponse(objectPath, response, request, objectInfo, download);
+    }
+
+    private void checkReferer(WebRequest request, BucketInfo bucketInfo) {
+        // 匿名访问，检查 referer
+        String headReferer = request.getHeader("Referer");
+        RefererInfo refererInfo = refererInfoDaoService.getOne(new QueryWrapper<RefererInfo>().eq("bucket_id", bucketInfo.getId()));
+        if (refererInfo != null) {
+            Boolean allowEmpty = refererInfo.getAllowEmpty();
+            String whiteList = refererInfo.getWhiteList();
+            String blackList = refererInfo.getBlackList();
+            // 两者同时设置方可生效
+            if (allowEmpty != null && StringUtils.isNotBlank(whiteList)) {
+                // 1.不允许 空 referer，deny
+                if (StringUtils.isBlank(headReferer) && !allowEmpty) {
+                    throw new XmlResponseException(new AccessDenied("referer deny"));
+                }
+                if (StringUtils.isNotBlank(headReferer)) {
+                    // 2. 黑名单中，deny
+                    String[] blackArr = blackList.split(",");
+                    for (String black : blackArr) {
+                        if (headReferer.matches(".*?" + black + ".*")) {
+                            throw new XmlResponseException(new AccessDenied("referer deny"));
+                        }
+                    }
+                    // 3. 白名单，pass
+                    String[] whiteArr = whiteList.split(",");
+                    boolean match = false;
+                    for (String black : blackArr) {
+                        if (headReferer.matches(".*?" + black + ".*")) {
+                            match = true;
+                            break;
+                        }
+                    }
+                    if (!match) {
+                        throw new XmlResponseException(new AccessDenied("referer deny"));
+                    }
+                }
+
+            }
+        }
     }
 
     @Override
