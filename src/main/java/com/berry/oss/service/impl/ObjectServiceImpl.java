@@ -260,13 +260,12 @@ public class ObjectServiceImpl implements IObjectService {
 
         boolean skipCheckAuth = false;
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
-        if (currentUser != null && currentUser.getId() != null) {
+        boolean anonymous = currentUser == null || currentUser.getId() == null;
+
+        if (!anonymous) {
             // 用户请求头中带有密钥口令，无需url验证
             // 1. 检查当前用户 是否拥有对 所请求bucket的访问权限，通过后 可获取对该bucket的完全权限,跳过 url 校验
             skipCheckAuth = authService.checkUserHaveAccessToBucketObject(currentUser, bucket, "/" + objectPath);
-        } else {
-            // 匿名访问，检查 referer
-            checkReferer(request, bucketInfo);
         }
 
         String fileName = objectPath;
@@ -283,6 +282,10 @@ public class ObjectServiceImpl implements IObjectService {
         if (objectInfo == null) {
             // 资源不存在;
             throw new XmlResponseException(new NotFound());
+        }
+        if (!skipCheckAuth && anonymous && objectInfo.getAcl().startsWith("PUBLIC")) {
+            // 匿名访问 公开资源，检查 referer
+            checkReferer(request, bucketInfo);
         }
 
         if (!objectInfo.getAcl().startsWith("PUBLIC") && !skipCheckAuth) {
