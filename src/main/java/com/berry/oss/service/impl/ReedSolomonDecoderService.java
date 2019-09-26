@@ -4,14 +4,19 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.berry.oss.common.utils.HttpClient;
 import com.berry.oss.erasure.ReedSolomon;
+import com.berry.oss.lock.model.Lock;
+import com.berry.oss.lock.service.LockService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.net.URLEncoder;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,8 +40,17 @@ public class ReedSolomonDecoderService {
     private static final int TOTAL_SHARDS = 6;
     private static final int BYTES_IN_INT = 4;
 
+    @Resource
+    private ReedSolomonEncoderService encoderService;
 
-    public InputStream readData(String shardJson) {
+    private final LockService lockService;
+
+    public ReedSolomonDecoderService(LockService lockService) {
+        this.lockService = lockService;
+    }
+
+
+    InputStream readData(String shardJson, String objectId) {
 
         JSONArray jsonArray = JSONArray.parseArray(shardJson);
 
@@ -58,14 +72,18 @@ public class ReedSolomonDecoderService {
             String path = shard.getString("path");
             try {
                 Map<String, Object> params = new HashMap<>(16);
-                params.put("path", path);
+                params.put("path", URLEncoder.encode(path, StandardCharsets.UTF_8.name()));
                 byte[] bytes = HttpClient.doGet(url, params);
-                if (bytes == null) {
+                if (bytes == null || bytes.length == 0) {
                     logger.error("读取：{} url：{}, path: {},数据为空", i, url, path);
                     continue;
                 }
-                if (path.substring(path.lastIndexOf(".") + 1).equals(String.valueOf(i))) {
+                if (i < DATA_SHARDS && path.substring(path.lastIndexOf(".") + 1).equals(String.valueOf(i))) {
                     check[i] = true;
+                }
+                if (shardSize != 0 && bytes.length != shardSize) {
+                    logger.error("数据损坏，分片{}大小{}与上一分片大小{}不一致", i, bytes.length, shardSize);
+                    return null;
                 }
                 shardSize = bytes.length;
                 shards[i] = bytes;
@@ -73,6 +91,7 @@ public class ReedSolomonDecoderService {
                 shardCount += 1;
             } catch (Exception e) {
                 logger.error(e.getMessage());
+                return null;
             }
         }
 
@@ -85,21 +104,30 @@ public class ReedSolomonDecoderService {
                 return null;
             }
 
-            // 用空的 buffers 填充 丢失的分片
+            // 1.用空的 buffers 填充 丢失的分片
             for (int i = 0; i < TOTAL_SHARDS; i++) {
                 if (!shardPresent[i]) {
                     shards[i] = new byte[shardSize];
                 }
             }
 
-            // 使用 Reed-Solomon 算法恢复丢失的分片
+            // 2.使用 Reed-Solomon 算法恢复丢失的分片
             ReedSolomon reedSolomon = ReedSolomon.create(DATA_SHARDS, PARITY_SHARDS);
             reedSolomon.decodeMissing(shards, shardPresent, 0, shardSize);
             logger.debug("RS纠错数据恢复完成!");
+
+            try {
+                // 以对象 id 为key 创建锁
+                Lock lock = lockService.create(objectId);
+                // 3.异步自动修复丢失数据
+                encoderService.fixDamageData(jsonArray, shards, shardPresent, objectId);
+                lockService.release(lock.getName(), lock.getValue());
+            } catch (Exception e) {
+                logger.error(e.getLocalizedMessage());
+            }
         }
 
-        // Combine the data shards into one buffer for convenience.
-        // (This is not efficient, but it is convenient.)
+        // 二维数组转一维
         byte[] allBytes = new byte[shardSize * DATA_SHARDS];
         for (int i = 0; i < DATA_SHARDS; i++) {
             System.arraycopy(shards[i], 0, allBytes, shardSize * i, shardSize);

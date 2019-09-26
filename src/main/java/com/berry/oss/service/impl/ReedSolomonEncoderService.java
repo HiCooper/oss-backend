@@ -1,6 +1,8 @@
 package com.berry.oss.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.berry.oss.common.utils.HttpClient;
 import com.berry.oss.common.utils.StringUtils;
 import com.berry.oss.dao.entity.BucketInfo;
@@ -10,6 +12,7 @@ import com.berry.oss.module.dto.ServerListDTO;
 import com.berry.oss.module.dto.WriteShardResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -63,7 +66,7 @@ public class ReedSolomonEncoderService {
         this.regionInfoDaoService = regionInfoDaoService;
     }
 
-    public String writeData(byte[] data, String fileName, BucketInfo bucketInfo, String username) throws IOException {
+    String writeData(byte[] data, String fileName, BucketInfo bucketInfo, String username) throws IOException {
         final int fileSize = data.length;
 
         // 计算每个数据分片大小.  (文件大小 + 4个数据分片头) 除以 4 向上取整
@@ -84,7 +87,7 @@ public class ReedSolomonEncoderService {
      * @return 对象唯一标识id
      * @throws IOException
      */
-    public String writeData(InputStream inputStream, String fileName, BucketInfo bucketInfo, String username) throws IOException {
+    String writeData(InputStream inputStream, String fileName, BucketInfo bucketInfo, String username) throws IOException {
 
         // Get the size of the input file.  (Files bigger that
         // Integer.MAX_VALUE will fail here!) 最大 2G
@@ -146,13 +149,57 @@ public class ReedSolomonEncoderService {
             params.put("shardIndex", i);
             params.put("data", shards[i]);
             String basePath = "http://" + server.getIp() + ":" + server.getPort();
-            String writePath = HttpClient.doPost(basePath + "/data/write", params);
-            if (StringUtils.isBlank(writePath)) {
-                logger.error("数据写入失败，index:{},服务：{}", i, basePath + "/data/write");
-                throw new RuntimeException("数据写入失败");
-            }
+            String writePath = writeOneShard(basePath + "/data/write", i, params);
             result.add(new WriteShardResponse(basePath + "/data/read", writePath));
         }
         return result;
+    }
+
+    /**
+     * 异步修复数据分片
+     *
+     * @param jsonArray    分片信息
+     * @param shards       完整的数据分片
+     * @param shardPresent 数据丢失信息
+     */
+    @Async("taskExecutor")
+    public void fixDamageData(JSONArray jsonArray, byte[][] shards, boolean[] shardPresent, String objectId) {
+        for (int i = 0; i < TOTAL_SHARDS; i++) {
+            if (!shardPresent[i]) {
+                JSONObject shard = jsonArray.getJSONObject(i);
+                String readUrl = shard.getString("url");
+                String writeUrl = readUrl.replace("read", "write");
+                String path = shard.getString("path");
+                // path 由  basePath + bucketName + fileName 组成
+                String fileName = path.substring(path.lastIndexOf("/") + 1, path.lastIndexOf("."));
+                String purePath = path.substring(0, path.lastIndexOf("/"));
+                String bucketName = purePath.substring(purePath.lastIndexOf("\\") + 1);
+
+                Map<String, Object> params = new HashMap<>(16);
+                params.put("bucketName", bucketName);
+                params.put("fileName", fileName);
+                params.put("shardIndex", i);
+                params.put("data", shards[i]);
+                writeOneShard(writeUrl, i, params);
+                logger.debug("修复对象：{} 数据块：{} 完成, url:{}, path:{}", objectId, i, readUrl, path);
+            }
+        }
+    }
+
+    /**
+     * 写单个分片数据
+     *
+     * @param url    请求api地址
+     * @param index  当前分片索引
+     * @param params 参数
+     * @return 写入路径
+     */
+    public String writeOneShard(String url, int index, Map<String, Object> params) {
+        String writePath = HttpClient.doPost(url, params);
+        if (StringUtils.isBlank(writePath)) {
+            logger.error("数据写入失败，index:{},服务：{}", index, url);
+            throw new RuntimeException("数据写入失败");
+        }
+        return writePath;
     }
 }
