@@ -58,15 +58,8 @@ public class ReedSolomonDecoderService {
         final boolean[] shardPresent = new boolean[TOTAL_SHARDS];
         int shardSize = 0;
         int shardCount = 0;
-        // 是否跳过 RS
-        boolean skipRs = false;
         final boolean[] check = new boolean[DATA_SHARDS];
         for (int i = 0; i < TOTAL_SHARDS; i++) {
-            if (i == DATA_SHARDS && checkAllTrue(check)) {
-                // 如果前 DATA_SHARDS 个数据块顺序读出，可以不再读取后两个校验块，并跳过 RS 纠错算法
-                skipRs = true;
-                break;
-            }
             JSONObject shard = jsonArray.getJSONObject(i);
             String url = shard.getString("url");
             String path = shard.getString("path");
@@ -83,7 +76,7 @@ public class ReedSolomonDecoderService {
                 }
                 if (shardSize != 0 && bytes.length != shardSize) {
                     logger.error("数据损坏，分片{}大小{}与上一分片大小{}不一致", i, bytes.length, shardSize);
-                    return null;
+                    continue;
                 }
                 shardSize = bytes.length;
                 shards[i] = bytes;
@@ -93,6 +86,12 @@ public class ReedSolomonDecoderService {
                 logger.error(e.getMessage());
                 return null;
             }
+        }
+        // 是否跳过 RS
+        boolean skipRs = false;
+        if (checkAllTrue(check) && shardCount == TOTAL_SHARDS) {
+            // 如果前 DATA_SHARDS 个数据块顺序读出，并且所有分片完整，可以跳过 RS 纠错
+            skipRs = true;
         }
 
         if (!skipRs) {

@@ -67,7 +67,7 @@ mybatis-plus:
 
 global:
   # 单机模式(单机模式没用数据冗余)
-  singleton: true
+  singleton: false
   # 本机ip
   server-ip: 192.168.3.190
   mail:
