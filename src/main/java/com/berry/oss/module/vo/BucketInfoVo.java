@@ -43,4 +43,9 @@ public class BucketInfoVo {
      * 更新时间
      */
     private Date updateTime;
+
+    /**
+     * 是否设置防盗链
+     */
+    private Boolean referer;
 }

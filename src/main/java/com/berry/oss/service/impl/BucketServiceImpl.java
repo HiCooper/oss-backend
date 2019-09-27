@@ -101,8 +101,19 @@ public class BucketServiceImpl implements IBucketService {
             return null;
         }
         RefererDetailVo vo = new RefererDetailVo();
+        vo.setId(refererInfo.getId());
         vo.setAllowEmpty(refererInfo.getAllowEmpty());
         vo.setWhiteList(refererInfo.getWhiteList());
         return vo;
+    }
+
+    @Override
+    public void updateReferer(String bucketId, Integer id, Boolean allowEmpty, String whiteList) {
+        RefererInfo refererInfo = new RefererInfo();
+        refererInfo.setId(id);
+        refererInfo.setAllowEmpty(allowEmpty);
+        refererInfo.setWhiteList(whiteList);
+        refererInfo.setBucketId(bucketId);
+        refererInfoDaoService.saveOrUpdate(refererInfo);
     }
 }

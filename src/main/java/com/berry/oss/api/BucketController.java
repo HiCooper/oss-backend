@@ -9,6 +9,7 @@ import com.berry.oss.dao.service.IBucketInfoDaoService;
 import com.berry.oss.module.mo.CreateBucketMo;
 import com.berry.oss.module.mo.DeleteBucketMo;
 import com.berry.oss.module.mo.UpdateBucketAclMo;
+import com.berry.oss.module.mo.UpdateRefererMo;
 import com.berry.oss.module.vo.BucketInfoVo;
 import com.berry.oss.module.vo.RefererDetailVo;
 import com.berry.oss.security.SecurityUtils;
@@ -90,11 +91,9 @@ public class BucketController {
 
     @PostMapping("update_referer.json")
     @ApiOperation("更新 Bucket 防盗链设置")
-    public Result updateReferer(@RequestParam("bucket") String bucket) {
-        BucketInfo bucketInfo = bucketService.checkUserHaveBucket(bucket);
-        // 获取防盗链设置
-        //allowEmpty: true //是否允许空 referer
-        //list: [] //白名单
+    public Result updateReferer(@Validated @RequestBody UpdateRefererMo updateRefererMo) {
+        BucketInfo bucketInfo = bucketService.checkUserHaveBucket(updateRefererMo.getBucket());
+        bucketService.updateReferer(bucketInfo.getId(), updateRefererMo.getId(), updateRefererMo.getAllowEmpty(), updateRefererMo.getWhiteList());
         return ResultFactory.wrapper();
     }
 

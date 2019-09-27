@@ -14,6 +14,8 @@ import lombok.Data;
 @Data
 public class RefererDetailVo {
 
+    private Integer id;
+
     private Boolean allowEmpty;
     /**
      * 多个host，支持模式匹配

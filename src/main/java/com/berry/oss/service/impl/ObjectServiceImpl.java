@@ -341,15 +341,15 @@ public class ObjectServiceImpl implements IObjectService {
                     // 2. 黑名单中，deny
                     String[] blackArr = blackList.split(",");
                     for (String black : blackArr) {
-                        if (headReferer.matches(".*?" + black + ".*")) {
+                        if (headReferer.matches(black)) {
                             throw new XmlResponseException(new AccessDenied("referer deny"));
                         }
                     }
                     // 3. 白名单，pass
                     String[] whiteArr = whiteList.split(",");
                     boolean match = false;
-                    for (String black : blackArr) {
-                        if (headReferer.matches(".*?" + black + ".*")) {
+                    for (String white : whiteArr) {
+                        if (headReferer.matches(white)) {
                             match = true;
                             break;
                         }
