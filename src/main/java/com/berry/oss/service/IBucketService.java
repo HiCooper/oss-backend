@@ -2,6 +2,7 @@ package com.berry.oss.service;
 
 import com.berry.oss.dao.entity.BucketInfo;
 import com.berry.oss.module.vo.BucketInfoVo;
+import com.berry.oss.module.vo.RefererDetailVo;
 
 import java.util.List;
 
@@ -57,4 +58,12 @@ public interface IBucketService {
      * @return true or false
      */
     Boolean checkUserHaveBucket(Integer userId, String bucket);
+
+    /**
+     * 获取bucket的 防盗链白名单信息
+     *
+     * @param bucketId bucket id
+     * @return info
+     */
+    RefererDetailVo getReferer(String bucketId);
 }

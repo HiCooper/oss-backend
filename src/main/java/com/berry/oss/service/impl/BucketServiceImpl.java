@@ -4,10 +4,13 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.berry.oss.common.ResultCode;
 import com.berry.oss.common.exceptions.BaseException;
 import com.berry.oss.dao.entity.BucketInfo;
+import com.berry.oss.dao.entity.RefererInfo;
 import com.berry.oss.dao.entity.RegionInfo;
 import com.berry.oss.dao.service.IBucketInfoDaoService;
+import com.berry.oss.dao.service.IRefererInfoDaoService;
 import com.berry.oss.dao.service.IRegionInfoDaoService;
 import com.berry.oss.module.vo.BucketInfoVo;
+import com.berry.oss.module.vo.RefererDetailVo;
 import com.berry.oss.security.SecurityUtils;
 import com.berry.oss.security.dto.UserInfoDTO;
 import com.berry.oss.service.IBucketService;
@@ -29,11 +32,13 @@ public class BucketServiceImpl implements IBucketService {
 
     private final IBucketInfoDaoService bucketInfoDaoService;
     private final IRegionInfoDaoService regionInfoDaoService;
+    private final IRefererInfoDaoService refererInfoDaoService;
 
     @Autowired
-    public BucketServiceImpl(IBucketInfoDaoService bucketInfoDaoService, IRegionInfoDaoService regionInfoDaoService) {
+    public BucketServiceImpl(IBucketInfoDaoService bucketInfoDaoService, IRegionInfoDaoService regionInfoDaoService, IRefererInfoDaoService refererInfoDaoService) {
         this.bucketInfoDaoService = bucketInfoDaoService;
         this.regionInfoDaoService = regionInfoDaoService;
+        this.refererInfoDaoService = refererInfoDaoService;
     }
 
     @Override
@@ -87,5 +92,17 @@ public class BucketServiceImpl implements IBucketService {
         int count = bucketInfoDaoService.count(new QueryWrapper<BucketInfo>().eq("name", bucket)
                 .eq("user_id", userId));
         return 1 == count;
+    }
+
+    @Override
+    public RefererDetailVo getReferer(String bucketId) {
+        RefererInfo refererInfo = refererInfoDaoService.getOne(new QueryWrapper<RefererInfo>().eq("bucket_id", bucketId));
+        if (refererInfo == null) {
+            return null;
+        }
+        RefererDetailVo vo = new RefererDetailVo();
+        vo.setAllowEmpty(refererInfo.getAllowEmpty());
+        vo.setWhiteList(refererInfo.getWhiteList());
+        return vo;
     }
 }

@@ -50,7 +50,7 @@ public class ReedSolomonDecoderService {
     }
 
 
-    InputStream readData(String shardJson, String objectId) {
+    InputStream readData(String bucket, String shardJson, String objectId) {
 
         JSONArray jsonArray = JSONArray.parseArray(shardJson);
 
@@ -120,7 +120,7 @@ public class ReedSolomonDecoderService {
                 // 以对象 id 为key 创建锁
                 Lock lock = lockService.create(objectId);
                 // 3.异步自动修复丢失数据
-                encoderService.fixDamageData(jsonArray, shards, shardPresent, objectId);
+                encoderService.fixDamageData(bucket, jsonArray, shards, shardPresent, objectId);
                 lockService.release(lock.getName(), lock.getValue());
             } catch (Exception e) {
                 logger.error(e.getLocalizedMessage());

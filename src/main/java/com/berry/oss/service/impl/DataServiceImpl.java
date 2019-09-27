@@ -49,7 +49,7 @@ public class DataServiceImpl implements IDataService {
     }
 
     @Override
-    public String saveObject(InputStream inputStream, long size, String hash, String fileName, BucketInfo bucketInfo, String username) throws IOException {
+    public String saveObject(String filePath, InputStream inputStream, long size, String hash, String fileName, BucketInfo bucketInfo) throws IOException {
         String fileId = ObjectId.get();
         boolean singleton = globalProperties.isSingleton();
         String json;
@@ -62,10 +62,10 @@ public class DataServiceImpl implements IDataService {
                 throw new RuntimeException("数据流读取错误");
             }
             // 单机模式 分片信息仅保存本地路径
-            json = shardSaveService.writeShard(username, bucketInfo.getName(), fileName, data);
+            json = shardSaveService.writeShard(filePath, bucketInfo.getName(), fileName, data);
         } else {
             // 分布式模式
-            json = reedSolomonEncoderService.writeData(inputStream, fileName, bucketInfo, username);
+            json = reedSolomonEncoderService.writeData(filePath, inputStream, fileName, bucketInfo);
         }
         // 保存对象信息
         saveShardInfo(size, hash, fileName, fileId, singleton, json);
@@ -73,16 +73,16 @@ public class DataServiceImpl implements IDataService {
     }
 
     @Override
-    public String saveObject(byte[] data, long size, String hash, String fileName, BucketInfo bucketInfo, String username) throws IOException {
+    public String saveObject(String filePath, byte[] data, long size, String hash, String fileName, BucketInfo bucketInfo) throws IOException {
         String fileId = ObjectId.get();
         boolean singleton = globalProperties.isSingleton();
         String json;
         if (singleton) {
             // 单机模式 分片信息仅保存本地路径
-            json = shardSaveService.writeShard(username, bucketInfo.getName(), fileName, data);
+            json = shardSaveService.writeShard(filePath, bucketInfo.getName(), fileName, data);
         } else {
             // 分布式模式
-            json = reedSolomonEncoderService.writeData(data, fileName, bucketInfo, username);
+            json = reedSolomonEncoderService.writeData(filePath, data, fileName, bucketInfo);
         }
         // 保存对象信息
         saveShardInfo(size, hash, fileName, fileId, singleton, json);
@@ -90,7 +90,7 @@ public class DataServiceImpl implements IDataService {
     }
 
     @Override
-    public ObjectResource getObject(String objectId) throws IOException {
+    public ObjectResource getObject(String bucket, String objectId) throws IOException {
         ShardInfo shardInfo = shardInfoDaoService.getOne(new QueryWrapper<ShardInfo>().eq("file_id", objectId));
         if (shardInfo == null) {
             logger.error("文件不存在：{}", objectId);
@@ -111,7 +111,7 @@ public class DataServiceImpl implements IDataService {
             inputStream = new ByteArrayInputStream(outputStream.toByteArray());
         } else {
             // RS 分布式冗余模式
-            inputStream = reedSolomonDecoderService.readData(shardJson, objectId);
+            inputStream = reedSolomonDecoderService.readData(bucket, shardJson, objectId);
         }
 
         if (inputStream == null) {

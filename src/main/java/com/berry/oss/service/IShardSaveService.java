@@ -15,14 +15,14 @@ public interface IShardSaveService {
     /**
      * 写数据分片
      *
-     * @param username   用户名
+     * @param filePath   存储路径
      * @param bucketName bucketName
      * @param fileName   文件名
      * @param data       数据
      * @return 分片路径及ip等信息
      * @throws IOException
      */
-    String writeShard(String username, String bucketName, String fileName, byte[] data) throws IOException;
+    String writeShard(String filePath, String bucketName, String fileName, byte[] data) throws IOException;
 
     /**
      * 读数据分片

@@ -3,6 +3,7 @@ package com.berry.oss.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.berry.oss.common.exceptions.BaseException;
 import com.berry.oss.common.utils.HttpClient;
 import com.berry.oss.common.utils.StringUtils;
 import com.berry.oss.dao.entity.BucketInfo;
@@ -66,14 +67,14 @@ public class ReedSolomonEncoderService {
         this.regionInfoDaoService = regionInfoDaoService;
     }
 
-    String writeData(byte[] data, String fileName, BucketInfo bucketInfo, String username) throws IOException {
+    String writeData(String filePath, byte[] data, String fileName, BucketInfo bucketInfo) throws IOException {
         final int fileSize = data.length;
 
         // 计算每个数据分片大小.  (文件大小 + 4个数据分片头) 除以 4 向上取整
         final int storedSize = fileSize + BYTES_IN_INT;
         final int shardSize = (storedSize + DATA_SHARDS - 1) / DATA_SHARDS;
 
-        List<WriteShardResponse> result = getWriteShardResponses(fileName, bucketInfo, username, shardSize, data);
+        List<WriteShardResponse> result = getWriteShardResponses(filePath, fileName, bucketInfo, shardSize, data);
         return JSON.toJSONString(result);
     }
 
@@ -87,7 +88,7 @@ public class ReedSolomonEncoderService {
      * @return 对象唯一标识id
      * @throws IOException
      */
-    String writeData(InputStream inputStream, String fileName, BucketInfo bucketInfo, String username) throws IOException {
+    String writeData(String filePath, InputStream inputStream, String fileName, BucketInfo bucketInfo) throws IOException {
 
         // Get the size of the input file.  (Files bigger that
         // Integer.MAX_VALUE will fail here!) 最大 2G
@@ -111,12 +112,12 @@ public class ReedSolomonEncoderService {
         }
         inputStream.close();
 
-        List<WriteShardResponse> result = getWriteShardResponses(fileName, bucketInfo, username, shardSize, allBytes);
+        List<WriteShardResponse> result = getWriteShardResponses(filePath, fileName, bucketInfo, shardSize, allBytes);
 
         return JSON.toJSONString(result);
     }
 
-    private List<WriteShardResponse> getWriteShardResponses(String fileName, BucketInfo bucketInfo, String username, int shardSize, byte[] allBytes) {
+    private List<WriteShardResponse> getWriteShardResponses(String filePath, String fileName, BucketInfo bucketInfo, int shardSize, byte[] allBytes) {
         // 创建二维字节数组，将 文件字节数组 （allBytes）copy到该数组（shards）
         byte[][] shards = new byte[TOTAL_SHARDS][shardSize];
 
@@ -140,8 +141,8 @@ public class ReedSolomonEncoderService {
         List<WriteShardResponse> result = new ArrayList<>(16);
 
         Map<String, Object> params = new HashMap<>(16);
-        params.put("username", username);
         params.put("bucketName", bucketInfo.getName());
+        params.put("filePath", filePath);
         params.put("fileName", fileName);
         // 数据分片分发
         for (int i = 0; i < TOTAL_SHARDS; i++) {
@@ -163,20 +164,29 @@ public class ReedSolomonEncoderService {
      * @param shardPresent 数据丢失信息
      */
     @Async("taskExecutor")
-    public void fixDamageData(JSONArray jsonArray, byte[][] shards, boolean[] shardPresent, String objectId) {
+    public void fixDamageData(String bucket, JSONArray jsonArray, byte[][] shards, boolean[] shardPresent, String objectId) {
         for (int i = 0; i < TOTAL_SHARDS; i++) {
             if (!shardPresent[i]) {
                 JSONObject shard = jsonArray.getJSONObject(i);
                 String readUrl = shard.getString("url");
                 String writeUrl = readUrl.replace("read", "write");
                 String path = shard.getString("path");
-                // path 由  basePath + bucketName + fileName 组成
+                System.out.println(path);
+                // path 由  basePath + bucketName + filePath + fileName 组成
+                String[] split = path.split(bucket);
+                if (split.length != 2) {
+                    logger.error("bucket :{}, index:{} ,path:{}，路径不正确", bucket, i, path);
+                    throw new BaseException("403", "自动修复失败");
+                }
+                String fullFilePath = split[1];
                 String fileName = path.substring(path.lastIndexOf("/") + 1, path.lastIndexOf("."));
-                String purePath = path.substring(0, path.lastIndexOf("/"));
-                String bucketName = purePath.substring(purePath.lastIndexOf("\\") + 1);
+                String filePath = fullFilePath.substring(0, fullFilePath.lastIndexOf("/"));
+                System.out.println(filePath);
+                System.out.println(fileName);
 
                 Map<String, Object> params = new HashMap<>(16);
-                params.put("bucketName", bucketName);
+                params.put("bucketName", bucket);
+                params.put("filePath", filePath);
                 params.put("fileName", fileName);
                 params.put("shardIndex", i);
                 params.put("data", shards[i]);

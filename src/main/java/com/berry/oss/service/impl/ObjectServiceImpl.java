@@ -161,7 +161,7 @@ public class ObjectServiceImpl implements IObjectService {
                     vo.setUploadType(false);
                     // 快速上传失败，
                     // 调用存储数据服务，保存对象，返回24位对象id,
-                    fileId = dataService.saveObject(file.getInputStream(), fileSize, hash, fileName, bucketInfo, currentUser.getUsername());
+                    fileId = dataService.saveObject(filePath, file.getInputStream(), fileSize, hash, fileName, bucketInfo);
                 }
                 // 保存上传信息
                 saveObjectInfo(bucketInfo.getId(), acl, hash, fileSize, fileName, filePath, fileId);
@@ -195,7 +195,7 @@ public class ObjectServiceImpl implements IObjectService {
         ObjectInfoVo vo = new ObjectInfoVo();
 
         // 保存或更新改对象信息
-        saveOrUpdateObject(filePath, data, acl, currentUser, bucketInfo, hash, size, vo, fileName);
+        saveOrUpdateObject(filePath, data, acl, currentUser.getId(), bucketInfo, hash, size, vo, fileName);
 
         buildResponse(bucket, filePath, fileName, acl, "", size, vo);
         return vo;
@@ -227,7 +227,7 @@ public class ObjectServiceImpl implements IObjectService {
         ObjectInfoVo vo = new ObjectInfoVo();
 
         // 保存或更新改对象信息
-        saveOrUpdateObject(filePath, byteData, acl, currentUser, bucketInfo, hash, size, vo, fileName + fileType);
+        saveOrUpdateObject(filePath, byteData, acl, currentUser.getId(), bucketInfo, hash, size, vo, fileName + fileType);
 
         buildResponse(bucket, filePath, fileName, acl, fileType, size, vo);
         return vo;
@@ -320,7 +320,7 @@ public class ObjectServiceImpl implements IObjectService {
             }
         }
 
-        handlerResponse(objectPath, response, request, objectInfo, download);
+        handlerResponse(bucket, objectPath, response, request, objectInfo, download);
     }
 
     private void checkReferer(WebRequest request, BucketInfo bucketInfo) {
@@ -525,9 +525,9 @@ public class ObjectServiceImpl implements IObjectService {
         objectHashService.increaseRefCountByHash(hash, fileId, contentLength);
     }
 
-    private void saveOrUpdateObject(String filePath, byte[] data, String acl, UserInfoDTO currentUser, BucketInfo bucketInfo, String hash, long size, ObjectInfoVo vo, String fullFileName) throws IOException {
+    private void saveOrUpdateObject(String filePath, byte[] data, String acl, Integer userId, BucketInfo bucketInfo, String hash, long size, ObjectInfoVo vo, String fullFileName) throws IOException {
         // 检查 该用户 同目录 同名 同bucket 下 文件是否已经存在
-        ObjectInfo objectInfo = getObjectInfo(filePath, currentUser.getId(), bucketInfo.getId(), fullFileName);
+        ObjectInfo objectInfo = getObjectInfo(filePath, userId, bucketInfo.getId(), fullFileName);
         boolean exist = objectInfo != null;
 
         vo.setReplace(exist);
@@ -539,7 +539,7 @@ public class ObjectServiceImpl implements IObjectService {
                 // 快速上传失败，
                 vo.setUploadType(false);
                 // 调用存储数据服务，保存对象，返回24位对象id,
-                fileId = dataService.saveObject(data, size, hash, fullFileName, bucketInfo, currentUser.getUsername());
+                fileId = dataService.saveObject(filePath, data, size, hash, fullFileName, bucketInfo);
             }
             // 保存上传信息
             saveObjectInfo(bucketInfo.getId(), acl, hash, size, fullFileName, filePath, fileId);
@@ -663,6 +663,7 @@ public class ObjectServiceImpl implements IObjectService {
     /**
      * 处理对象读取响应
      *
+     * @param bucket
      * @param objectPath 对象全路径 如：/test.jpg
      * @param response   响应
      * @param request    请求
@@ -670,9 +671,9 @@ public class ObjectServiceImpl implements IObjectService {
      * @param download   是否是下载
      * @throws IOException IO 异常
      */
-    private void handlerResponse(String objectPath, HttpServletResponse response, WebRequest request, ObjectInfo objectInfo, Boolean download) throws IOException {
+    private void handlerResponse(String bucket, String objectPath, HttpServletResponse response, WebRequest request, ObjectInfo objectInfo, Boolean download) throws IOException {
         if (download != null && download) {
-            ObjectResource object = dataService.getObject(objectInfo.getFileId());
+            ObjectResource object = dataService.getObject(bucket, objectInfo.getFileId());
             if (object == null || object.getInputStream() == null) {
                 throw new XmlResponseException(new NotFound());
             }
@@ -688,7 +689,7 @@ public class ObjectServiceImpl implements IObjectService {
         if (request.checkNotModified(eTag, lastModified)) {
             response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
         } else {
-            ObjectResource object = dataService.getObject(objectInfo.getFileId());
+            ObjectResource object = dataService.getObject(bucket, objectInfo.getFileId());
             if (object == null) {
                 throw new XmlResponseException(new NotFound());
             }

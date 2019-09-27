@@ -30,18 +30,17 @@ public class ShardSaveServiceImpl implements IShardSaveService {
     private GlobalProperties globalProperties;
 
     @Override
-    public String writeShard(String username, String bucketName, String fileName, byte[] data) throws IOException {
-        File file = new File(globalProperties.getDataPath(), bucketName);
+    public String writeShard(String filePath, String bucketName, String fileName, byte[] data) throws IOException {
+        File file = new File(globalProperties.getDataPath(), bucketName + filePath);
         if (!file.exists()) {
             file.mkdirs();
         }
-        String filePath;
         // 单机模式下 没有 shardIndex 参数
-        filePath = file.getPath() + "/" + fileName;
-        FileOutputStream outputStream = new FileOutputStream(filePath);
+        String fileFullPath = file.getPath() + "/" + fileName;
+        FileOutputStream outputStream = new FileOutputStream(fileFullPath);
         outputStream.write(data);
         outputStream.close();
-        return filePath;
+        return fileFullPath;
     }
 
     @Override

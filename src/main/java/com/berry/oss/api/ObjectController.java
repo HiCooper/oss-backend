@@ -25,7 +25,7 @@ import java.util.Map;
 
 /**
  * Title ObjectController
- * Description
+ * Description 所有目录相关参数 除新建文件夹以外，所有路径必须以 / 开头
  * Copyright (c) 2019
  *
  * @author berry_cooper

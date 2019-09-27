@@ -19,37 +19,37 @@ public interface IDataService {
     /**
      * 保存对象
      *
+     * @param filePath    保存路径
      * @param inputStream 输入流
      * @param size        size
      * @param hash        hash
      * @param fileName    文件名
      * @param bucketInfo  存储空间
-     * @param username    用户名
      * @return fileId 对象唯一id
      * @throws IOException
      */
-    String saveObject(InputStream inputStream, long size, String hash, String fileName, BucketInfo bucketInfo, String username) throws IOException;
+    String saveObject(String filePath, InputStream inputStream, long size, String hash, String fileName, BucketInfo bucketInfo) throws IOException;
 
     /**
      * 保存对象（字节数组）
      *
+     * @param filePath   保存路径
      * @param data       data
      * @param size       size
      * @param hash       hash
      * @param fileName   文件名
      * @param bucketInfo 存储空间
-     * @param username   用户名
      * @return fileId 对象唯一id
      * @throws IOException IO
      */
-    String saveObject(byte[] data, long size, String hash, String fileName, BucketInfo bucketInfo, String username) throws IOException;
+    String saveObject(String filePath, byte[] data, long size, String hash, String fileName, BucketInfo bucketInfo) throws IOException;
 
     /**
      * 获取对象
-     *
+     * @param bucket name
      * @param objectId 对象id
      * @return 资源对象
      * @throws IOException IO
      */
-    ObjectResource getObject(String objectId) throws IOException;
+    ObjectResource getObject(String bucket, String objectId) throws IOException;
 }
