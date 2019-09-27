@@ -144,7 +144,6 @@ public class ReedSolomonDecoderService {
      * @return boolean
      */
     private boolean checkAllTrue(boolean[] check) {
-        System.out.println(Arrays.toString(check));
         for (boolean b : check) {
             if (!b) {
                 return false;
