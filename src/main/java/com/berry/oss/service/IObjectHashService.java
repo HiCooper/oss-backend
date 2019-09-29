@@ -34,4 +34,9 @@ public interface IObjectHashService {
      * @param hash
      */
     void decreaseRefCountByHash(String hash);
+
+    /**
+     * 空引用对象数据清理
+     */
+    void scanNonReferenceObjectThenClean();
 }

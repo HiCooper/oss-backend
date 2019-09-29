@@ -10,11 +10,12 @@
         <result column="size" property="size"/>
         <result column="create_time" property="createTime"/>
         <result column="reference_count" property="referenceCount"/>
+        <result column="locked" property="locked"/>
     </resultMap>
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, hash, file_id, size, create_time, reference_count
+        id, hash, file_id, size, create_time, reference_count,locked
     </sql>
 
 </mapper>

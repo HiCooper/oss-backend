@@ -51,6 +51,11 @@ public class ObjectHash implements Serializable {
     private Integer referenceCount;
 
     /**
+     * 是否已锁定
+     */
+    private Boolean locked;
+
+    /**
      * 创建时间
      */
     private Date createTime;
