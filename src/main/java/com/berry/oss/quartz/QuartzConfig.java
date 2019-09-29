@@ -17,14 +17,14 @@ import org.springframework.context.annotation.Configuration;
 public class QuartzConfig {
 
     @Bean
-    public JobDetail nonsupportRuleSaveJob() {
+    public JobDetail nonRefObjectCleanJob() {
         return JobBuilder.newJob(NonReferenceObjectCleanJob.class).withIdentity("non_ref_clean_job", "sys_job").storeDurably().build();
     }
 
     @Bean
-    public Trigger nonsupportRuleSaveJobTrigger() {
-        //cron方式
-        return TriggerBuilder.newTrigger().forJob(nonsupportRuleSaveJob())
+    public Trigger nonRefObjectCleanJobTrigger() {
+        //cron方式 每周末 0点0分开始
+        return TriggerBuilder.newTrigger().forJob(nonRefObjectCleanJob())
                 .withIdentity("non_ref_clean_job_trigger", "sys_trigger")
                 .withSchedule(CronScheduleBuilder.cronSchedule(CsvUtils.getCornByName("non_ref_clean_task"))).build();
     }

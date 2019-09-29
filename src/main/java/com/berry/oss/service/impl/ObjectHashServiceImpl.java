@@ -100,11 +100,16 @@ public class ObjectHashServiceImpl implements IObjectHashService {
         // 1. 查出所有空引用对象,将其锁定
         QueryWrapper<ObjectHash> queryWrapper = new QueryWrapper<ObjectHash>().eq("reference_count", 0).eq("locked", false);
         List<ObjectHash> nonRefObjectList = objectHashDaoService.list(queryWrapper);
+        if (nonRefObjectList.size() == 0) {
+            logger.info("暂无需要清理的数据");
+            return;
+        }
         nonRefObjectList.forEach(item -> item.setLocked(true));
         objectHashDaoService.updateBatchById(nonRefObjectList);
         // 2. 查出这些对象的数据位置
         List<String> fileIdList = nonRefObjectList.stream().map(ObjectHash::getFileId).collect(Collectors.toList());
-        List<ShardInfo> shardInfos = shardInfoDaoService.list(new QueryWrapper<ShardInfo>().in("file_id", fileIdList));
+        QueryWrapper<ShardInfo> dealShardQuery = new QueryWrapper<ShardInfo>().in("file_id", fileIdList);
+        List<ShardInfo> shardInfos = shardInfoDaoService.list(dealShardQuery);
         // 3. 删除数据
         shardInfos.forEach(item -> {
             String shardJson = item.getShardJson();
@@ -114,6 +119,9 @@ public class ObjectHashServiceImpl implements IObjectHashService {
                 File tempFile = new File(shardJson);
                 if (tempFile.exists() && tempFile.isFile()) {
                     FileUtils.deleteQuietly(tempFile);
+                    logger.info("删除文件成功：{}", tempFile.getPath());
+                } else {
+                    logger.info("文件不存在或非文件：{}", tempFile.getPath());
                 }
             } else {
                 // 分布式多机模式
@@ -127,12 +135,16 @@ public class ObjectHashServiceImpl implements IObjectHashService {
                     try {
                         params.put("path", URLEncoder.encode(path, StandardCharsets.UTF_8.name()));
                         HttpClient.doPost(removeUrl, params);
+                        logger.info("删除分片文件成功：{} , {}", url, path);
                     } catch (UnsupportedEncodingException e) {
                         e.printStackTrace();
                     }
                 }
             }
         });
-        // 4. 删除位置信息
+        // 4. 删除 hash 记录
+        objectHashDaoService.removeByIds(nonRefObjectList.stream().map(ObjectHash::getId).collect(Collectors.toList()));
+        // 5. 删除位置信息
+        shardInfoDaoService.remove(dealShardQuery);
     }
 }
