@@ -1,6 +1,5 @@
 package com.berry.oss.module.vo;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import lombok.Data;
 
 /**
