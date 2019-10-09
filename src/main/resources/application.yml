@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: OSS_SERVICE
+    name: oss-service
   profiles:
     active: dev
   servlet:
