@@ -61,7 +61,7 @@ import static com.berry.oss.common.constant.Constants.DEFAULT_FILE_PATH;
 @Service
 public class ObjectServiceImpl implements IObjectService {
 
-    private static final int UPLOAD_PER_SIZE_LIMIT = 100;
+    private static final int UPLOAD_PER_SIZE_LIMIT = 200;
     private static final String BASE64_DATA_START_PATTERN = "data:image/[a-z];";
 
     private final IObjectInfoDaoService objectInfoDaoService;
