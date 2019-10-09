@@ -2,7 +2,7 @@ spring:
   datasource:
     url: jdbc:mysql://127.0.0.1:3306/db_oss_service?characterEncoding=utf8&useSSL=false&useUnicode=true&allowPublicKeyRetrieval=true
     username: root
-    password: 3edcvfr4
+    password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.alibaba.druid.pool.DruidDataSource
     platform: mysql
@@ -14,7 +14,7 @@ spring:
     # Redis服务器连接端口
     port: 6379
     # Redis服务器连接密码（默认为空）
-    password: seassoon123
+    password: 123456
     jedis:
       pool:
         # 连接池最大连接数（使用负值表示没有限制）
@@ -32,8 +32,8 @@ spring:
       discovery:
         enabled: true
         health-check-interval: 10s
-        health-check-url: http://10.50.12.38:${server.port}/actuator/health
-        instance-id: ${spring.application.name}:10.50.12.38:${server.port}
+        health-check-url: http://127.0.0.1:${server.port}/actuator/health
+        instance-id: ${spring.application.name}:127.0.0.1:${server.port}
         port: ${server.port}
         service-name: ${spring.application.name}
         tags: prod
@@ -80,7 +80,7 @@ global:
   singleton: true
   data-path: ./
   # 本机对外ip
-  server-ip: 10.50.12.38
+  server-ip: 127.0.0.1
   mail:
     from: berry_cooper@163.com
     base-url: ''
