@@ -34,7 +34,7 @@ public class LogMethodAspect {
     /**
      * 默认在注解 @RestController下方法 和 有 @LogMethodExecutionInfo 的方法上有效
      */
-    @Pointcut("within(@org.springframework.web.bind.annotation.RestController *) || @annotation(LogMethodExecutionInfo)")
+    @Pointcut("within(@org.springframework.web.bind.annotation.RestController *)")
     public void restController() {
         // Method is empty as this is just a Pointcut, the implementations are in the advices.
     }
@@ -61,7 +61,7 @@ public class LogMethodAspect {
                 logger.debug("返回结果: {}", result);
             }
             if (executionTime > RESPONSE_THRESHOLD_VALUE) {
-                logger.warn("执行耗时: " + executionTime + " ms");
+                logger.warn("执行耗时:{} ms", executionTime);
             }
             return result;
         } catch (IllegalArgumentException e) {

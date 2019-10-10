@@ -64,6 +64,8 @@ public class ObjectServiceImpl implements IObjectService {
     private static final int UPLOAD_PER_SIZE_LIMIT = 200;
     private static final String BASE64_DATA_START_PATTERN = "data:image/[a-z];";
 
+    private static final String CHART_SET = "UTF-8";
+
     private final IObjectInfoDaoService objectInfoDaoService;
     private final IObjectHashService objectHashService;
     private final IBucketService bucketService;
@@ -280,7 +282,7 @@ public class ObjectServiceImpl implements IObjectService {
                 .eq("bucket_id", bucketInfo.getId())
         );
         if (objectInfo == null) {
-            // 资源不存在;
+            // 资源不存在
             throw new XmlResponseException(new NotFound());
         }
         if (!skipCheckAuth && anonymous && objectInfo.getAcl().startsWith("PUBLIC")) {
@@ -294,7 +296,7 @@ public class ObjectServiceImpl implements IObjectService {
             }
 
             // 非公开资源，需要验证身份及签名
-            String url = "Expires=" + expiresTime + "&OSSAccessKeyId=" + URLEncoder.encode(ossAccessKeyId, "UTF-8");
+            String url = "Expires=" + expiresTime + "&OSSAccessKeyId=" + URLEncoder.encode(ossAccessKeyId, CHART_SET);
 
             // 1. 签名验证
             String sign = new String(Base64.getEncoder().encode(MD5.md5Encode(url).getBytes()));
@@ -403,7 +405,7 @@ public class ObjectServiceImpl implements IObjectService {
         String url = "http://" + ip + ":" + port + "/ajax/bucket/file/" + bucket + objectPath;
 
         long expires = (System.currentTimeMillis() + timeout * 1000) / 1000;
-        String tempAccessKeyId = URLEncoder.encode(ossAccessKeyId, "UTF-8");
+        String tempAccessKeyId = URLEncoder.encode(ossAccessKeyId, CHART_SET);
 
         Map<String, Object> paramsMap = new HashMap<>(3);
         paramsMap.put("Expires", expires);
@@ -414,7 +416,7 @@ public class ObjectServiceImpl implements IObjectService {
         String sign = new String(Base64.getEncoder().encode(MD5.md5Encode(urlExpiresAccessKeyId).getBytes()));
 
         // 拼接签名到url
-        String signature = urlExpiresAccessKeyId + "&Signature=" + URLEncoder.encode(sign, "UTF-8");
+        String signature = urlExpiresAccessKeyId + "&Signature=" + URLEncoder.encode(sign, CHART_SET);
 
         // 没有域名地址表，这里手动配置ip和端口
         return new GenerateUrlWithSignedVo()
