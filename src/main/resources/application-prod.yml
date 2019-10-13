@@ -72,7 +72,6 @@ logging:
     com.berry.oss: DEBUG
   path: ./log
   file:
-    max-size: 100MB
     max-history: 30
 
 global:

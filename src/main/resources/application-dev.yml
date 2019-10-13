@@ -65,6 +65,17 @@ mybatis-plus:
   global-config:
     sql-parser-cache: true
 
+
+# logback set path
+logging:
+  config: classpath:logback/logback.xml
+  level:
+    root: INFO
+    com.berry.oss: DEBUG
+  path: ./log
+  file:
+    max-history: 30
+
 global:
   # 单机模式(单机模式没用数据冗余)
   singleton: true
