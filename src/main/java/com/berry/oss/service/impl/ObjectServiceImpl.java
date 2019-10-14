@@ -103,11 +103,10 @@ public class ObjectServiceImpl implements IObjectService {
         QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_id", currentUser.getId());
         queryWrapper.eq("bucket_id", bucketInfo.getId());
+        queryWrapper.eq("file_path", path);
         queryWrapper.orderByDesc("is_dir");
         if (StringUtils.isNotBlank(search)) {
             queryWrapper.likeRight("file_name", search);
-        } else {
-            queryWrapper.eq("file_path", path);
         }
         return objectInfoDaoService.list(queryWrapper);
     }
