@@ -20,7 +20,7 @@ public interface IObjectHashService {
     String checkExist(String hash, Long contentLength);
 
     /**
-     * 增加 哈希引用计算
+     * 增加 哈希引用计算, 记录可能不存在，所以需要 fileId  size 进行创建时初始化
      *
      * @param hash   hash值
      * @param fileId fileId

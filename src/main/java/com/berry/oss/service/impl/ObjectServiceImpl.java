@@ -148,7 +148,7 @@ public class ObjectServiceImpl implements IObjectService {
                 fileName = StringUtils.filterUnsafeUrlCharts(fileName);
             }
 
-            // 检查 该用户 同目录 同名 同bucket 下 文件是否已经存在
+            // 检查 该用户 同目录 同名 同bucket 下 文件是否已经存在（不检查文件内容 值判断路径和文件名）
             ObjectInfo objectInfo = getObjectInfo(filePath, currentUser.getId(), bucketInfo.getId(), fileName);
             boolean exist = objectInfo != null;
 
@@ -167,6 +167,19 @@ public class ObjectServiceImpl implements IObjectService {
                 // 保存上传信息
                 saveObjectInfo(bucketInfo.getId(), acl, hash, fileSize, fileName, filePath, fileId);
             } else {
+                String oldHash = objectInfo.getHash();
+                if (!oldHash.equals(hash)) {
+                    // 文件内容变化
+                    objectHashService.decreaseRefCountByHash(oldHash);
+                    vo.setUploadType(false);
+                    // 调用存储数据服务，保存对象，返回24位对象id,
+                    String fileId = dataService.saveObject(filePath, file.getInputStream(), fileSize, hash, fileName, bucketInfo);
+                    objectInfo.setFileId(fileId);
+                    objectInfo.setHash(hash);
+                    objectInfo.setSize(fileSize);
+                    objectInfo.setFormattedSize(StringUtils.getFormattedSize(fileSize));
+                    objectHashService.increaseRefCountByHash(hash, fileId, fileSize);
+                }
                 objectInfo.setUpdateTime(new Date());
                 objectInfoDaoService.updateById(objectInfo);
             }
