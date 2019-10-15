@@ -3,9 +3,39 @@
 <configuration>
 
     <springProperty scope="context" name="logPath" source="logging.path" defaultValue="./log"/>
-    <springProperty scope="context" name="fileMaxSize" source="logging.file.max-size" defaultValue="100M"/>
     <springProperty scope="context" name="fileMaxHistory" source="logging.file.max-history" defaultValue="30"/>
     <springProperty scope="context" name="rootLevel" source="logging.level.root" defaultValue="INFO"/>
+
+
+    <appender name="INFO_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <maxHistory>${fileMaxHistory}</maxHistory>
+            <fileNamePattern>${logPath}/info/info.%d{yyyy-MM-dd}.log</fileNamePattern>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d %level [%thread] %logger{36} %msg%n</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>INFO</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+    <appender name="DEBUG_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <maxHistory>${fileMaxHistory}</maxHistory>
+            <fileNamePattern>${logPath}/debug/debug.%d{yyyy-MM-dd}.log</fileNamePattern>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d %level [%thread] %logger{36} %msg%n</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>DEBUG</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
 
     <appender name="WARN_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
@@ -13,24 +43,10 @@
             <fileNamePattern>${logPath}/warn/warn.%d{yyyy-MM-dd}.log</fileNamePattern>
         </rollingPolicy>
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss:SSS} %level [%thread] %logger{36} [%file : %line] %msg%n</pattern>
+            <pattern>%d %level [%thread] %logger{36} [%file : %line] %msg%n</pattern>
         </encoder>
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
             <level>WARN</level>
-            <onMatch>ACCEPT</onMatch>
-            <onMismatch>DENY</onMismatch>
-        </filter>
-    </appender>
-    <appender name="DEBUG_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <maxHistory>${fileMaxHistory}</maxHistory>
-            <fileNamePattern>${logPath}/debug/debug.%d{yyyy-MM-dd}.log</fileNamePattern>
-        </rollingPolicy>
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss:SSS} %level [%thread] %logger{36} [%file : %line] %msg%n</pattern>
-        </encoder>
-        <filter class="ch.qos.logback.classic.filter.LevelFilter">
-            <level>DEBUG</level>
             <onMatch>ACCEPT</onMatch>
             <onMismatch>DENY</onMismatch>
         </filter>
@@ -42,7 +58,7 @@
             <fileNamePattern>${logPath}/error/error.%d{yyyy-MM-dd}.log</fileNamePattern>
         </rollingPolicy>
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss:SSS} %level [%thread] %logger{36} [%file : %line] %msg%n</pattern>
+            <pattern>%d %level [%thread] %logger{36} [%file : %line] %msg%n</pattern>
         </encoder>
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
             <level>ERROR</level>
@@ -51,24 +67,10 @@
         </filter>
     </appender>
 
-    <appender name="INFO_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <maxHistory>${fileMaxHistory}</maxHistory>
-            <fileNamePattern>${logPath}/info/info.%d{yyyy-MM-dd}.log</fileNamePattern>
-        </rollingPolicy>
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss:SSS} %level [%thread] %logger{36} [%file : %line] %msg%n</pattern>
-        </encoder>
-        <filter class="ch.qos.logback.classic.filter.LevelFilter">
-            <level>INFO</level>
-            <onMatch>ACCEPT</onMatch>
-            <onMismatch>DENY</onMismatch>
-        </filter>
-    </appender>
-
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss:SSS} %highlight(%-5level) -- [%yellow(%8thread)] %cyan(%-36logger{36}:) [%file : %line] %msg%n</pattern>
+            <pattern>%d %highlight(%-5level) -- [%yellow(%8thread)] %cyan(%-36logger{36}:) [%file : %line] %msg%n
+            </pattern>
         </encoder>
     </appender>
 
