@@ -6,11 +6,12 @@ export LANG="en_US.UTF-8"
 #----------------------------------------------------------------------
 
 # 远程服务器 ip
-# 远程服务器 ip
-remote_server_ip='10.50.12.38'
+#remote_server_ip='10.50.12.38'
+remote_server_ip='47.101.42.169'
 username='root'
 # !确保远程文件夹存在
-jar_store_dir='/home/jar-service/oss/backend'
+#jar_store_dir='/home/jar-service/oss/backend'
+jar_store_dir='/home/jar-task/backend-service'
 
 #----------------------------------------------------------------------
 # 脚本
@@ -43,4 +44,4 @@ fi
 
 # ssh远程启动jar
 # shellcheck disable=SC2035
-#ssh ${username}@${remote_server_ip} ${jar_store_dir}/run.sh restart *.jar
+ssh ${username}@${remote_server_ip}
