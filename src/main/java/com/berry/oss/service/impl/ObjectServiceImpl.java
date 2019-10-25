@@ -11,6 +11,7 @@ import com.berry.oss.common.exceptions.xml.AccessDenied;
 import com.berry.oss.common.exceptions.xml.NotFound;
 import com.berry.oss.common.exceptions.xml.SignatureDoesNotMatch;
 import com.berry.oss.common.utils.*;
+import com.berry.oss.common.utils.StringUtils;
 import com.berry.oss.config.GlobalProperties;
 import com.berry.oss.dao.entity.BucketInfo;
 import com.berry.oss.dao.entity.ObjectInfo;
@@ -30,10 +31,7 @@ import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.AntPathMatcher;
-import org.springframework.util.Base64Utils;
-import org.springframework.util.DigestUtils;
-import org.springframework.util.StreamUtils;
+import org.springframework.util.*;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.HandlerMapping;
@@ -351,7 +349,7 @@ public class ObjectServiceImpl implements IObjectService {
                 if (StringUtils.isBlank(headReferer) && !allowEmpty) {
                     throw new XmlResponseException(new AccessDenied("referer deny"));
                 }
-                if (StringUtils.isNotBlank(headReferer)) {
+                if (!StringUtils.isAnyBlank(headReferer, blackList)) {
                     // 2. 黑名单中，deny
                     String[] blackArr = blackList.split(",");
                     for (String black : blackArr) {
