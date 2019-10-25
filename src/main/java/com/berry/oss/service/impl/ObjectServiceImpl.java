@@ -607,7 +607,7 @@ public class ObjectServiceImpl implements IObjectService {
         if (!DEFAULT_FILE_PATH.equals(filePath)) {
             boolean matches = filePath.substring(1).matches(Constants.FILE_PATH_PATTERN);
             if (!filePath.startsWith(DEFAULT_FILE_PATH) || !matches) {
-                throw new UploadException("403", "当前上传文件目录不正确！");
+                throw new UploadException("403", "当前上传文件目录不正确！filePath:" + filePath);
             }
         }
     }
