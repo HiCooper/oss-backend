@@ -17,9 +17,9 @@ public final class Constants {
 
     /**
      * 文件路径正则,
-     * 不以 '/' 开头和结尾， 不能出现连续 '//' ，仅允许字母数字中文短横线下划线和单个 '/' 中文小括号
+     * 不以 '/' 开头和结尾， 不能出现连续 '//' ，仅允许字母数字中文短横线下划线和单个 '/' 中英文小括号
      */
-    public static final String FILE_PATH_PATTERN = "^[^/]((?!//)[（）a-zA-Z0-9/\\-_\\u4E00-\\u9FA5]+)*[^/]$";
+    public static final String FILE_PATH_PATTERN = "^[^/]((?!//)[（）\\(\\)a-zA-Z0-9/\\-_\\u4E00-\\u9FA5]+)*[^/]$";
 
     /**
      * 默认文件路径（根路径 / ）
