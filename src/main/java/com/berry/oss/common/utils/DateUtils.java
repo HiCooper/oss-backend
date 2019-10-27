@@ -150,10 +150,9 @@ public class DateUtils {
      * @param date
      * @param fmt
      * @return
-     * @throws Exception
      * @ author sys
      */
-    public static String formatDate(Date date, String fmt) throws Exception {
+    public static String formatDate(Date date, String fmt) {
         if (date == null) {
             return "";
         }

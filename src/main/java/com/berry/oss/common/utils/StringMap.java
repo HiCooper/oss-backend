@@ -2,8 +2,6 @@ package com.berry.oss.common.utils;
 
 import com.alibaba.fastjson.JSON;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -56,12 +54,6 @@ public final class StringMap {
         return this;
     }
 
-    public void forEach(Consumer imp) {
-        for (Map.Entry<String, Object> i : map.entrySet()) {
-            imp.accept(i.getKey(), i.getValue());
-        }
-    }
-
     public int size() {
         return map.size();
     }
@@ -78,33 +70,8 @@ public final class StringMap {
         return map.keySet();
     }
 
-    public String formString() {
-        final StringBuilder b = new StringBuilder();
-        forEach(new Consumer() {
-            private boolean notStart = false;
-
-            @Override
-            public void accept(String key, Object value) {
-                if (notStart) {
-                    b.append("&");
-                }
-                try {
-                    b.append(URLEncoder.encode(key, "UTF-8")).append('=')
-                            .append(URLEncoder.encode(value.toString(), "UTF-8"));
-                } catch (UnsupportedEncodingException e) {
-                    throw new AssertionError(e);
-                }
-                notStart = true;
-            }
-        });
-        return b.toString();
-    }
-
     public String jsonString() {
         return JSON.toJSONString(this);
     }
 
-    public interface Consumer {
-        void accept(String key, Object value);
-    }
 }
