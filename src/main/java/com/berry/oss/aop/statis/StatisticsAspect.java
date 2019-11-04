@@ -6,7 +6,6 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -28,10 +27,11 @@ public class StatisticsAspect {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    private final IStatisticsService statisticsService;
 
-    @Autowired
-    private IStatisticsService statisticsService;
-
+    public StatisticsAspect(IStatisticsService statisticsService) {
+        this.statisticsService = statisticsService;
+    }
 
     @Around("execution(* com.berry.oss.api.ObjectController.getObject(..))")
     public Object getObjectStatistics(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -42,10 +42,10 @@ public class StatisticsAspect {
             HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
             String url = request.getRequestURL().toString();
             String apiPrefix = "/ajax/bucket/file/";
-            String fileName = url.substring(url.lastIndexOf("/") + 1);
             int index = url.indexOf(apiPrefix) + apiPrefix.length();
-            String bucket = url.substring(index, url.lastIndexOf(fileName) - 1);
-            String fileFullPath = url.substring(url.lastIndexOf(bucket) + bucket.length() + 1);
+            String afterPrefix = url.substring(index);
+            String bucket = afterPrefix.substring(0, afterPrefix.indexOf("/"));
+            String fileFullPath = afterPrefix.substring(afterPrefix.indexOf("/"));
             statisticsService.updateDailyStatistics(bucket, fileFullPath);
         }
         return result;
