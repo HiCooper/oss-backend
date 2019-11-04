@@ -34,12 +34,13 @@
 
     <insert id="insertIgnoreBatch">
         INSERT IGNORE INTO object_info (id, bucket_id, user_id, file_name, file_path, file_id, hash, category, size,
-        acl, formatted_size, is_dir) VALUES
+        acl, formatted_size, is_dir, create_time) VALUES
         <foreach collection="objectInfoList" item="objectInfo" index="index" separator=",">
             (
             #{objectInfo.id}, #{objectInfo.bucketId}, #{objectInfo.userId},
             #{objectInfo.fileName}, #{objectInfo.filePath},#{objectInfo.fileId},#{objectInfo.hash},
-            #{objectInfo.category}, #{objectInfo.size}, #{objectInfo.acl}, #{objectInfo.formattedSize}, #{objectInfo.isDir}
+            #{objectInfo.category}, #{objectInfo.size}, #{objectInfo.acl}, #{objectInfo.formattedSize},
+            #{objectInfo.isDir}, now()
             )
         </foreach>
     </insert>

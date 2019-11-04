@@ -57,7 +57,7 @@ public interface IBucketService {
      * @param bucket bucket name
      * @return true or false
      */
-    Boolean checkUserHaveBucket(Integer userId, String bucket);
+    boolean checkUserHaveBucket(Integer userId, String bucket);
 
     /**
      * 获取bucket的 防盗链白名单信息

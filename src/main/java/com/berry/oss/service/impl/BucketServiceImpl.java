@@ -88,7 +88,7 @@ public class BucketServiceImpl implements IBucketService {
     }
 
     @Override
-    public Boolean checkUserHaveBucket(Integer userId, String bucket) {
+    public boolean checkUserHaveBucket(Integer userId, String bucket) {
         int count = bucketInfoDaoService.count(new QueryWrapper<BucketInfo>().eq("name", bucket)
                 .eq("user_id", userId));
         return 1 == count;

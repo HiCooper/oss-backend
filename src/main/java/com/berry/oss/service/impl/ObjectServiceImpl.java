@@ -10,8 +10,8 @@ import com.berry.oss.common.exceptions.XmlResponseException;
 import com.berry.oss.common.exceptions.xml.AccessDenied;
 import com.berry.oss.common.exceptions.xml.NotFound;
 import com.berry.oss.common.exceptions.xml.SignatureDoesNotMatch;
-import com.berry.oss.common.utils.*;
 import com.berry.oss.common.utils.StringUtils;
+import com.berry.oss.common.utils.*;
 import com.berry.oss.config.GlobalProperties;
 import com.berry.oss.dao.entity.BucketInfo;
 import com.berry.oss.dao.entity.ObjectInfo;
@@ -39,6 +39,7 @@ import org.springframework.web.servlet.HandlerMapping;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URLEncoder;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
@@ -47,6 +48,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.berry.oss.common.constant.Constants.DEFAULT_FILE_PATH;
+import static org.apache.commons.lang3.StringUtils.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -61,6 +63,11 @@ public class ObjectServiceImpl implements IObjectService {
 
     private static final int UPLOAD_PER_SIZE_LIMIT = 200;
     private static final String BASE64_DATA_START_PATTERN = "data:image/[a-z];";
+
+    private static final String USER_ID_COLUMN = "user_id";
+    private static final String BUCKET_ID_COLUMN = "bucket_id";
+    private static final String FILE_PATH_COLUMN = "file_path";
+    private static final String FILE_NAME_COLUMN = "file_name";
 
     private static final String CHART_SET = "UTF-8";
 
@@ -99,12 +106,12 @@ public class ObjectServiceImpl implements IObjectService {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
         BucketInfo bucketInfo = bucketService.checkUserHaveBucket(bucket);
         QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_id", currentUser.getId());
-        queryWrapper.eq("bucket_id", bucketInfo.getId());
-        queryWrapper.eq("file_path", path);
+        queryWrapper.eq(USER_ID_COLUMN, currentUser.getId());
+        queryWrapper.eq(BUCKET_ID_COLUMN, bucketInfo.getId());
+        queryWrapper.eq(FILE_PATH_COLUMN, path);
         queryWrapper.orderByDesc("is_dir");
-        if (StringUtils.isNotBlank(search)) {
-            queryWrapper.likeRight("file_name", search);
+        if (isNotBlank(search)) {
+            queryWrapper.likeRight(FILE_NAME_COLUMN, search);
         }
         return objectInfoDaoService.list(queryWrapper);
     }
@@ -114,7 +121,7 @@ public class ObjectServiceImpl implements IObjectService {
     public List<ObjectInfoVo> create(String bucket, MultipartFile[] files, String acl, String filePath) throws Exception {
 
         if (files.length > UPLOAD_PER_SIZE_LIMIT) {
-            throw new UploadException("403", "最多同时上传数量为100");
+            throw new UploadException("403", "最多同时上传数量为200");
         }
 
         // 验证acl 规范
@@ -141,46 +148,30 @@ public class ObjectServiceImpl implements IObjectService {
 
             // 校验通过
             String fileName = file.getOriginalFilename();
-            if (StringUtils.isNotBlank(fileName)) {
+            if (isNotBlank(fileName)) {
                 // 过滤替换文件名特殊字符
                 fileName = StringUtils.filterUnsafeUrlCharts(fileName);
             }
 
-            // 检查 该用户 同目录 同名 同bucket 下 文件是否已经存在（不检查文件内容 值判断路径和文件名）
+            // 检查 该用户 同目录 同名 同bucket 下 文件是否已经存在（不检查文件内容 仅判断路径和文件名）
             ObjectInfo objectInfo = getObjectInfo(filePath, currentUser.getId(), bucketInfo.getId(), fileName);
             boolean exist = objectInfo != null;
 
             ObjectInfoVo vo = new ObjectInfoVo();
             vo.setReplace(exist);
-
-            if (!exist) {
-                // 尝试快速上传
-                String fileId = objectHashService.checkExist(hash, fileSize);
-                if (StringUtils.isBlank(fileId)) {
-                    vo.setUploadType(false);
-                    // 快速上传失败，
-                    // 调用存储数据服务，保存对象，返回24位对象id,
-                    fileId = dataService.saveObject(filePath, file.getInputStream(), fileSize, hash, fileName, bucketInfo);
-                }
-                // 保存上传信息
-                saveObjectInfo(bucketInfo.getId(), acl, hash, fileSize, fileName, filePath, fileId);
-            } else {
-                String oldHash = objectInfo.getHash();
-                if (!oldHash.equals(hash)) {
-                    // 文件内容变化
-                    objectHashService.decreaseRefCountByHash(oldHash);
-                    vo.setUploadType(false);
-                    // 调用存储数据服务，保存对象，返回24位对象id,
-                    String fileId = dataService.saveObject(filePath, file.getInputStream(), fileSize, hash, fileName, bucketInfo);
-                    objectInfo.setFileId(fileId);
-                    objectInfo.setHash(hash);
-                    objectInfo.setSize(fileSize);
-                    objectInfo.setFormattedSize(StringUtils.getFormattedSize(fileSize));
-                    objectHashService.increaseRefCountByHash(hash, fileId, fileSize);
-                }
-                objectInfo.setUpdateTime(new Date());
-                objectInfoDaoService.updateById(objectInfo);
+            InputStream inputStream = file.getInputStream();
+            int available = inputStream.available();
+            byte[] data = new byte[available];
+            int readSize = inputStream.read(data);
+            if (readSize != available) {
+                vo.setAcl(acl);
+                vo.setFileName(fileName);
+                vo.setSuccess(false);
+                continue;
             }
+            // 保存或更新改对象信息
+            saveOrUpdateObject(filePath, data, acl, currentUser.getId(), bucketInfo, hash, fileSize, vo, fileName);
+
             buildResponse(bucket, filePath, fileName, acl, "", fileSize, vo);
             vos.add(vo);
         }
@@ -254,7 +245,7 @@ public class ObjectServiceImpl implements IObjectService {
         BucketInfo bucketInfo = bucketService.checkUserHaveBucket(bucket);
 
         List<ObjectInfo> infos = getFolderInfoList(currentUser.getId(), bucketInfo.getId(), folder);
-        if (infos.size() > 0) {
+        if (!CollectionUtils.isEmpty(infos)) {
             objectInfoDaoService.insertIgnoreBatch(infos);
         }
     }
@@ -283,13 +274,13 @@ public class ObjectServiceImpl implements IObjectService {
         String fileName = objectPath;
         String filePath = DEFAULT_FILE_PATH;
         if (objectPath.contains(DEFAULT_FILE_PATH)) {
-            fileName = objectPath.substring(objectPath.lastIndexOf("/") + 1);
-            filePath = "/" + objectPath.substring(0, objectPath.lastIndexOf("/"));
+            fileName = objectPath.substring(objectPath.lastIndexOf(DEFAULT_FILE_PATH) + 1);
+            filePath = DEFAULT_FILE_PATH + objectPath.substring(0, objectPath.lastIndexOf(DEFAULT_FILE_PATH));
         }
         ObjectInfo objectInfo = objectInfoDaoService.getOne(new QueryWrapper<ObjectInfo>()
-                .eq("file_name", fileName)
-                .eq("file_path", filePath)
-                .eq("bucket_id", bucketInfo.getId())
+                .eq(FILE_NAME_COLUMN, fileName)
+                .eq(FILE_PATH_COLUMN, filePath)
+                .eq(BUCKET_ID_COLUMN, bucketInfo.getId())
         );
         if (objectInfo == null) {
             // 资源不存在
@@ -301,7 +292,7 @@ public class ObjectServiceImpl implements IObjectService {
         }
 
         if (!objectInfo.getAcl().startsWith("PUBLIC") && !skipCheckAuth) {
-            if (StringUtils.isAnyBlank(expiresTime, ossAccessKeyId, signature)) {
+            if (isAnyBlank(expiresTime, ossAccessKeyId, signature)) {
                 throw new XmlResponseException(new AccessDenied("illegal url"));
             }
 
@@ -315,7 +306,7 @@ public class ObjectServiceImpl implements IObjectService {
             }
 
             // 2. 过期验证
-            if (StringUtils.isNumeric(expiresTime)) {
+            if (isNumeric(expiresTime)) {
                 // 时间戳字符串转时间,expiresTime 是秒单位
                 Date date = new Date(Long.parseLong(expiresTime) * 1000);
                 if (date.before(new Date())) {
@@ -338,39 +329,34 @@ public class ObjectServiceImpl implements IObjectService {
     private void checkReferer(WebRequest request, BucketInfo bucketInfo) {
         // 匿名访问，检查 referer
         String headReferer = request.getHeader("Referer");
-        RefererInfo refererInfo = refererInfoDaoService.getOne(new QueryWrapper<RefererInfo>().eq("bucket_id", bucketInfo.getId()));
+        RefererInfo refererInfo = refererInfoDaoService.getOne(new QueryWrapper<RefererInfo>().eq(BUCKET_ID_COLUMN, bucketInfo.getId()));
         if (refererInfo != null) {
+            // 未设置 默认为允许 Referer 为空
             Boolean allowEmpty = refererInfo.getAllowEmpty();
             String whiteList = refererInfo.getWhiteList();
-            String blackList = refererInfo.getBlackList();
-            // 两者同时设置方可生效
-            if (allowEmpty != null && StringUtils.isNotBlank(whiteList)) {
-                // 1.不允许 空 referer，deny
-                if (StringUtils.isBlank(headReferer) && !allowEmpty) {
+            // 同时设置了 ‘允许空 Referer’ 和 ‘白名单’ 两者方可生效
+            if (allowEmpty != null && isNotBlank(whiteList)) {
+                boolean allowEmptyB = allowEmpty;
+                // 1.允许为空
+                if (allowEmptyB) {
+                    return;
+                }
+                // 2.不允许 空 referer，请求 头中 没有 referer，则deny
+                if (isBlank(headReferer)) {
                     throw new XmlResponseException(new AccessDenied("referer deny"));
                 }
-                if (!StringUtils.isAnyBlank(headReferer, blackList)) {
-                    // 2. 黑名单中，deny
-                    String[] blackArr = blackList.split(",");
-                    for (String black : blackArr) {
-                        if (headReferer.matches(black)) {
-                            throw new XmlResponseException(new AccessDenied("referer deny"));
-                        }
-                    }
-                    // 3. 白名单，pass
-                    String[] whiteArr = whiteList.split(",");
-                    boolean match = false;
-                    for (String white : whiteArr) {
-                        if (headReferer.matches(white)) {
-                            match = true;
-                            break;
-                        }
-                    }
-                    if (!match) {
-                        throw new XmlResponseException(new AccessDenied("referer deny"));
+                // 3. 白名单，pass
+                String[] whiteArr = whiteList.split(",");
+                boolean match = false;
+                for (String white : whiteArr) {
+                    if (headReferer.matches(white)) {
+                        match = true;
+                        break;
                     }
                 }
-
+                if (!match) {
+                    throw new XmlResponseException(new AccessDenied("referer deny"));
+                }
             }
         }
     }
@@ -381,10 +367,10 @@ public class ObjectServiceImpl implements IObjectService {
         BucketInfo bucketInfo = bucketService.checkUserHaveBucket(bucket);
         String eTag = DigestUtils.md5DigestAsHex(objectName.getBytes());
         QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<ObjectInfo>()
-                .eq("bucket_id", bucketInfo.getId())
-                .eq("user_id", currentUser.getId())
-                .eq("file_path", path)
-                .eq("file_name", objectName);
+                .eq(BUCKET_ID_COLUMN, bucketInfo.getId())
+                .eq(USER_ID_COLUMN, currentUser.getId())
+                .eq(FILE_PATH_COLUMN, path)
+                .eq(FILE_NAME_COLUMN, objectName);
         ObjectInfo objectInfo = objectInfoDaoService.getOne(queryWrapper);
         if (objectInfo == null) {
             throw new BaseException(ResultCode.DATA_NOT_EXIST);
@@ -456,10 +442,10 @@ public class ObjectServiceImpl implements IObjectService {
 
         List<ObjectInfo> objectInfos = new ArrayList<>(objectInfoDaoService.listByIds(Arrays.asList(objectIdArray)));
 
-        if (objectInfos.size() > 0) {
+        if (!CollectionUtils.isEmpty(objectInfos)) {
             List<ObjectInfo> files = objectInfos.stream().filter(info -> !info.getIsDir()).collect(Collectors.toList());
 
-            if (files.size() > 0) {
+            if (!CollectionUtils.isEmpty(files)) {
                 objectInfoDaoService.removeByIds(files.stream().map(ObjectInfo::getId).collect(Collectors.toList()));
                 files.forEach(file -> {
                     // 对象hash引用 计数 -1
@@ -469,17 +455,15 @@ public class ObjectServiceImpl implements IObjectService {
 
             List<ObjectInfo> dirs = objectInfos.stream().filter(ObjectInfo::getIsDir).collect(Collectors.toList());
 
-            if (dirs.size() > 0) {
+            if (!CollectionUtils.isEmpty(dirs)) {
                 // 删除文件夹本身
                 objectInfoDaoService.removeByIds(dirs.stream().map(ObjectInfo::getId).collect(Collectors.toList()));
-                // 删除文件夹的子目录
-                dirs.forEach(dir -> {
-                    // 如果是文件夹，则删除该文件夹下所有的子项
-                    objectInfoDaoService.remove(new QueryWrapper<ObjectInfo>()
-                            .eq("bucket_id", bucketInfo.getId())
-                            .eq("file_path", dir.getFilePath() + dir.getFileName())
-                            .eq("user_id", currentUser.getId()));
-                });
+                // 删除文件夹的子目录(如果是文件夹，则删除该文件夹下所有的子项)
+                dirs.forEach(dir ->
+                        objectInfoDaoService.remove(new QueryWrapper<ObjectInfo>()
+                                .eq(BUCKET_ID_COLUMN, bucketInfo.getId())
+                                .eq(FILE_PATH_COLUMN, dir.getFilePath() + dir.getFileName())
+                                .eq(USER_ID_COLUMN, currentUser.getId())));
             }
         }
     }
@@ -492,9 +476,9 @@ public class ObjectServiceImpl implements IObjectService {
 
         // 检查该对象是否存在
         ObjectInfo objectInfo = objectInfoDaoService.getOne(new QueryWrapper<ObjectInfo>()
-                .eq("file_path", objectPath)
-                .eq("file_name", objectName)
-                .eq("bucket_id", bucketInfo.getId())
+                .eq(FILE_PATH_COLUMN, objectPath)
+                .eq(FILE_NAME_COLUMN, objectName)
+                .eq(BUCKET_ID_COLUMN, bucketInfo.getId())
         );
         if (objectInfo == null) {
             throw new BaseException(ResultCode.DATA_NOT_EXIST);
@@ -525,7 +509,7 @@ public class ObjectServiceImpl implements IObjectService {
         // 检查文件路径，非 / 则需要创建目录
         if (!DEFAULT_FILE_PATH.equals(filePath)) {
             List<ObjectInfo> infos = getFolderInfoList(currentUser.getId(), bucketId, filePath);
-            if (infos.size() > 0) {
+            if (!CollectionUtils.isEmpty(infos)) {
                 // 添加目录信息
                 newObject.addAll(infos);
             }
@@ -537,7 +521,9 @@ public class ObjectServiceImpl implements IObjectService {
         objectHashService.increaseRefCountByHash(hash, fileId, contentLength);
     }
 
-    private void saveOrUpdateObject(String filePath, byte[] data, String acl, Integer userId, BucketInfo bucketInfo, String hash, long size, ObjectInfoVo vo, String fullFileName) throws IOException {
+    private void saveOrUpdateObject(String filePath, byte[] data, String acl, Integer userId,
+                                    BucketInfo bucketInfo, String hash, long size,
+                                    ObjectInfoVo vo, String fullFileName) throws IOException {
         // 检查 该用户 同目录 同名 同bucket 下 文件是否已经存在
         ObjectInfo objectInfo = getObjectInfo(filePath, userId, bucketInfo.getId(), fullFileName);
         boolean exist = objectInfo != null;
@@ -547,7 +533,7 @@ public class ObjectServiceImpl implements IObjectService {
         if (!exist) {
             // 尝试快速上传
             String fileId = objectHashService.checkExist(hash, size);
-            if (StringUtils.isBlank(fileId)) {
+            if (isBlank(fileId)) {
                 // 快速上传失败，
                 vo.setUploadType(false);
                 // 调用存储数据服务，保存对象，返回24位对象id,
@@ -556,6 +542,19 @@ public class ObjectServiceImpl implements IObjectService {
             // 保存上传信息
             saveObjectInfo(bucketInfo.getId(), acl, hash, size, fullFileName, filePath, fileId);
         } else {
+            String oldHash = objectInfo.getHash();
+            if (!oldHash.equals(hash)) {
+                // 文件内容变化
+                objectHashService.decreaseRefCountByHash(oldHash);
+                vo.setUploadType(false);
+                // 调用存储数据服务，保存对象，返回24位对象id,
+                String fileId = dataService.saveObject(filePath, data, size, hash, fullFileName, bucketInfo);
+                objectInfo.setFileId(fileId);
+                objectInfo.setHash(hash);
+                objectInfo.setSize(size);
+                objectInfo.setFormattedSize(StringUtils.getFormattedSize(size));
+                objectHashService.increaseRefCountByHash(hash, fileId, size);
+            }
             objectInfo.setUpdateTime(new Date());
             objectInfoDaoService.updateById(objectInfo);
         }
@@ -588,7 +587,7 @@ public class ObjectServiceImpl implements IObjectService {
     private BucketInfo getBucketInfo(String bucket, UserInfoDTO currentUser) {
         BucketInfo bucketInfo = bucketInfoDaoService.getOne(new QueryWrapper<BucketInfo>()
                 .eq("name", bucket)
-                .eq("user_id", currentUser.getId())
+                .eq(USER_ID_COLUMN, currentUser.getId())
         );
         if (bucketInfo == null) {
             throw new UploadException("404", "bucket not exist");
@@ -597,7 +596,7 @@ public class ObjectServiceImpl implements IObjectService {
     }
 
     private static String getFileType(String dataPrefix) {
-        return "." + dataPrefix.substring(dataPrefix.lastIndexOf("/") + 1, dataPrefix.length() - 1);
+        return "." + dataPrefix.substring(dataPrefix.lastIndexOf(DEFAULT_FILE_PATH) + 1, dataPrefix.length() - 1);
     }
 
     private static void checkPath(String filePath) {
@@ -618,10 +617,10 @@ public class ObjectServiceImpl implements IObjectService {
     private ObjectInfo getObjectInfo(String filePath, Integer userId, String bucketId, String fileName) {
         // 检查该 bucket 及 path 下 同名文件是否存在
         QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_id", userId);
-        queryWrapper.eq("bucket_id", bucketId);
-        queryWrapper.eq("file_path", filePath);
-        queryWrapper.eq("file_name", fileName);
+        queryWrapper.eq(USER_ID_COLUMN, userId);
+        queryWrapper.eq(BUCKET_ID_COLUMN, bucketId);
+        queryWrapper.eq(FILE_PATH_COLUMN, filePath);
+        queryWrapper.eq(FILE_NAME_COLUMN, fileName);
         return objectInfoDaoService.getOne(queryWrapper);
     }
 
@@ -641,7 +640,7 @@ public class ObjectServiceImpl implements IObjectService {
         ObjectInfo objectInfo;
         StringBuilder path = new StringBuilder("/");
         for (String dirName : objectArr) {
-            if (StringUtils.isNotBlank(dirName)) {
+            if (isNotBlank(dirName)) {
                 objectInfo = new ObjectInfo();
                 objectInfo.setId(ObjectId.get());
                 objectInfo.setIsDir(true);
@@ -675,7 +674,7 @@ public class ObjectServiceImpl implements IObjectService {
     /**
      * 处理对象读取响应
      *
-     * @param bucket
+     * @param bucket     bucket name
      * @param objectPath 对象全路径 如：/test.jpg
      * @param response   响应
      * @param request    请求
@@ -695,7 +694,6 @@ public class ObjectServiceImpl implements IObjectService {
             return;
         }
 
-//        long lastModified = objectInfo.getUpdateTime().toEpochSecond(OffsetDateTime.now().getOffset()) * 1000;
         long lastModified = objectInfo.getUpdateTime().getTime();
         String eTag = "\"" + DigestUtils.md5DigestAsHex(objectPath.getBytes()) + "\"";
         if (request.checkNotModified(eTag, lastModified)) {
@@ -718,9 +716,9 @@ public class ObjectServiceImpl implements IObjectService {
 
     private String getPublicObjectUrl(String bucket, String filePath, String fileName) {
         String ip = globalProperties.getServerIp();
-        String objectPath = filePath + "/" + fileName;
+        String objectPath = filePath + DEFAULT_FILE_PATH + fileName;
         if (filePath.equals(DEFAULT_FILE_PATH)) {
-            objectPath = "/" + fileName;
+            objectPath = DEFAULT_FILE_PATH + fileName;
         }
         return "http://" + ip + ":" + port + "/ajax/bucket/file/" + bucket + objectPath;
     }

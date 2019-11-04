@@ -1,5 +1,6 @@
 package com.berry.oss.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -7,8 +8,10 @@ import com.berry.oss.common.ResultCode;
 import com.berry.oss.common.exceptions.BaseException;
 import com.berry.oss.common.utils.HttpClient;
 import com.berry.oss.dao.entity.ObjectHash;
+import com.berry.oss.dao.entity.ObjectInfo;
 import com.berry.oss.dao.entity.ShardInfo;
 import com.berry.oss.dao.service.IObjectHashDaoService;
+import com.berry.oss.dao.service.IObjectInfoDaoService;
 import com.berry.oss.dao.service.IShardInfoDaoService;
 import com.berry.oss.service.IObjectHashService;
 import org.apache.commons.io.FileUtils;
@@ -17,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
@@ -42,10 +46,13 @@ public class ObjectHashServiceImpl implements IObjectHashService {
 
     private final IObjectHashDaoService objectHashDaoService;
     private final IShardInfoDaoService shardInfoDaoService;
+    private final IObjectInfoDaoService objectInfoDaoService;
 
-    ObjectHashServiceImpl(IObjectHashDaoService objectHashDaoService, IShardInfoDaoService shardInfoDaoService) {
+
+    ObjectHashServiceImpl(IObjectHashDaoService objectHashDaoService, IShardInfoDaoService shardInfoDaoService, IObjectInfoDaoService objectInfoDaoService) {
         this.objectHashDaoService = objectHashDaoService;
         this.shardInfoDaoService = shardInfoDaoService;
+        this.objectInfoDaoService = objectInfoDaoService;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -100,17 +107,30 @@ public class ObjectHashServiceImpl implements IObjectHashService {
         // 1. 查出所有空引用对象,将其锁定
         QueryWrapper<ObjectHash> queryWrapper = new QueryWrapper<ObjectHash>().eq("reference_count", 0).eq("locked", false);
         List<ObjectHash> nonRefObjectList = objectHashDaoService.list(queryWrapper);
-        if (nonRefObjectList.size() == 0) {
+        if (CollectionUtils.isEmpty(nonRefObjectList)) {
             logger.info("暂无需要清理的数据");
             return;
         }
-        nonRefObjectList.forEach(item -> item.setLocked(true));
+        // 2. 再次根据 hash file_id size 进行对象引用查询确认
+        nonRefObjectList.forEach(item -> {
+            int count = objectInfoDaoService.count(new QueryWrapper<ObjectInfo>()
+                    .eq("file_id", item.getFileId())
+                    .eq("hash", item.getHash())
+                    .eq("size", item.getSize()));
+            if (count != 0) {
+                item.setReferenceCount(count);
+            } else {
+                item.setLocked(true);
+            }
+        });
         objectHashDaoService.updateBatchById(nonRefObjectList);
-        // 2. 查出这些对象的数据位置
+        // 3.过滤步骤2中更新引用大于0的hash对象
+        nonRefObjectList = nonRefObjectList.stream().filter(s -> s.getReferenceCount() == 0).collect(Collectors.toList());
+        // 4. 查出这些对象的数据位置
         List<String> fileIdList = nonRefObjectList.stream().map(ObjectHash::getFileId).collect(Collectors.toList());
         QueryWrapper<ShardInfo> dealShardQuery = new QueryWrapper<ShardInfo>().in("file_id", fileIdList);
         List<ShardInfo> shardInfos = shardInfoDaoService.list(dealShardQuery);
-        // 3. 删除数据
+        // 5. 删除数据
         shardInfos.forEach(item -> {
             String shardJson = item.getShardJson();
             Boolean singleton = item.getSingleton();
@@ -125,19 +145,19 @@ public class ObjectHashServiceImpl implements IObjectHashService {
                 }
             } else {
                 // 分布式多机模式
-                JSONArray jsonArray = JSONArray.parseArray(shardJson);
+                JSONArray jsonArray = JSON.parseArray(shardJson);
                 for (int i = 0; i < jsonArray.size(); i++) {
                     JSONObject shard = jsonArray.getJSONObject(i);
                     String url = shard.getString("url");
                     String path = shard.getString("path");
-                    String removeUrl = url.replaceAll("read", "delete");
+                    String removeUrl = url.replace("read", "delete");
                     Map<String, Object> params = new HashMap<>(16);
                     try {
                         params.put("path", URLEncoder.encode(path, StandardCharsets.UTF_8.name()));
                         HttpClient.doPost(removeUrl, params);
                         logger.info("删除分片文件成功：{} , {}", url, path);
                     } catch (UnsupportedEncodingException e) {
-                        e.printStackTrace();
+                        logger.info("删除分片文件失败：{} , {}, msg:{}", url, path, e.getMessage());
                     }
                 }
             }

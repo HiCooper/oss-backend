@@ -57,4 +57,9 @@ public class ObjectInfoVo {
      * 已覆盖旧文件
      */
     private Boolean replace;
+
+    /**
+     * 成功与否, 默认 成功=true
+     */
+    private Boolean success = true;
 }
