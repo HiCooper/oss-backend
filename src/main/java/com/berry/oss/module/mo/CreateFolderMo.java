@@ -26,6 +26,6 @@ public class CreateFolderMo {
      */
     @NotBlank
     @Length(min = 2, max = 254, message = "路径长度在2～254之间")
-    @Pattern(regexp = "^[^/]((?!//)[（）\\(\\)a-zA-Z0-9/\\-_\\u4E00-\\u9FA5])*[^/]$", message = "路径不符合要求:不以 / 开头和结尾，不能出现连续 // 支持中文数字字母短横线下划线")
+    @Pattern(regexp = "^[^/]((?!//)[（）()a-zA-Z0-9/\\-_\\u4E00-\\u9FA5])*[^/]$", message = "路径不符合要求:不以 / 开头和结尾，不能出现连续 // 支持中文数字字母短横线下划线")
     private String folder;
 }
