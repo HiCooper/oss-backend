@@ -7,13 +7,13 @@ export LANG="en_US.UTF-8"
 
 # 远程服务器 ip
 #remote_server_ip='10.50.12.38'
-#remote_server_ip='47.101.42.169'
-remote_server_ip='192.168.2.195'
+remote_server_ip='47.101.42.169'
+#remote_server_ip='192.168.2.195'
 username='root'
 # !确保远程文件夹存在
 #jar_store_dir='/home/jar-service/oss/backend'
-#jar_store_dir='/home/jar-task/backend-service'
-jar_store_dir='/bagua/oss_service/backend'
+jar_store_dir='/home/jar-task/backend-service'
+#jar_store_dir='/bagua/oss_service/backend'
 
 #----------------------------------------------------------------------
 # 脚本
@@ -42,8 +42,3 @@ if [ -f ./build/libs/*.jar ]; then
   fi
   echo "上传成功"
 fi
-
-
-# ssh远程启动jar
-# shellcheck disable=SC2035
-ssh ${username}@${remote_server_ip}
