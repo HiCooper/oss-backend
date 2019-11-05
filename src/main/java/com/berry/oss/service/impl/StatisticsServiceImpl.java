@@ -22,7 +22,7 @@ import java.util.*;
 @Service
 public class StatisticsServiceImpl implements IStatisticsService {
 
-    private static String PREFIX = "daily-statistics:";
+    private static final String PREFIX = "daily-statistics:";
 
     @Resource
     private HashOperations<String, String, Object> hashOperations;
@@ -81,9 +81,9 @@ public class StatisticsServiceImpl implements IStatisticsService {
         }
         List<HotObjectStatisVo> voList = new ArrayList<>();
         result.forEach((key, value) -> voList.add(new HotObjectStatisVo(key, value)));
-        voList.sort(Comparator.comparing(HotObjectStatisVo::getCount));
-        if (CollectionUtils.isEmpty(voList) && voList.size() > 10) {
-            voList.subList(0, 10);
+        voList.sort(Comparator.comparing(HotObjectStatisVo::getCount).reversed());
+        if (!CollectionUtils.isEmpty(voList) && voList.size() > 10) {
+            return voList.subList(0, 10);
         }
         return voList;
     }
