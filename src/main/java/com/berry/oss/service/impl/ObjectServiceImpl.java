@@ -108,13 +108,15 @@ public class ObjectServiceImpl implements IObjectService {
         QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq(USER_ID_COLUMN, currentUser.getId());
         queryWrapper.eq(BUCKET_ID_COLUMN, bucketInfo.getId());
-        if (!path.equalsIgnoreCase(DEFAULT_FILE_PATH)) {
-            // 仅在非 首页启用当前路径匹配
-            queryWrapper.eq(FILE_PATH_COLUMN, path);
-        }
         queryWrapper.orderByDesc("is_dir");
         if (isNotBlank(search)) {
             queryWrapper.likeRight(FILE_NAME_COLUMN, search);
+            if (!path.equalsIgnoreCase(DEFAULT_FILE_PATH)) {
+                // 仅在非 首页启用当前路径匹配
+                queryWrapper.eq(FILE_PATH_COLUMN, path);
+            }
+        } else {
+            queryWrapper.eq(FILE_PATH_COLUMN, path);
         }
         return objectInfoDaoService.list(queryWrapper);
     }
