@@ -24,8 +24,9 @@ public interface IObjectService {
 
     /**
      * 搜索列表
+     *
      * @param bucket bucket name
-     * @param path 搜索路径 path
+     * @param path   搜索路径 path
      * @param search 搜索关键字
      * @return list
      */

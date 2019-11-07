@@ -69,10 +69,11 @@ public interface IBucketService {
 
     /**
      * 更新防盗链信息
-     * @param bucketId bucket id
-     * @param id 主键
+     *
+     * @param bucketId   bucket id
+     * @param id         主键
      * @param allowEmpty 是否referer允许为空
-     * @param whiteList 白名单 逗号 隔开多个
+     * @param whiteList  白名单 逗号 隔开多个
      */
     void updateReferer(String bucketId, Integer id, Boolean allowEmpty, String whiteList);
 }

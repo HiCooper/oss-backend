@@ -10,9 +10,16 @@ buildscript {
     }
 }
 
+plugins {
+    id "org.sonarqube" version "2.8"
+}
+
 apply plugin: 'java'
+apply plugin: 'jacoco'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
+
+apply from: "sonar.gradle"
 
 group = 'com.berry'
 version = '0.0.1-SNAPSHOT'
@@ -32,6 +39,9 @@ dependencies {
     compile("ch.qos.logback:logback-core:1.1.3")
     compile("ch.qos.logback:logback-classic:1.1.3")
     compile("ch.qos.logback:logback-access:1.1.3")
+
+    // sonar
+    compile "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.8"
 
     // https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
     compile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.14.2'

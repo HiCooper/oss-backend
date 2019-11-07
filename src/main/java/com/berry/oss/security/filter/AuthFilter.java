@@ -2,7 +2,6 @@ package com.berry.oss.security.filter;
 
 import com.berry.oss.common.constant.Constants;
 import com.berry.oss.common.utils.NetworkUtils;
-import com.berry.oss.common.utils.StringUtils;
 import com.berry.oss.security.interceptor.AccessProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +16,9 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+
+import static io.micrometer.core.instrument.util.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 /**
  * 请求过滤器，如果请求头信息包含 'authorization' 验证token通过后 添加 安全凭证
@@ -45,14 +47,14 @@ public class AuthFilter extends GenericFilterBean {
         String requestUrl = httpServletRequest.getRequestURI();
         if (Constants.WRITE_LIST.stream().noneMatch(requestUrl::matches)) {
             String jwt = resolveToken(httpServletRequest);
-            if (StringUtils.isNotBlank(jwt) && this.tokenProvider.validateToken(jwt)) {
+            if (isNotBlank(jwt) && this.tokenProvider.validateToken(jwt)) {
                 // 验证jwt 设置授权信息到该线程上下文
                 Authentication authentication = this.tokenProvider.getAuthentication(jwt);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } else {
                 String ip = NetworkUtils.getRequestIpAddress(httpServletRequest);
                 String ossAuth = httpServletRequest.getHeader(Constants.OSS_SDK_AUTH_HEAD_NAME);
-                if (StringUtils.isNotBlank(ossAuth)) {
+                if (isNotBlank(ossAuth)) {
                     // 只验证 token 格式 尝试设置用户信息
                     Authentication authentication = this.accessProvider.getSdkAuthentication(ossAuth);
                     if (authentication != null) {
@@ -62,7 +64,7 @@ public class AuthFilter extends GenericFilterBean {
                 } else {
                     // 上传 token 拦截器
                     String accessToken = httpServletRequest.getHeader(Constants.ACCESS_TOKEN_KEY);
-                    if (StringUtils.isNotBlank(accessToken)) {
+                    if (isNotBlank(accessToken)) {
                         // 只验证 token 格式 尝试设置用户信息
                         Authentication authentication = this.accessProvider.getUploadAuthentication(accessToken);
                         if (authentication != null) {
@@ -79,18 +81,18 @@ public class AuthFilter extends GenericFilterBean {
     /**
      * 获取token，如果请求头中没有，则在cookie中获取
      *
-     * @param request
-     * @return
+     * @param request request
+     * @return token or null
      */
     private String resolveToken(HttpServletRequest request) {
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
-        if (StringUtils.isNotBlank(bearerToken)) {
+        if (isNotBlank(bearerToken)) {
             return bearerToken;
         } else {
             Cookie cookie = getCookie(request);
             if (cookie != null) {
                 // Validate that the cookie is used at the correct place.
-                String path = StringUtils.trimToNull(cookie.getPath());
+                String path = trimToNull(cookie.getPath());
                 if (path != null && !pathMatches(path, request.getRequestURI())) {
                     log.warn("Found '{}' cookie at path '{}', but should be only used for '{}'", AUTHORIZATION_HEADER, request.getRequestURI(), path);
                 } else {
@@ -110,7 +112,7 @@ public class AuthFilter extends GenericFilterBean {
      * 获取cookie
      *
      * @param request request
-     * @return
+     * @return Cookie
      */
     private static Cookie getCookie(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
@@ -129,7 +131,7 @@ public class AuthFilter extends GenericFilterBean {
      *
      * @param cookiePath  cookie路径
      * @param requestPath 请求路径
-     * @return
+     * @return boolean
      * @see <a href="https://tools.ietf.org/html/rfc6265#section-5.1.4">RFC 6265, Section 5.1.4 "Paths and Path-Match"</a>
      */
     private boolean pathMatches(String cookiePath, String requestPath) {

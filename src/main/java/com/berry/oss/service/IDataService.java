@@ -46,7 +46,8 @@ public interface IDataService {
 
     /**
      * 获取对象
-     * @param bucket name
+     *
+     * @param bucket   name
      * @param objectId 对象id
      * @return 资源对象
      * @throws IOException IO

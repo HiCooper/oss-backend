@@ -7,6 +7,7 @@ import com.berry.oss.lock.model.Lock;
 import lombok.Setter;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.Date;
@@ -50,7 +51,7 @@ public class RedisLockServiceImpl implements LockService {
     public Iterable<Lock> findAll() {
         Set<String> keys = stringTemplate.keys(prefix + "*");
         Set<Lock> locks = new LinkedHashSet<>();
-        if (keys != null && keys.size() > 0) {
+        if (!CollectionUtils.isEmpty(keys)) {
             for (String key : keys) {
                 Long expire = stringTemplate.getExpire(key, TimeUnit.MILLISECONDS);
                 Date expires = new Date(System.currentTimeMillis() + (expire == null ? 0L : expire));

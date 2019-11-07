@@ -2,7 +2,6 @@ package com.berry.oss.security.interceptor;
 
 import com.berry.oss.common.constant.Constants;
 import com.berry.oss.common.utils.Auth;
-import com.berry.oss.common.utils.StringUtils;
 import com.berry.oss.dao.service.IAccessKeyInfoDaoService;
 import com.berry.oss.security.SecurityUtils;
 import com.berry.oss.security.dao.entity.Role;
@@ -23,6 +22,8 @@ import java.net.URLDecoder;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
  * Created with IntelliJ IDEA.
@@ -80,7 +81,7 @@ public class AccessProvider {
         String credentials = SecurityUtils.getCurrentCredentials();
         String path = request.getRequestURI();
         String query = request.getQueryString();
-        String urlStr = StringUtils.isBlank(query) ? path : path + "?" + query;
+        String urlStr = isBlank(query) ? path : path + "?" + query;
         // 校验 token 签名
         Auth.validRequest(credentials, URLDecoder.decode(urlStr, "utf-8"), userInfoDTO.getAccessKeyId(), userInfoDTO.getAccessKeySecret());
     }

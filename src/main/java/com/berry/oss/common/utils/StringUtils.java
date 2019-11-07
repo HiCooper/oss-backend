@@ -24,7 +24,6 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
 
     private static final String GUTTER = ".";
 
-
     /**
      * 对所有传入参数按照字段名的 ASCII 码从小到大排序（字典序）&拼接成字符
      *
@@ -37,7 +36,7 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
         // 构造URL 键值对的格式
         StringBuilder buf = new StringBuilder();
         for (Map.Entry<String, Object> item : infoIds) {
-            if (StringUtils.isNotBlank(item.getKey()) && item.getValue() != null) {
+            if (isNotBlank(item.getKey()) && item.getValue() != null) {
                 String key = item.getKey();
                 String val = item.getValue().toString();
                 buf.append(key).append("=").append(val);

@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 public final class StringMap {
     private Map<String, Object> map;
 
@@ -23,7 +25,7 @@ public final class StringMap {
     }
 
     public StringMap putNotBlank(String key, String value) {
-        if (StringUtils.isNotBlank(value)) {
+        if (isNotBlank(value)) {
             map.put(key, value);
         }
         return this;

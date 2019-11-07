@@ -69,8 +69,10 @@ public final class RSAUtil {
         } catch (IOException e) {
             throw new RuntimeException(e);
         } finally {
-            if (oos1 != null && oos2 != null) {
+            if (oos1 != null) {
                 oos1.close();
+            }
+            if (oos2 != null) {
                 oos2.close();
             }
         }

@@ -1,5 +1,6 @@
 package com.berry.oss.common.utils;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.berry.oss.common.constant.Constants;
 import org.slf4j.Logger;
@@ -12,6 +13,8 @@ import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
  * Created with IntelliJ IDEA.
@@ -72,7 +75,7 @@ public final class Auth {
         }
         String json = StringUtils.utf8String(Base64Util.decode(encodeJson));
         // 验证json 有效期
-        JSONObject object = JSONObject.parseObject(json);
+        JSONObject object = JSON.parseObject(json);
         long deadline = object.getLong(ENCODE_JSON_DEADLINE_KEY);
         Date deadDate = new Date(deadline * 1000);
         if (deadDate.before(new Date())) {
@@ -120,7 +123,7 @@ public final class Auth {
     }
 
     private static Auth create(String accessKeyId, String accessKeySecret) {
-        if (StringUtils.isBlank(accessKeyId) || StringUtils.isBlank(accessKeySecret)) {
+        if (isBlank(accessKeyId) || isBlank(accessKeySecret)) {
             throw new IllegalArgumentException("empty key");
         }
         byte[] sk = StringUtils.utf8Bytes(accessKeySecret);

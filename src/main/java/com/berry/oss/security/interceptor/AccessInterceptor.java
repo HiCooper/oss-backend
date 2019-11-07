@@ -2,7 +2,6 @@ package com.berry.oss.security.interceptor;
 
 import com.berry.oss.common.constant.Constants;
 import com.berry.oss.common.utils.NetworkUtils;
-import com.berry.oss.common.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -10,6 +9,8 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.UnsupportedEncodingException;
+
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
  * Created with IntelliJ IDEA.
@@ -36,14 +37,14 @@ public class AccessInterceptor implements HandlerInterceptor {
             // sdk 通用请求拦截器,sdk token 验证后将不验证 upload token
             String ossAuth = request.getHeader(Constants.OSS_SDK_AUTH_HEAD_NAME);
             String ip = NetworkUtils.getRequestIpAddress(request);
-            if (StringUtils.isNotBlank(ossAuth)) {
+            if (isNotBlank(ossAuth)) {
                 // 验证 token 合法性
                 this.accessProvider.validateSdkAuthentication(request);
                 logger.info("IP:{} 通过 sdk 授权认证", ip);
             } else {
                 // 上传 token 拦截器
                 String accessToken = request.getHeader(Constants.ACCESS_TOKEN_KEY);
-                if (StringUtils.isNotBlank(accessToken)) {
+                if (isNotBlank(accessToken)) {
                     // 验证 token 合法性
                     this.accessProvider.validateUploadAuthentication(requestUrl);
                     logger.info("IP:{} 通过 upload token 授权认证", ip);

@@ -104,7 +104,7 @@ public class TokenProvider {
      * @param token 待验证token
      * @return boolean
      */
-    Boolean validateToken(String token) {
+    boolean validateToken(String token) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(SECRET);
             JWTVerifier verifier = JWT.require(algorithm)

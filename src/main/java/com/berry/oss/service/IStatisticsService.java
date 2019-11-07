@@ -18,8 +18,8 @@ public interface IStatisticsService {
     /**
      * 每日访问统计增加
      *
-     * @param bucket bucket name
-     * @param bucket fileFullPath fileFullPath
+     * @param bucket       bucket name
+     * @param fileFullPath fileFullPath
      */
     void updateDailyStatistics(String bucket, String fileFullPath);
 
@@ -27,6 +27,7 @@ public interface IStatisticsService {
      * 最近30天的对象访问次数
      *
      * @param bucket bucket name
+     * @return map
      */
     Map<String, Long> lastThirtyDaysObjectQuery(String bucket);
 
@@ -34,7 +35,7 @@ public interface IStatisticsService {
      * 最近30天热点数据排行前10
      *
      * @param bucket bucket name
-     * @return
+     * @return list
      */
     List<HotObjectStatisVo> lastThirtyDaysHotObjectRanking(String bucket);
 }

@@ -1,9 +1,9 @@
 package com.berry.oss.dao.service.impl;
 
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.berry.oss.dao.entity.RefererInfo;
 import com.berry.oss.dao.mapper.RefererInfoMapper;
 import com.berry.oss.dao.service.IRefererInfoDaoService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 
 /**

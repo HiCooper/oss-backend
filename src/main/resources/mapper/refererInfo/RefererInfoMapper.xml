@@ -4,13 +4,13 @@
 
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.berry.oss.dao.entity.RefererInfo">
-        <id column="id" property="id" />
-        <result column="bucket_id" property="bucketId" />
-        <result column="white_list" property="whiteList" />
-        <result column="black_list" property="blackList" />
-        <result column="allow_empty" property="allowEmpty" />
-        <result column="create_time" property="createTime" />
-        <result column="update_time" property="updateTime" />
+        <id column="id" property="id"/>
+        <result column="bucket_id" property="bucketId"/>
+        <result column="white_list" property="whiteList"/>
+        <result column="black_list" property="blackList"/>
+        <result column="allow_empty" property="allowEmpty"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
     </resultMap>
 
     <!-- 通用查询结果列 -->

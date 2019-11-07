@@ -48,15 +48,17 @@ public class ConvertTools {
     private static final int[] BITS = {BIT_0, BIT_1, BIT_2, BIT_3, BIT_4, BIT_5, BIT_6, BIT_7};
 
     /**
-     * 把16进制字符串转换成字节数组 @param hex @return
+     * 把16进制字符串转换成字节数组
+     *
+     * @param hex @return
      */
-    public static byte[] hexStringToByte(String hex) {
+    private static byte[] hexStringToByte(String hex) {
         int len = (hex.length() / 2);
         byte[] result = new byte[len];
         char[] achar = hex.toCharArray();
         for (int i = 0; i < len; i++) {
             int pos = i * 2;
-            result[i] = (byte) (toByte(achar[pos]) << 4 | toByte(achar[pos + 1]));
+            result[i] = (byte) (toByte(achar[pos]) << 4 | toByte(achar[pos + 1]) & 0xff);
         }
         return result;
     }
@@ -71,11 +73,11 @@ public class ConvertTools {
      * @param bArray
      * @return
      */
-    public static final String bytesToHexString(byte[] bArray) {
-        StringBuffer sb = new StringBuffer(bArray.length);
+    private static String bytesToHexString(byte[] bArray) {
+        StringBuilder sb = new StringBuilder(bArray.length);
         String sTemp;
-        for (int i = 0; i < bArray.length; i++) {
-            sTemp = Integer.toHexString(0xFF & bArray[i]);
+        for (byte b : bArray) {
+            sTemp = Integer.toHexString(0xFF & b);
             if (sTemp.length() < 2) {
                 sb.append(0);
             }
@@ -92,7 +94,7 @@ public class ConvertTools {
      * @throws IOException
      * @throws ClassNotFoundException
      */
-    public static final Object bytesToObject(byte[] bytes) throws IOException, ClassNotFoundException {
+    private static Object bytesToObject(byte[] bytes) throws IOException, ClassNotFoundException {
         ByteArrayInputStream in = new ByteArrayInputStream(bytes);
         ObjectInputStream oi = new ObjectInputStream(in);
         Object o = oi.readObject();
@@ -107,7 +109,7 @@ public class ConvertTools {
      * @return
      * @throws IOException
      */
-    public static byte[] objectToBytes(Serializable s) throws IOException {
+    private static byte[] objectToBytes(Serializable s) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ObjectOutputStream ot = new ObjectOutputStream(out);
         ot.writeObject(s);
@@ -130,11 +132,11 @@ public class ConvertTools {
      * 10进制串
      */
     public static String bcd2Str(byte[] bytes) {
-        StringBuffer temp = new StringBuffer(bytes.length * 2);
+        StringBuilder temp = new StringBuilder(bytes.length * 2);
 
-        for (int i = 0; i < bytes.length; i++) {
-            temp.append((byte) ((bytes[i] & 0xf0) >>> 4));
-            temp.append((byte) (bytes[i] & 0x0f));
+        for (byte aByte : bytes) {
+            temp.append((byte) ((aByte & 0xf0) >>> 4));
+            temp.append((byte) (aByte & 0x0f));
         }
         return temp.toString().substring(0, 1).equalsIgnoreCase("0") ? temp.toString().substring(1) : temp.toString();
     }
@@ -154,12 +156,12 @@ public class ConvertTools {
             len = asc.length();
         }
 
-        byte abt[] = null;
+        byte[] abt;
         if (len >= 2) {
             len = len / 2;
         }
 
-        byte bbt[] = new byte[len];
+        byte[] bbt = new byte[len];
         abt = asc.getBytes();
         int j, k;
 
@@ -243,7 +245,7 @@ public class ConvertTools {
         return lascii;
     }
 
-    public static byte[] acsiiTobytes(char[] ascii) {
+    private static byte[] acsiiTobytes(char[] ascii) {
         if (ascii == null || ascii.length == 0) {
             return new byte[0];
         }
@@ -316,12 +318,10 @@ public class ConvertTools {
      */
     public static String charAsciiString2HexAsciiStringWithLength(String s) throws Exception {
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         char[] c = s.toCharArray();
-        for (int i = 0; i < c.length; i++) {
-
-            int temp = (int) c[i];
-            String hex = Integer.toHexString(temp);
+        for (char value : c) {
+            String hex = Integer.toHexString((int) value);
             sb.append(hex);
         }
         return sb.toString();
@@ -349,13 +349,14 @@ public class ConvertTools {
         int j = 0;
         for (int i = 0; i < (ascLen + 1) / 2; i++) {
             bcd[i] = ascToBcd(ascii[j++]);
-            bcd[i] = (byte) (((j >= ascLen) ? 0x00 : ascToBcd(ascii[j++])) + (bcd[i] << 4));
+            bcd[i] = (byte) (((j >= ascLen) ? 0x00 : ascToBcd(ascii[j++]) & 0xff) + (bcd[i] << 4));
         }
         return bcd;
     }
 
     public static String bcd2Str2(byte[] bytes) {
-        char temp[] = new char[bytes.length * 2], val;
+        char[] temp = new char[bytes.length * 2];
+        char val;
 
         for (int i = 0; i < bytes.length; i++) {
             val = (char) (((bytes[i] & 0xf0) >> 4) & 0x0f);

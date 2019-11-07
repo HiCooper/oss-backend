@@ -20,7 +20,7 @@
 
     <select id="listBucket" resultType="com.berry.oss.module.vo.BucketInfoVo">
         SELECT a.id, a.name, a.acl, a.create_time, a.update_time, b.code as region, b.name as regionName,
-        CASE when `white_list`!= '' and  `white_list` is not null then true ELSE false END as referer
+        CASE when `white_list`!= '' and `white_list` is not null then true ELSE false END as referer
         from
         bucket_info a
         LEFT JOIN region_info b on a.region_id = b.id

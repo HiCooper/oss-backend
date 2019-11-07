@@ -1,7 +1,7 @@
 package com.berry.oss.dao.service;
 
-import com.berry.oss.dao.entity.RefererInfo;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.berry.oss.dao.entity.RefererInfo;
 
 /**
  * <p>
