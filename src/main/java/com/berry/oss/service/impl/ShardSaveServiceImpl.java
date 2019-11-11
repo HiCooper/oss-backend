@@ -37,7 +37,14 @@ public class ShardSaveServiceImpl implements IShardSaveService {
         }
         // 单机模式下 没有 shardIndex 参数
         String fileFullPath = file.getPath() + "/" + fileName;
-        FileOutputStream outputStream = new FileOutputStream(fileFullPath);
+        File file1 = new File(fileFullPath);
+        if (file1.exists()) {
+            boolean delete = file1.delete();
+            if (delete) {
+                logger.debug("旧文件存在，已删除");
+            }
+        }
+        FileOutputStream outputStream = new FileOutputStream(file1);
         outputStream.write(data);
         outputStream.close();
         return fileFullPath;
