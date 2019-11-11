@@ -464,11 +464,14 @@ public class ObjectServiceImpl implements IObjectService {
                 // 删除文件夹本身
                 objectInfoDaoService.removeByIds(dirs.stream().map(ObjectInfo::getId).collect(Collectors.toList()));
                 // 删除文件夹的子目录(如果是文件夹，则删除该文件夹下所有的子项)
-                dirs.forEach(dir ->
-                        objectInfoDaoService.remove(new QueryWrapper<ObjectInfo>()
-                                .eq(BUCKET_ID_COLUMN, bucketInfo.getId())
-                                .eq(FILE_PATH_COLUMN, dir.getFilePath() + dir.getFileName())
-                                .eq(USER_ID_COLUMN, currentUser.getId())));
+                dirs.forEach(dir -> {
+                    String filePath = dir.getFilePath();
+                    String dirFullPath = filePath.equalsIgnoreCase(DEFAULT_FILE_PATH) ? filePath + dir.getFileName() : filePath + "/" + dir.getFileName();
+                    objectInfoDaoService.remove(new QueryWrapper<ObjectInfo>()
+                            .eq(BUCKET_ID_COLUMN, bucketInfo.getId())
+                            .eq(USER_ID_COLUMN, currentUser.getId())
+                            .likeRight(FILE_PATH_COLUMN, dirFullPath));
+                });
             }
         }
     }
