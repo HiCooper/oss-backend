@@ -467,10 +467,15 @@ public class ObjectServiceImpl implements IObjectService {
                 dirs.forEach(dir -> {
                     String filePath = dir.getFilePath();
                     String dirFullPath = filePath.equalsIgnoreCase(DEFAULT_FILE_PATH) ? filePath + dir.getFileName() : filePath + "/" + dir.getFileName();
-                    objectInfoDaoService.remove(new QueryWrapper<ObjectInfo>()
+                    QueryWrapper<ObjectInfo> objectInfoQueryWrapper = new QueryWrapper<ObjectInfo>()
                             .eq(BUCKET_ID_COLUMN, bucketInfo.getId())
                             .eq(USER_ID_COLUMN, currentUser.getId())
-                            .likeRight(FILE_PATH_COLUMN, dirFullPath));
+                            .likeRight(FILE_PATH_COLUMN, dirFullPath);
+                    List<ObjectInfo> infos = objectInfoDaoService.list(objectInfoQueryWrapper);
+                    // 1. 删除文件和子项
+                    objectInfoDaoService.removeByIds(infos.stream().map(ObjectInfo::getId).collect(Collectors.toList()));
+                    // 2. 对应文件的 引用计数 -1
+                    objectHashService.batchDecreaseRefCountByHash(infos.stream().map(ObjectInfo::getHash).collect(Collectors.toList()));
                 });
             }
         }

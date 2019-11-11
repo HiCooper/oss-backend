@@ -74,6 +74,7 @@ public class DataServiceImpl implements IDataService {
 
     @Override
     public String saveObject(String filePath, byte[] data, long size, String hash, String fileName, BucketInfo bucketInfo) throws IOException {
+        logger.debug("ready to save object,fileName: {}, filePath:{}", fileName, filePath);
         String fileId = ObjectId.get();
         boolean singleton = globalProperties.isSingleton();
         String json;

@@ -1,5 +1,7 @@
 package com.berry.oss.service;
 
+import java.util.List;
+
 /**
  * Created with IntelliJ IDEA.
  *
@@ -34,6 +36,12 @@ public interface IObjectHashService {
      * @param hash
      */
     void decreaseRefCountByHash(String hash);
+
+    /**
+     * 引用计数 批量 -1
+     * @param hashList hash 集合
+     */
+    void batchDecreaseRefCountByHash(List<String> hashList);
 
     /**
      * 空引用对象数据清理

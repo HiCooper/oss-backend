@@ -102,6 +102,23 @@ public class ObjectHashServiceImpl implements IObjectHashService {
         objectHashDaoService.updateById(one);
     }
 
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    @Async("taskExecutor")
+    public void batchDecreaseRefCountByHash(List<String> hashList) {
+        QueryWrapper<ObjectHash> queryWrapper = new QueryWrapper<ObjectHash>().in("hash", hashList).eq("locked", false);
+        List<ObjectHash> list = objectHashDaoService.list(queryWrapper);
+        if (CollectionUtils.isEmpty(list)) {
+            return;
+        }
+        list.forEach(item -> {
+            int newCount = Math.max(item.getReferenceCount() - 1, 0);
+            item.setReferenceCount(newCount);
+        });
+        // 引用为 0  的索引，由定时任务程序去扫描整理删除 对应的数据和引用
+        objectHashDaoService.updateBatchById(list);
+    }
+
     @Override
     public void scanNonReferenceObjectThenClean() {
         // 1. 查出所有空引用对象,将其锁定

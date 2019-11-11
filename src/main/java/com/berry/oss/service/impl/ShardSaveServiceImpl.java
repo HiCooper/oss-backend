@@ -47,6 +47,7 @@ public class ShardSaveServiceImpl implements IShardSaveService {
         FileOutputStream outputStream = new FileOutputStream(file1);
         outputStream.write(data);
         outputStream.close();
+        logger.debug("write data to:{}", fileFullPath);
         return fileFullPath;
     }
 
