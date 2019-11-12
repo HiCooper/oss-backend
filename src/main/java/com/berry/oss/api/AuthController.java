@@ -96,10 +96,8 @@ public class AuthController {
             } else if (e instanceof BadCredentialsException) {
                 throw new BaseException(ResultCode.USERNAME_OR_PASSWORD_ERROR);
             }
-
+            throw new BaseException("unknow", e.getMessage());
         }
-        return new ResponseEntity<>(HttpStatus.OK);
-
     }
 
 
