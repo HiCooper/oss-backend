@@ -19,6 +19,6 @@ public class LoginVM {
     @Size(min = 4, max = 100)
     private String password;
 
-    private Boolean rememberMe;
+    private boolean rememberMe;
 
 }

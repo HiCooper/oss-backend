@@ -22,7 +22,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.validation.annotation.Validated;
@@ -74,12 +73,11 @@ public class AuthController {
         try {
             Authentication authentication = this.authenticationManager.authenticate(authenticationToken);
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            boolean rememberMe = (loginVm.getRememberMe() == null) ? false : loginVm.getRememberMe();
-            String jwt = this.tokenProvider.createAndSignToken(authentication, user.getId(), rememberMe);
+            String jwt = this.tokenProvider.createAndSignToken(authentication, user.getId(), loginVm.isRememberMe());
             HttpHeaders httpHeaders = new HttpHeaders();
             httpHeaders.add(AuthFilter.AUTHORIZATION_HEADER, jwt);
             long expires = TokenProvider.TOKEN_VALIDITY_IN_MILLISECONDS / 1000;
-            if (rememberMe) {
+            if (loginVm.isRememberMe()) {
                 expires = TokenProvider.TOKEN_VALIDITY_IN_MILLISECONDS_FOR_REMEMBER_ME / 1000;
             }
             Cookie cookie = new Cookie(AuthFilter.AUTHORIZATION_HEADER, jwt);
@@ -88,15 +86,12 @@ public class AuthController {
             response.addCookie(cookie);
             httpHeaders.add("expires", String.valueOf(expires));
             return new ResponseEntity<>(new LoginSuccessVo(jwt, expires, new UserInfo(user.getId(), user.getUsername())), httpHeaders, HttpStatus.OK);
-        } catch (AuthenticationException e) {
-            if (e instanceof DisabledException) {
-                throw new BaseException(ResultCode.ACCOUNT_DISABLE);
-            } else if (e instanceof LockedException) {
-                throw new BaseException(ResultCode.ACCOUNT_LOCKED);
-            } else if (e instanceof BadCredentialsException) {
-                throw new BaseException(ResultCode.USERNAME_OR_PASSWORD_ERROR);
-            }
-            throw new BaseException("unknow", e.getMessage());
+        } catch (DisabledException | LockedException e) {
+            throw new BaseException(ResultCode.ACCOUNT_DISABLE);
+        } catch (BadCredentialsException e) {
+            throw new BaseException(ResultCode.USERNAME_OR_PASSWORD_ERROR);
+        } catch (Exception e) {
+            throw new BaseException(ResultCode.FAIL);
         }
     }
 
