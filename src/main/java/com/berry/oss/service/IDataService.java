@@ -45,7 +45,7 @@ public interface IDataService {
     String saveObject(String filePath, byte[] data, long size, String hash, String fileName, BucketInfo bucketInfo) throws IOException;
 
     /**
-     * 获取对象
+     * 获取对象,优先尝试从 redis 缓存读取，缓存击中失败，从File system 或者 net 获取
      *
      * @param bucket   name
      * @param objectId 对象id
