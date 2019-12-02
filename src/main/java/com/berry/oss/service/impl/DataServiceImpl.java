@@ -107,26 +107,41 @@ public class DataServiceImpl implements IDataService {
             return null;
         }
         String shardJson = shardInfo.getShardJson();
-        InputStream cacheIs;
-        logger.debug("get object from disk or net ...");
-        if (shardInfo.getSingleton() != null && shardInfo.getSingleton()) {
-            // 单机模式
-            byte[] bytes = shardSaveService.readShard(shardJson);
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        InputStream cacheIs = null;
+        if (shardInfo.getSize() <= MAX_CACHE_FILE_SIZE) {
             try {
-                outputStream.write(bytes);
+                // 查询缓存
+                cacheIs = hotDataCacheService.getObjectIsByObjectId(objectId);
             } catch (Exception e) {
-                logger.error("构造返回数据流失败");
-                return null;
+                logger.error("get object from cache throw exception,msg:[{}] ! ObjectId:【{}】", e.getLocalizedMessage(), objectId);
             }
-            cacheIs = new ByteArrayInputStream(outputStream.toByteArray());
-        } else {
-            // RS 分布式冗余模式
-            cacheIs = reedSolomonDecoderService.readData(bucket, shardJson, objectId);
         }
         if (cacheIs == null) {
-            logger.error("文件损坏或丢失:{}", objectId);
-            return null;
+            logger.debug("get object from disk or net ...");
+            if (shardInfo.getSingleton() != null && shardInfo.getSingleton()) {
+                // 单机模式
+                byte[] bytes = shardSaveService.readShard(shardJson);
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                try {
+                    outputStream.write(bytes);
+                } catch (Exception e) {
+                    logger.error("构造返回数据流失败");
+                    return null;
+                }
+                cacheIs = new ByteArrayInputStream(outputStream.toByteArray());
+            } else {
+                // RS 分布式冗余模式
+                cacheIs = reedSolomonDecoderService.readData(bucket, shardJson, objectId);
+            }
+            if (cacheIs == null) {
+                logger.error("文件损坏或丢失:{}", objectId);
+                return null;
+            }
+
+            if (shardInfo.getSize() <= MAX_CACHE_FILE_SIZE) {
+                // 尝试设置缓存
+                hotDataCacheService.trySetObject(objectId, cacheIs);
+            }
         }
         return new ObjectResource()
                 .setCreateTime(shardInfo.getCreateTime())

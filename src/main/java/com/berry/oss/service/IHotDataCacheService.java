@@ -30,5 +30,5 @@ public interface IHotDataCacheService {
      * @param inputStream 输入流
      * @throws IOException
      */
-    void setObject(String objectId, InputStream inputStream) throws IOException;
+    void trySetObject(String objectId, InputStream inputStream) throws IOException;
 }
