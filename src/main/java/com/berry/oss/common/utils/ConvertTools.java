@@ -52,7 +52,7 @@ public class ConvertTools {
      *
      * @param hex @return
      */
-    private static byte[] hexStringToByte(String hex) {
+    public static byte[] hexStringToByte(String hex) {
         int len = (hex.length() / 2);
         byte[] result = new byte[len];
         char[] achar = hex.toCharArray();
@@ -73,7 +73,7 @@ public class ConvertTools {
      * @param bArray
      * @return
      */
-    private static String bytesToHexString(byte[] bArray) {
+    public static String bytesToHexString(byte[] bArray) {
         StringBuilder sb = new StringBuilder(bArray.length);
         String sTemp;
         for (byte b : bArray) {

@@ -313,8 +313,8 @@ public class ReedSolomon {
         // This will make the top square be the identity matrix, but
         // preserve the property that any square subset of rows is
         // invertible.
-        // 范特蒙矩阵 乘以 矩阵顶部（4 * 4）方阵的逆矩阵,这将使上面的方阵成为单位矩阵,
-        // 保证任意行的子集方阵是可逆的，todo why ？
+        // 范特蒙矩阵 乘以 自身顶部（4 * 4）方阵的逆矩阵,这将使上面的方阵成为单位矩阵,
+        // 保证任意行的子集方阵是可逆的
         Matrix top = vandermonde.submatrix(0, 0, dataShards, dataShards);
         return vandermonde.times(top.invert());
     }
@@ -323,7 +323,7 @@ public class ReedSolomon {
      * Create a Vandermonde matrix, which is guaranteed to have the
      * property that any subset of rows that forms a square matrix
      * is invertible.
-     * 创建一个范特蒙矩阵 ，它保证具有这样的性质即构成矩阵的任何行子集都是可逆的
+     * 创建一个范特蒙矩阵 ，它保证具有这样的性质:构成矩阵的任何行子集都是可逆的
      * <p>
      * [1, 0, 0, 0],
      * [1, 1, 1, 1],

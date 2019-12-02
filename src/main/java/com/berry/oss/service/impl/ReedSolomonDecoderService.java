@@ -51,6 +51,8 @@ public class ReedSolomonDecoderService {
 
     InputStream readData(String bucket, String shardJson, String objectId) {
 
+        long start = System.currentTimeMillis();
+
         JSONArray jsonArray = JSONArray.parseArray(shardJson);
 
         final byte[][] shards = new byte[TOTAL_SHARDS][];
@@ -98,7 +100,7 @@ public class ReedSolomonDecoderService {
             logger.debug("启用RS纠错数据恢复...");
             // 至少需要 DATA_SHARDS 个用来重构数据
             if (shardCount < DATA_SHARDS) {
-                System.out.println("Not enough shards present");
+                logger.error("Not enough shards present");
                 return null;
             }
 
@@ -133,6 +135,7 @@ public class ReedSolomonDecoderService {
         int fileSize = ByteBuffer.wrap(allBytes).getInt();
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         outputStream.write(allBytes, BYTES_IN_INT, fileSize);
+        logger.debug("读取对象：[{}], 耗时:[{}]", objectId, (System.currentTimeMillis() - start));
         return new ByteArrayInputStream(outputStream.toByteArray());
     }
 

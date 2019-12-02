@@ -1,5 +1,6 @@
 package com.berry.oss.service.impl;
 
+import com.berry.oss.common.utils.ConvertTools;
 import com.berry.oss.service.IHotDataCacheService;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -13,7 +14,6 @@ import javax.annotation.Resource;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
 /**
@@ -23,15 +23,21 @@ import java.util.Set;
  * @version 1.0
  * @date 2019/11/29 14:41
  * fileName：HotDataCacheServiceImpl
- * Use：
+ * Use：热点数据缓存，实际测试效果不佳（速度低于硬盘读取），暂不用
  */
 @Service
 public class HotDataCacheServiceImpl implements IHotDataCacheService {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    /**
+     * 保存热点数据 key，且 保证热点数据 不会 超过 RANK_KEEP_SIZE
+     */
     @Resource
     private ZSetOperations<String, String> zSetOperations;
 
+    /**
+     * 保存热点数据内容
+     */
     @Resource
     private HashOperations<String, String, String> hashOperations;
 
@@ -40,8 +46,9 @@ public class HotDataCacheServiceImpl implements IHotDataCacheService {
     private static final int RANK_KEEP_SIZE = 20;
 
     @Override
-    public InputStream getObjectIsByObjectId(String objectId) throws IOException {
-        String object = hashOperations.get(HOT_DATA_KEY, objectId);
+    public InputStream getObjectIsByObjectId(String objectId) {
+        long start = System.currentTimeMillis();
+        String data = hashOperations.get(HOT_DATA_KEY, objectId);
         zSetOperations.incrementScore(Z_SET_KEY, objectId, 1D);
         Long size = zSetOperations.zCard(Z_SET_KEY);
         if (size != null && size > RANK_KEEP_SIZE) {
@@ -50,17 +57,21 @@ public class HotDataCacheServiceImpl implements IHotDataCacheService {
             hashOperations.delete(HOT_DATA_KEY, delRangeObjectIds);
             zSetOperations.remove(Z_SET_KEY, delRangeObjectIds);
         }
-        if (StringUtils.isBlank(object)) {
+        if (StringUtils.isBlank(data)) {
             return null;
         }
-        return new ByteArrayInputStream(object.getBytes(StandardCharsets.UTF_8));
+        logger.debug("get cache data from redis spend time: [{}] ms ", (System.currentTimeMillis() - start));
+        return new ByteArrayInputStream(ConvertTools.hexStringToByte(data));
     }
 
     @Override
     public void setObject(String objectId, InputStream inputStream) throws IOException {
         if (inputStream.available() > 0) {
+            long start = System.currentTimeMillis();
             byte[] bytes = StreamUtils.copyToByteArray(inputStream);
-            hashOperations.put(HOT_DATA_KEY, objectId, new String(bytes, StandardCharsets.UTF_8));
+            String data = ConvertTools.bytesToHexString(bytes);
+            hashOperations.put(HOT_DATA_KEY, objectId, data);
+            logger.debug("set cache data to redis spend time: [{}] ms ", (System.currentTimeMillis() - start));
         }
     }
 }

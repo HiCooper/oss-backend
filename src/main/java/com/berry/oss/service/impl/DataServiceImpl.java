@@ -32,6 +32,12 @@ import java.io.InputStream;
 public class DataServiceImpl implements IDataService {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    /**
+     * 缓存对象最大容量  512KB
+     */
+    private static final int MAX_CACHE_FILE_SIZE = 512 * 1024;
+
+
     @Resource
     private ReedSolomonEncoderService reedSolomonEncoderService;
 
@@ -101,38 +107,27 @@ public class DataServiceImpl implements IDataService {
             return null;
         }
         String shardJson = shardInfo.getShardJson();
-        InputStream cacheIs = null;
-//        try {
-////            // 查询缓存 todo  too slow, closed temporarily
-////            cacheIs = hotDataCacheService.getObjectIsByObjectId(objectId);
-////        } catch (Exception e) {
-////            logger.error("get object from cache throw exception,msg:[{}] ! ObjectId:【{}】", e.getLocalizedMessage(), objectId);
-////        }
-//        if (cacheIs == null) {
-            logger.debug("get object from cache fail ...");
-            if (shardInfo.getSingleton() != null && shardInfo.getSingleton()) {
-                // 单机模式
-                byte[] bytes = shardSaveService.readShard(shardJson);
-                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                try {
-                    outputStream.write(bytes);
-                } catch (Exception e) {
-                    logger.error("构造返回数据流失败");
-                    return null;
-                }
-                cacheIs = new ByteArrayInputStream(outputStream.toByteArray());
-            } else {
-                // RS 分布式冗余模式
-                cacheIs = reedSolomonDecoderService.readData(bucket, shardJson, objectId);
-            }
-            if (cacheIs == null) {
-                logger.error("文件损坏或丢失:{}", objectId);
+        InputStream cacheIs;
+        logger.debug("get object from disk or net ...");
+        if (shardInfo.getSingleton() != null && shardInfo.getSingleton()) {
+            // 单机模式
+            byte[] bytes = shardSaveService.readShard(shardJson);
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            try {
+                outputStream.write(bytes);
+            } catch (Exception e) {
+                logger.error("构造返回数据流失败");
                 return null;
             }
-            // 更新缓存
-//            logger.debug("set object cache, objectId:[{}]", objectId);
-//            hotDataCacheService.setObject(objectId, cacheIs);
-//        }
+            cacheIs = new ByteArrayInputStream(outputStream.toByteArray());
+        } else {
+            // RS 分布式冗余模式
+            cacheIs = reedSolomonDecoderService.readData(bucket, shardJson, objectId);
+        }
+        if (cacheIs == null) {
+            logger.error("文件损坏或丢失:{}", objectId);
+            return null;
+        }
         return new ObjectResource()
                 .setCreateTime(shardInfo.getCreateTime())
                 .setFileId(shardInfo.getFileId())
@@ -142,7 +137,8 @@ public class DataServiceImpl implements IDataService {
                 .setInputStream(cacheIs);
     }
 
-    private void saveShardInfo(long size, String hash, String fileName, String fileId, boolean singleton, String json) {
+    private void saveShardInfo(long size, String hash, String fileName, String fileId,
+                               boolean singleton, String json) {
         ShardInfo shardInfo = new ShardInfo();
         shardInfo.setFileId(fileId);
         shardInfo.setSingleton(singleton);
