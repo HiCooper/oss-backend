@@ -22,12 +22,17 @@ public class GlobalProperties {
     /**
      * 是否为单机模式
      */
-    private boolean singleton;
+    private boolean singleton = true;
+
+    /**
+     * 是否开启热点数据缓存，单机模式效果不佳
+     */
+    private boolean hotDataCache = false;
 
     /**
      * 单机模式下 数据存储路径
      */
-    private String dataPath;
+    private String dataPath = "./data";
 
     /**
      * 服务 访问ip

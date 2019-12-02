@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StreamUtils;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.io.ByteArrayInputStream;
@@ -23,7 +23,7 @@ import java.util.Set;
  * @version 1.0
  * @date 2019/11/29 14:41
  * fileName：HotDataCacheServiceImpl
- * Use：热点数据缓存，实际测试效果不佳（速度低于硬盘读取），暂不用
+ * Use：热点数据缓存，实际测试效果不佳（速度低于硬盘读取）, 主要用于分布式环境，在集中缓存数据上有优势
  */
 @Service
 public class HotDataCacheServiceImpl implements IHotDataCacheService {
@@ -42,8 +42,8 @@ public class HotDataCacheServiceImpl implements IHotDataCacheService {
     @Resource
     private HashOperations<String, String, String> hashOperations;
 
-    private static final String HOT_DATA_KEY = "hot_data:";
-    private static final String Z_SET_KEY = "hot_data_rank:";
+    private static final String HOT_DATA_KEY = "hot_data";
+    private static final String Z_SET_KEY = "hot_data_rank";
     private static final int RANK_DATA_KEEP_SIZE = 20;
     private static final int RANK_KEY_KEEP_SIZE = 4 * RANK_DATA_KEEP_SIZE;
 
@@ -61,42 +61,44 @@ public class HotDataCacheServiceImpl implements IHotDataCacheService {
     /**
      * 尝试更新缓存，保证 hashOperations 缓存的数据 始终是 zSetOperations 的前  RANK_DATA_KEEP_SIZE 个
      * todo not finished
+     *
      * @param objectId    objectId
-     * @param inputStream 输入流
+     * @param dataInput data
      * @throws IOException
      */
     @Override
-    public void trySetObject(String objectId, InputStream inputStream) throws IOException {
-        if (inputStream.available() > 0) {
+    public void trySetObject(String objectId, byte[] dataInput) throws IOException {
+        if (dataInput.length > 0) {
             long start = System.currentTimeMillis();
-            byte[] bytes = StreamUtils.copyToByteArray(inputStream);
-            String data = ConvertTools.bytesToHexString(bytes);
+            String data = ConvertTools.bytesToHexString(dataInput);
             Set<String> ids = zSetOperations.reverseRange(Z_SET_KEY, 0L, -1L);
 
-            // 1. zset size < RANK_DATA_KEEP_SIZE 直接 put key and data
-            if (ids == null || ids.size() < RANK_DATA_KEEP_SIZE) {
-                zSetOperations.incrementScore(Z_SET_KEY, objectId, 1D);
-                hashOperations.put(HOT_DATA_KEY, objectId, data);
-            } else {
+            // zset 不为空 并且 大于 hash 最大容量 RANK_DATA_KEEP_SIZE
+            if (!CollectionUtils.isEmpty(ids) && ids.size() >= RANK_DATA_KEEP_SIZE) {
+                // key 是否存在于 zset 集合中
                 boolean exist = ids.stream().filter(s -> s.equals(objectId)).findAny().orElse(null) != null;
+                if (!exist && ids.size() == RANK_KEY_KEEP_SIZE) {
+                    // 不存在 ，并且 zset size = RANK_KEY_KEEP_SIZE , 先删除第一个，然后将新的 key put
+                    zSetOperations.removeRange(Z_SET_KEY, 0, 0);
+                }
+                zSetOperations.incrementScore(Z_SET_KEY, objectId, 1D);
                 if (exist) {
-                    // 存在于 zset 已有的集合中，直接更新 score，检查前十是否有变动，变动则更新到 hashOperations
-                } else {
-                    // 不存在与 zset 已有的集合中
-                    if (ids.size() == RANK_KEY_KEEP_SIZE) {
-                        // 2. zset size = RANK_KEY_KEEP_SIZE , 先删除 score 最小的一个，score 相等则删除最后一个，然后将新的 key put
-                    } else if (ids.size() < RANK_KEY_KEEP_SIZE) {
-                        // 直接put key
+                    // 存在于 zset 已有的集合中，如果在前 RANK_DATA_KEEP_SIZE ，更新到 hash
+                    Set<String> rankTenIds = zSetOperations.reverseRange(Z_SET_KEY, 0L, RANK_DATA_KEEP_SIZE - 1L);
+                    if (!CollectionUtils.isEmpty(rankTenIds) && rankTenIds.stream().filter(s -> s.equals(objectId)).findAny().orElse(null) != null) {
+                        // 查看 keys 与 rankTenIds 的差集
+                        Set<String> keys = hashOperations.keys(HOT_DATA_KEY);
+                        keys.removeAll(rankTenIds);
+                        if (!CollectionUtils.isEmpty(keys)) {
+                            hashOperations.delete(HOT_DATA_KEY, keys);
+                        }
+                        hashOperations.put(HOT_DATA_KEY, objectId, data);
                     }
                 }
-            }
-            zSetOperations.incrementScore(Z_SET_KEY, objectId, 1D);
-            Long size = zSetOperations.zCard(Z_SET_KEY);
-            if (size != null && size > RANK_DATA_KEEP_SIZE) {
-                // 默认是 升序排，所以移除的是前部份
-                Set<String> delRangeObjectIds = zSetOperations.range(Z_SET_KEY, 0, size - RANK_DATA_KEEP_SIZE - 1);
-                hashOperations.delete(HOT_DATA_KEY, delRangeObjectIds);
-                zSetOperations.remove(Z_SET_KEY, delRangeObjectIds);
+            } else {
+                // zset size < RANK_DATA_KEEP_SIZE 直接 put key and data
+                zSetOperations.incrementScore(Z_SET_KEY, objectId, 1D);
+                hashOperations.put(HOT_DATA_KEY, objectId, data);
             }
             logger.debug("set cache data to redis spend time: [{}] ms ", (System.currentTimeMillis() - start));
         }

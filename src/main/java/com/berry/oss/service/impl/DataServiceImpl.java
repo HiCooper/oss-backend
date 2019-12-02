@@ -13,6 +13,7 @@ import com.berry.oss.service.IShardSaveService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StreamUtils;
 
 import javax.annotation.Resource;
 import java.io.ByteArrayInputStream;
@@ -33,9 +34,9 @@ public class DataServiceImpl implements IDataService {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /**
-     * 缓存对象最大容量  512KB
+     * 缓存对象最大容量  1M
      */
-    private static final int MAX_CACHE_FILE_SIZE = 512 * 1024;
+    private static final int MAX_CACHE_FILE_SIZE = 1024 * 1024;
 
 
     @Resource
@@ -108,12 +109,13 @@ public class DataServiceImpl implements IDataService {
         }
         String shardJson = shardInfo.getShardJson();
         InputStream cacheIs = null;
-        if (shardInfo.getSize() <= MAX_CACHE_FILE_SIZE) {
+        boolean useHotDataCache = globalProperties.isHotDataCache() && shardInfo.getSize() <= MAX_CACHE_FILE_SIZE;
+        if (useHotDataCache) {
             try {
                 // 查询缓存
                 cacheIs = hotDataCacheService.getObjectIsByObjectId(objectId);
             } catch (Exception e) {
-                logger.error("get object from cache throw exception,msg:[{}] ! ObjectId:【{}】", e.getLocalizedMessage(), objectId);
+                logger.error("get object from cache throw exception,msg:[{}] ! ObjectId:[{}]", e.getLocalizedMessage(), objectId);
             }
         }
         if (cacheIs == null) {
@@ -138,9 +140,11 @@ public class DataServiceImpl implements IDataService {
                 return null;
             }
 
-            if (shardInfo.getSize() <= MAX_CACHE_FILE_SIZE) {
+            if (useHotDataCache) {
                 // 尝试设置缓存
-                hotDataCacheService.trySetObject(objectId, cacheIs);
+                byte[] dataInput = StreamUtils.copyToByteArray(cacheIs);
+                hotDataCacheService.trySetObject(objectId, dataInput);
+                cacheIs = new ByteArrayInputStream(dataInput);
             }
         }
         return new ObjectResource()
