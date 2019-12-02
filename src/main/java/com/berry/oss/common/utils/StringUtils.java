@@ -173,6 +173,9 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
         if (fileName.toLowerCase().endsWith(".jpg") || fileName.toLowerCase().endsWith(".jpeg")) {
             return MediaType.IMAGE_JPEG_VALUE;
         }
+        if (fileName.endsWith(".mp4")) {
+            return "video/mp4";
+        }
         if (fileName.endsWith(".gif")) {
             return MediaType.IMAGE_GIF_VALUE;
         }
