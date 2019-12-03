@@ -291,8 +291,11 @@ public class ObjectServiceImpl implements IObjectService {
             // 资源不存在
             throw new XmlResponseException(new NotFound());
         }
+
         String objectAcl = objectInfo.getAcl();
-        if (!skipCheckAuth && anonymous && objectAcl.startsWith("PUBLIC")) {
+        boolean extendAclPass = objectAcl.equals(CommonConstant.AclType.EXTEND_BUCKET.name()) && bucketInfo.getAcl().startsWith("PUBLIC");
+
+        if (!skipCheckAuth && anonymous && (objectAcl.startsWith("PUBLIC") || extendAclPass)) {
             // 匿名访问 公开资源，检查 referer
             checkReferer(request, bucketInfo);
         }
@@ -300,7 +303,6 @@ public class ObjectServiceImpl implements IObjectService {
         // 继承bucket acl,且为public，放行
         // 自身acl 以 PUBLIC 开头 放行
         // 跳过 skipCheckAuth 放行
-        boolean extendAclPass = objectAcl.equals(CommonConstant.AclType.EXTEND_BUCKET.name()) && bucketInfo.getAcl().startsWith("PUBLIC");
         if (!objectAcl.startsWith("PUBLIC") && !skipCheckAuth && !extendAclPass) {
             if (isAnyBlank(expiresTime, ossAccessKeyId, signature)) {
                 throw new XmlResponseException(new AccessDenied("illegal url"));
@@ -341,14 +343,14 @@ public class ObjectServiceImpl implements IObjectService {
         String headReferer = request.getHeader("Referer");
         RefererInfo refererInfo = refererInfoDaoService.getOne(new QueryWrapper<RefererInfo>().eq(BUCKET_ID_COLUMN, bucketInfo.getId()));
         if (refererInfo != null) {
-            // 未设置 默认为允许 Referer 为空
+            // 是否 允许空 Referer
             Boolean allowEmpty = refererInfo.getAllowEmpty();
             String whiteList = refererInfo.getWhiteList();
-            // 同时设置了 ‘允许空 Referer’ 和 ‘白名单’ 两者方可生效
+            // 同时设置了 ‘允许空 Referer’(非 null) 和 ‘白名单’ 两者方可生效
             if (allowEmpty != null && isNotBlank(whiteList)) {
-                boolean allowEmptyB = allowEmpty;
                 // 1.允许为空
-                if (allowEmptyB) {
+                boolean allowEmptyPrimitive = allowEmpty;
+                if (allowEmptyPrimitive) {
                     return;
                 }
                 // 2.不允许 空 referer，请求 头中 没有 referer，则deny
