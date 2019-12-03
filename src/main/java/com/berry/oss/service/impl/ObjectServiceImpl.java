@@ -291,12 +291,17 @@ public class ObjectServiceImpl implements IObjectService {
             // 资源不存在
             throw new XmlResponseException(new NotFound());
         }
-        if (!skipCheckAuth && anonymous && objectInfo.getAcl().startsWith("PUBLIC")) {
+        String objectAcl = objectInfo.getAcl();
+        if (!skipCheckAuth && anonymous && objectAcl.startsWith("PUBLIC")) {
             // 匿名访问 公开资源，检查 referer
             checkReferer(request, bucketInfo);
         }
 
-        if (!objectInfo.getAcl().startsWith("PUBLIC") && !skipCheckAuth) {
+        // 继承bucket acl,且为public，放行
+        // 自身acl 以 PUBLIC 开头 放行
+        // 跳过 skipCheckAuth 放行
+        boolean extendAclPass = objectAcl.equals(CommonConstant.AclType.EXTEND_BUCKET.name()) && bucketInfo.getAcl().startsWith("PUBLIC");
+        if (!objectAcl.startsWith("PUBLIC") && !skipCheckAuth && !extendAclPass) {
             if (isAnyBlank(expiresTime, ossAccessKeyId, signature)) {
                 throw new XmlResponseException(new AccessDenied("illegal url"));
             }
