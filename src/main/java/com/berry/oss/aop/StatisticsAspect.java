@@ -1,4 +1,4 @@
-package com.berry.oss.aop.statis;
+package com.berry.oss.aop;
 
 import com.berry.oss.service.IStatisticsService;
 import org.aspectj.lang.ProceedingJoinPoint;

@@ -29,8 +29,8 @@ public class CodeGenerator {
     private static final String db = "47.101.42.169:3306/db_oss_service";
     private static final String dbUsername = "berry";
     private static final String dbPassword = "okmnji123";
-    private static final String tableName = "referer_info";
-    private static final String moduleName = "refererInfo";
+    private static final String tableName = "login_log_info";
+    private static final String moduleName = "loginLog";
     private static final String author = "HiCooper";
 
     /**
@@ -64,7 +64,7 @@ public class CodeGenerator {
         // 包配置
         PackageConfig pc = new PackageConfig();
         pc.setModuleName(moduleName);
-        pc.setParent("com.berry.oss.core");
+        pc.setParent("com.berry.oss.dao");
         mpg.setPackageInfo(pc);
 
         // 自定义配置

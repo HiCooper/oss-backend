@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.berry.oss.dao.mapper.LoginLogInfoMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.berry.oss.dao.entity.LoginLogInfo">
+        <id column="id" property="id" />
+        <result column="username" property="username" />
+        <result column="login_time" property="loginTime" />
+        <result column="ip" property="ip" />
+        <result column="user_agent" property="userAgent" />
+        <result column="logout_time" property="logoutTime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, username, login_time, ip, user_agent, logout_time
+    </sql>
+
+</mapper>
