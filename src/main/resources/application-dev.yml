@@ -82,6 +82,7 @@ global:
   hotDataCache: true
   # 本机ip
   server-ip: 127.0.0.1
+  http-port: 7077
   mail:
     from: berry_cooper@163.com
     base-url: http://127.0.0.1:8080

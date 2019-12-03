@@ -39,6 +39,11 @@ public class GlobalProperties {
      */
     private String serverIp;
 
+    /**
+     * http 访问端口 默认 7077
+     */
+    private int httpPort = 7077;
+
     @Data
     public static class Mail {
         private boolean enabled;

@@ -5,7 +5,7 @@
 
 ![avatar](.gitbook/assets/demo.png)
 
-Demo 示例地址：[http://47.101.42.169:9002](http://47.101.42.169:9002)
+Demo 示例地址：[www.hicooer.cn](https://www.hicooer.cn)
 
 ```text
 username: test
