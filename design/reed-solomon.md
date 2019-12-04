@@ -36,7 +36,7 @@ int shardSize = (storedSize + DATA_SHARDS - 1) / DATA_SHARDS;
 
 1. 构建一个任意子集方阵可逆的编码矩阵C，它的顶部 4\*4 为一个 单位矩阵
 
-!\[构建编码矩阵C\]\(../../.gitbook/assets/gen_matrix.png\)
+!\[构建编码矩阵C\]\(../../.gitbook/assets/gen\_matrix.png\)
 
 取编码矩阵最后2 行，得到 一个 二维字节数组 记为 _**matrixRows**_
 
