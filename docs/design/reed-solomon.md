@@ -32,11 +32,11 @@ int shardSize = (storedSize + DATA_SHARDS - 1) / DATA_SHARDS;
 
 1. 原始数据分片与校验分片组织在一个 6 行 shardSize 列的二维字节数组中，记为_**shards**_ ，其中前 4 行填充原始数据，后两行填充校验分片数据：见下图
 
-!\[数据分片与校验分片组织方式\]\(../../.gitbook/assets/image%20\(2\).png\)
+!\[数据分片与校验分片组织方式\]\(../../.gitbook/assets/data-part.png\)
 
 1. 构建一个任意子集方阵可逆的编码矩阵C，它的顶部 4\*4 为一个 单位矩阵
 
-!\[构建编码矩阵C\]\(../../.gitbook/assets/image%20\(6\).png\)
+!\[构建编码矩阵C\]\(../../.gitbook/assets/gen_matrix.png\)
 
 取编码矩阵最后2 行，得到 一个 二维字节数组 记为 _**matrixRows**_
 
