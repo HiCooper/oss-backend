@@ -1,7 +1,7 @@
 server:
   port: 8077
   ssl:
-    key-store: classpath:ssl/hicooer.cn.pfx
+    key-store: hicooer.cn.pfx
     key-store-password: ddoTwdhm
     key-store-type: PKCS12
     key-alias: tomcat

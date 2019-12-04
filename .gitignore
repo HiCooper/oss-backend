@@ -39,3 +39,5 @@ src/main/resources/application-prod.yml
 /berry/
 
 log
+
+hicooer.cn.pfx
