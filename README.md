@@ -57,7 +57,7 @@ A:
 
 用到spring boot ，spring-security, mybatis-plus，undertow，druid，logback日志归档，提供swagger接口文档,基础代码自动生成
 
-### 源码src架构
+### 源码src结构
 
 软件架构说明
 
