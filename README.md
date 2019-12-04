@@ -2,9 +2,9 @@
 
 ## 项目demo示例
 
-![avatar](.gitbook/assets/demo.png)
+![Demo &#x793A;&#x4F8B;](.gitbook/assets/demo.png)
 
-Demo 示例地址：[www.hicooer.cn](https://www.hicooer.cn)
+Demo 示例在线地址：[www.hicooer.cn](https://www.hicooer.cn)
 
 ```text
 username: test
