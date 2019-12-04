@@ -32,11 +32,11 @@ int shardSize = (storedSize + DATA_SHARDS - 1) / DATA_SHARDS;
 
 1. 原始数据分片与校验分片组织在一个 6 行 shardSize 列的二维字节数组中，记为_**shards**_ ，其中前 4 行填充原始数据，后两行填充校验分片数据：见下图
 
-![&#x6570;&#x636E;&#x5206;&#x7247;&#x4E0E;&#x6821;&#x9A8C;&#x5206;&#x7247;&#x7EC4;&#x7EC7;&#x65B9;&#x5F0F;](../../.gitbook/assets/image%20(2).png)
+!\[数据分片与校验分片组织方式\]\(../../.gitbook/assets/image%20\(2\).png\)
 
-   2. 构建一个任意子集方阵可逆的编码矩阵C，它的顶部 4\*4 为一个 单位矩阵
+1. 构建一个任意子集方阵可逆的编码矩阵C，它的顶部 4\*4 为一个 单位矩阵
 
-![&#x6784;&#x5EFA;&#x7F16;&#x7801;&#x77E9;&#x9635;C](../../.gitbook/assets/image%20(6).png)
+!\[构建编码矩阵C\]\(../../.gitbook/assets/image%20\(6\).png\)
 
 取编码矩阵最后2 行，得到 一个 二维字节数组 记为 _**matrixRows**_
 
@@ -81,7 +81,7 @@ public void codeSomeShards(
     }
 ```
 
-执行 **codeSomeShards** 方法处理后，校验块将填充到 inputs 
+执行 **codeSomeShards** 方法处理后，校验块将填充到 inputs
 
 至此 4 + 2 = 6 个数据分片已经完成。
 
