@@ -272,7 +272,7 @@ public class ReedSolomon {
             throw new IllegalArgumentException("wrong number of shards: " + shards.length);
         }
 
-        // 每个分片长度都因该一致
+        // 每个分片长度都应该一致
         int shardLength = shards[0].length;
         for (int i = 1; i < shards.length; i++) {
             if (shards[i].length != shardLength) {
