@@ -5,15 +5,15 @@
 
 ## 关键模块设计 <a id="design"></a>
 
-* [密钥对](docs/design/mi-yao-dui.md)
-* [RS冗余纠错](docs/design/rs-rong-yu-jiu-cuo.md)
-* [对象数据存储](docs/design/dui-xiang-shu-ju-cun-chu.md)
+* [密钥对](docs/design/key-pair.md)
+* [RS冗余纠错](docs/design/reed-solomon.md)
+* [对象数据存储](docs/design/object-data-store.md)
 
 ## 开发更新
 
-* [更新日志](docs/update/geng-xin-ri-zhi.md)
+* [更新日志](docs/update/update-log.md)
 
 ## 更多 <a id="other"></a>
 
-* [问题](docs/other/wen-ti.md)
+* [问题](docs/other/qa.md)
 

@@ -42,7 +42,7 @@ int shardSize = (storedSize + DATA_SHARDS - 1) / DATA_SHARDS;
 
 生成校验快 byte\[2\]\[shardSize\] _**outputs**_
 
-```text
+```java
 public void codeSomeShards(
             byte[][] matrixRows,
             // shards 6*4 分片数组
