@@ -2,7 +2,15 @@
 
 # 介绍
 
-## [GitBook](https://hicooper007.gitbook.io/oss/)
+## [文档](https://hicooper007.gitbook.io/oss/)
+
+## 相关模块
+
+| 项目 | 描述 |
+|--|--|--|
+| [oss-java-sdk](https://github.com/HiCooper/oss-sdk-java) | JAVA SKD |
+| [oss-front](https://github.com/HiCooper/oss-front) | 前端工程，React 实现|
+| [oss-data-service](https://github.com/HiCooper/oss-data-service) | 分布式数据读取存储服务 |
 
 ## 项目demo示例
 
