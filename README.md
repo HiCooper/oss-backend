@@ -1,5 +1,7 @@
 # 介绍
 
+[![Build Status](https://travis-ci.org/HiCooper/oss-backend.svg?branch=master)](https://travis-ci.org/HiCooper/oss-backend)
+
 ## [GitBook](https://hicooper007.gitbook.io/oss/)
 
 ## 项目demo示例
