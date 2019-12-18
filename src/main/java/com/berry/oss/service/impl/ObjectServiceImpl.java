@@ -158,12 +158,7 @@ public class ObjectServiceImpl implements IObjectService {
                 fileName = StringUtils.filterUnsafeUrlCharts(fileName);
             }
 
-            // 检查 该用户 同目录 同名 同bucket 下 文件是否已经存在（不检查文件内容 仅判断路径和文件名）
-            ObjectInfo objectInfo = getObjectInfo(filePath, currentUser.getId(), bucketInfo.getId(), fileName);
-            boolean exist = objectInfo != null;
-
             ObjectInfoVo vo = new ObjectInfoVo();
-            vo.setReplace(exist);
             InputStream inputStream = file.getInputStream();
             int available = inputStream.available();
             byte[] data = new byte[available];
@@ -544,27 +539,16 @@ public class ObjectServiceImpl implements IObjectService {
     private void saveOrUpdateObject(String filePath, byte[] data, String acl, Integer userId,
                                     BucketInfo bucketInfo, String hash, long size,
                                     ObjectInfoVo vo, String fullFileName) throws IOException {
-        // 检查 该用户 同目录 同名 同bucket 下 文件是否已经存在
+        // 检查 该用户 同目录 同名 同bucket 下 文件是否已经存在（只检查文件路径和名称，不检查文件内容）
         ObjectInfo objectInfo = getObjectInfo(filePath, userId, bucketInfo.getId(), fullFileName);
         boolean exist = objectInfo != null;
 
         vo.setReplace(exist);
 
-        if (!exist) {
-            // 尝试快速上传
-            String fileId = objectHashService.checkExist(hash, size);
-            if (isBlank(fileId)) {
-                // 快速上传失败，
-                vo.setUploadType(false);
-                // 调用存储数据服务，保存对象，返回24位对象id,
-                fileId = dataService.saveObject(filePath, data, size, hash, fullFileName, bucketInfo);
-            }
-            // 保存上传信息
-            saveObjectInfo(bucketInfo.getId(), acl, hash, size, fullFileName, filePath, fileId);
-        } else {
-            String oldHash = objectInfo.getHash();
-            if (!oldHash.equals(hash)) {
-                // 文件内容变化
+        if (exist) {
+            if (!objectInfo.getHash().equals(hash)) {
+                // 存在，但文件内容有变动
+                String oldHash = objectInfo.getHash();
                 objectHashService.decreaseRefCountByHash(oldHash);
                 vo.setUploadType(false);
                 // 调用存储数据服务，保存对象，返回24位对象id,
@@ -577,6 +561,17 @@ public class ObjectServiceImpl implements IObjectService {
             }
             objectInfo.setUpdateTime(new Date());
             objectInfoDaoService.updateById(objectInfo);
+        } else {
+            // 尝试快速上传
+            String fileId = objectHashService.checkExist(hash, size);
+            if (isBlank(fileId)) {
+                // 快速上传失败，
+                vo.setUploadType(false);
+                // 调用存储数据服务，保存对象，返回24位对象id,
+                fileId = dataService.saveObject(filePath, data, size, hash, fullFileName, bucketInfo);
+            }
+            // 保存上传信息
+            saveObjectInfo(bucketInfo.getId(), acl, hash, size, fullFileName, filePath, fileId);
         }
     }
 
