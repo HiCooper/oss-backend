@@ -123,6 +123,7 @@ public class BucketServiceImpl implements IBucketService {
 
     @Override
     public List<BucketStatisticsInfoVo> getBucketUseInfo() {
+        // todo 方法不对
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
         List<BucketStatisticsInfoDto> dtos = bucketInfoDaoService.getBucketUseInfo(currentUser.getId());
         return dtos.stream().map(item -> {
