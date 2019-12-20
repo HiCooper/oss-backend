@@ -2,6 +2,7 @@ package com.berry.oss.service.impl;
 
 import com.berry.oss.common.utils.DateUtils;
 import com.berry.oss.module.dto.HotObjectStatisVo;
+import com.berry.oss.service.IBucketService;
 import com.berry.oss.service.IStatisticsService;
 import org.joda.time.LocalDate;
 import org.springframework.data.redis.core.HashOperations;
@@ -24,8 +25,14 @@ public class StatisticsServiceImpl implements IStatisticsService {
 
     private static final String PREFIX = "daily-statistics:";
 
+    private final IBucketService bucketService;
+
     @Resource
     private HashOperations<String, String, Object> hashOperations;
+
+    public StatisticsServiceImpl(IBucketService bucketService) {
+        this.bucketService = bucketService;
+    }
 
     @Override
     public void updateDailyStatistics(String bucket, String fileFullPath) {

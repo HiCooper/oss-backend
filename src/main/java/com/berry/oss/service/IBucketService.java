@@ -2,6 +2,7 @@ package com.berry.oss.service;
 
 import com.berry.oss.dao.entity.BucketInfo;
 import com.berry.oss.module.vo.BucketInfoVo;
+import com.berry.oss.module.vo.BucketStatisticsInfoVo;
 import com.berry.oss.module.vo.RefererDetailVo;
 
 import java.util.List;
@@ -76,4 +77,9 @@ public interface IBucketService {
      * @param whiteList  白名单 逗号 隔开多个
      */
     void updateReferer(String bucketId, Integer id, Boolean allowEmpty, String whiteList);
+
+    /**
+     * 获取账户空间统计信息
+     */
+    List<BucketStatisticsInfoVo> getBucketUseInfo();
 }
