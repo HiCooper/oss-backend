@@ -146,6 +146,8 @@ public class BucketServiceImpl implements IBucketService {
             }
         }
         formatTotalCountMap.put("bucketCount", dtos.size());
+        // 暂时设置 最大容量为 60G，这里暂没有任何意义，不做判断，只为了 显示和后续
+        formatTotalCountMap.put("capacity", "60G");
         List<BucketStatisticsInfoVo> collect = dtos.stream().map(item -> {
             BucketStatisticsInfoVo vo = new BucketStatisticsInfoVo();
             vo.setBucketName(item.getBucketName());
