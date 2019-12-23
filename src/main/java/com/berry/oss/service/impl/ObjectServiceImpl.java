@@ -563,7 +563,7 @@ public class ObjectServiceImpl implements IObjectService {
             objectInfoDaoService.updateById(objectInfo);
         } else {
             // 尝试快速上传
-            String fileId = objectHashService.checkExist(hash, size);
+            String fileId = objectHashService.checkExist(hash);
             if (isBlank(fileId)) {
                 // 快速上传失败，
                 vo.setUploadType(false);
@@ -698,8 +698,8 @@ public class ObjectServiceImpl implements IObjectService {
      * @throws IOException IO 异常
      */
     private void handlerResponse(String bucket, String objectPath, HttpServletResponse response, WebRequest request, ObjectInfo objectInfo, Boolean download) throws IOException {
+        ObjectResource object = dataService.getObject(bucket, objectInfo.getFileId());
         if (download != null && download) {
-            ObjectResource object = dataService.getObject(bucket, objectInfo.getFileId());
             if (object == null || object.getInputStream() == null) {
                 throw new XmlResponseException(new NotFound());
             }
@@ -714,7 +714,6 @@ public class ObjectServiceImpl implements IObjectService {
         if (request.checkNotModified(eTag, lastModified)) {
             response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
         } else {
-            ObjectResource object = dataService.getObject(bucket, objectInfo.getFileId());
             if (object == null) {
                 throw new XmlResponseException(new NotFound());
             }

@@ -57,8 +57,10 @@ public class ObjectHashServiceImpl implements IObjectHashService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public String checkExist(String hash, Long dataLength) {
-        QueryWrapper<ObjectHash> queryWrapper = new QueryWrapper<ObjectHash>().eq("hash", hash).eq("locked", false);
+    public String checkExist(String hash) {
+        QueryWrapper<ObjectHash> queryWrapper = new QueryWrapper<ObjectHash>()
+                .eq("hash", hash)
+                .eq("locked", false);
         int count = objectHashDaoService.count(queryWrapper);
         if (count == 0) {
             return null;
@@ -73,8 +75,7 @@ public class ObjectHashServiceImpl implements IObjectHashService {
     public void increaseRefCountByHash(String hash, String fileId, Long size) {
         QueryWrapper<ObjectHash> queryWrapper = new QueryWrapper<ObjectHash>()
                 .eq("hash", hash)
-                .eq("locked", false)
-                .eq("file_id", fileId);
+                .eq("locked", false);
         ObjectHash one = objectHashDaoService.getOne(queryWrapper);
         if (one == null) {
             one = new ObjectHash()
@@ -91,7 +92,9 @@ public class ObjectHashServiceImpl implements IObjectHashService {
     @Override
     @Async("taskExecutor")
     public void decreaseRefCountByHash(String hash) {
-        QueryWrapper<ObjectHash> queryWrapper = new QueryWrapper<ObjectHash>().eq("hash", hash).eq("locked", false);
+        QueryWrapper<ObjectHash> queryWrapper = new QueryWrapper<ObjectHash>()
+                .eq("hash", hash)
+                .eq("locked", false);
         ObjectHash one = objectHashDaoService.getOne(queryWrapper);
         if (one == null) {
             throw new BaseException(ResultCode.DATA_NOT_EXIST);
@@ -106,7 +109,9 @@ public class ObjectHashServiceImpl implements IObjectHashService {
     @Override
     @Async("taskExecutor")
     public void batchDecreaseRefCountByHash(List<String> hashList) {
-        QueryWrapper<ObjectHash> queryWrapper = new QueryWrapper<ObjectHash>().in("hash", hashList).eq("locked", false);
+        QueryWrapper<ObjectHash> queryWrapper = new QueryWrapper<ObjectHash>()
+                .in("hash", hashList)
+                .eq("locked", false);
         List<ObjectHash> list = objectHashDaoService.list(queryWrapper);
         if (CollectionUtils.isEmpty(list)) {
             return;
@@ -122,18 +127,17 @@ public class ObjectHashServiceImpl implements IObjectHashService {
     @Override
     public void scanNonReferenceObjectThenClean() {
         // 1. 查出所有空引用对象,将其锁定
-        QueryWrapper<ObjectHash> queryWrapper = new QueryWrapper<ObjectHash>().eq("reference_count", 0).eq("locked", false);
+        QueryWrapper<ObjectHash> queryWrapper = new QueryWrapper<ObjectHash>()
+                .eq("reference_count", 0)
+                .eq("locked", false);
         List<ObjectHash> nonRefObjectList = objectHashDaoService.list(queryWrapper);
         if (CollectionUtils.isEmpty(nonRefObjectList)) {
             logger.info("暂无需要清理的数据");
             return;
         }
-        // 2. 再次根据 hash file_id size 进行对象引用查询确认
+        // 2. 再次根据 hash 进行对象引用查询确认
         nonRefObjectList.forEach(item -> {
-            int count = objectInfoDaoService.count(new QueryWrapper<ObjectInfo>()
-                    .eq("file_id", item.getFileId())
-                    .eq("hash", item.getHash())
-                    .eq("size", item.getSize()));
+            int count = objectInfoDaoService.count(new QueryWrapper<ObjectInfo>().eq("hash", item.getHash()));
             if (count != 0) {
                 item.setReferenceCount(count);
             } else {

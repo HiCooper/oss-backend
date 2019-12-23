@@ -79,7 +79,7 @@ logging:
 global:
   # 单机模式(单机模式没用数据冗余)
   singleton: true
-  hotDataCache: true
+  hotDataCache: false
   # 本机ip
   server-ip: 127.0.0.1
   http-port: 7077

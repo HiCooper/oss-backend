@@ -16,10 +16,9 @@ public interface IObjectHashService {
      * 有且仅有一个 是正确，否则均为异常
      *
      * @param hash          hash
-     * @param contentLength 文件大小
      * @return fileId or null
      */
-    String checkExist(String hash, Long contentLength);
+    String checkExist(String hash);
 
     /**
      * 增加 哈希引用计算, 记录可能不存在，所以需要 fileId  size 进行创建时初始化

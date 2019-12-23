@@ -48,9 +48,9 @@ public interface IDataService {
      * 获取对象,优先尝试从 redis 缓存读取，缓存击中失败，从File system 或者 net 获取
      *
      * @param bucket   name
-     * @param objectId 对象id
+     * @param objectFileId 对象id
      * @return 资源对象
      * @throws IOException IO
      */
-    ObjectResource getObject(String bucket, String objectId) throws IOException;
+    ObjectResource getObject(String bucket, String objectFileId) throws IOException;
 }

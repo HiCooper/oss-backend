@@ -101,10 +101,10 @@ public class DataServiceImpl implements IDataService {
     }
 
     @Override
-    public ObjectResource getObject(String bucket, String objectId) throws IOException {
-        ShardInfo shardInfo = shardInfoDaoService.getOne(new QueryWrapper<ShardInfo>().eq("file_id", objectId));
+    public ObjectResource getObject(String bucket, String objectFileId) throws IOException {
+        ShardInfo shardInfo = shardInfoDaoService.getOne(new QueryWrapper<ShardInfo>().eq("file_id", objectFileId));
         if (shardInfo == null) {
-            logger.error("文件不存在：{}", objectId);
+            logger.error("文件不存在：{}", objectFileId);
             return null;
         }
         String shardJson = shardInfo.getShardJson();
@@ -113,9 +113,9 @@ public class DataServiceImpl implements IDataService {
         if (useHotDataCache) {
             try {
                 // 查询缓存
-                cacheIs = hotDataCacheService.getObjectIsByObjectId(objectId);
+                cacheIs = hotDataCacheService.getObjectIsByObjectId(objectFileId);
             } catch (Exception e) {
-                logger.error("get object from cache throw exception,msg:[{}] ! ObjectId:[{}]", e.getLocalizedMessage(), objectId);
+                logger.error("get object from cache throw exception,msg:[{}] ! ObjectFileId:[{}]", e.getLocalizedMessage(), objectFileId);
             }
         }
         if (cacheIs == null) {
@@ -133,17 +133,17 @@ public class DataServiceImpl implements IDataService {
                 cacheIs = new ByteArrayInputStream(outputStream.toByteArray());
             } else {
                 // RS 分布式冗余模式
-                cacheIs = reedSolomonDecoderService.readData(bucket, shardJson, objectId);
+                cacheIs = reedSolomonDecoderService.readData(bucket, shardJson, objectFileId);
             }
             if (cacheIs == null) {
-                logger.error("文件损坏或丢失:{}", objectId);
+                logger.error("文件损坏或丢失:{}", objectFileId);
                 return null;
             }
 
             if (useHotDataCache) {
                 // 尝试设置缓存
                 byte[] dataInput = StreamUtils.copyToByteArray(cacheIs);
-                hotDataCacheService.trySetObject(objectId, dataInput);
+                hotDataCacheService.trySetObject(objectFileId, dataInput);
                 cacheIs = new ByteArrayInputStream(dataInput);
             }
         }
