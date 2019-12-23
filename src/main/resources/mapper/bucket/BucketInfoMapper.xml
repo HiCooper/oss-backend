@@ -35,14 +35,39 @@
 
     <select id="getBucketUseInfo" resultType="com.berry.oss.module.dto.BucketStatisticsInfoDto">
         SELECT
+        f.bucketName,
+        objectMaxSize,
+        objectMinSize,
+        usedCapacity,
+        objectCount,
+        d.objectAverageSize
+        FROM
+        (
+        SELECT
         b.NAME AS bucketName,
         max( size ) AS objectMaxSize,
         min( size ) AS objectMinSize,
-        count( file_id ) AS objectCount,
         SUM( size ) AS usedCapacity,
-        cast( AVG( size ) AS DECIMAL ) AS objectAverageSize
+        count( file_id ) AS objectCount
         FROM
         `object_info` a
+        LEFT JOIN bucket_info b ON a.bucket_id = b.id
+        WHERE
+        is_dir = 0
+        GROUP BY
+        bucket_id
+        ) f
+        LEFT JOIN (
+        SELECT
+        bucketName,
+        objectAverageSize
+        FROM
+        (
+        SELECT
+        b.NAME AS bucketName,
+        cast( AVG( size ) AS DECIMAL ) AS objectAverageSize
+        FROM
+        object_info a
         LEFT JOIN bucket_info b ON a.bucket_id = b.id
         WHERE
         is_dir = 0
@@ -50,6 +75,8 @@
         AND size &lt; ( SELECT max( size ) FROM object_info )
         GROUP BY
         bucket_id
+        ) c
+        ) d ON d.bucketName = f.bucketName
     </select>
 
 </mapper>

@@ -6,6 +6,7 @@ import com.berry.oss.module.vo.BucketStatisticsInfoVo;
 import com.berry.oss.module.vo.RefererDetailVo;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created with IntelliJ IDEA.
@@ -49,7 +50,7 @@ public interface IBucketService {
      * @param bucketName bucketName
      * @return boolean
      */
-    Boolean checkBucketNotExist(String bucketName);
+    boolean checkBucketNotExist(String bucketName);
 
     /**
      * 检查用户是否拥有该 bucket
@@ -81,5 +82,5 @@ public interface IBucketService {
     /**
      * 获取账户空间统计信息
      */
-    List<BucketStatisticsInfoVo> getBucketUseInfo();
+    Map<String, Object> getBucketUseInfo();
 }

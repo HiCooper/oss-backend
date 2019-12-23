@@ -21,7 +21,7 @@ public class BucketStatisticsInfoVo {
     /**
      * object 个数
      */
-    private Integer objectCount;
+    private Long objectCount;
 
     /**
      * 最大 object size

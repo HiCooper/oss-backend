@@ -3,7 +3,6 @@ package com.berry.oss.api;
 import com.berry.oss.common.Result;
 import com.berry.oss.common.ResultFactory;
 import com.berry.oss.module.dto.HotObjectStatisVo;
-import com.berry.oss.module.vo.BucketStatisticsInfoVo;
 import com.berry.oss.service.IBucketService;
 import com.berry.oss.service.IStatisticsService;
 import io.swagger.annotations.Api;
@@ -40,9 +39,9 @@ public class StatisticsController {
 
     @GetMapping("overview.json")
     @ApiOperation("获取首页概览数据")
-    public Result<List<BucketStatisticsInfoVo>> overviewHome() {
-        List<BucketStatisticsInfoVo> bucketUseInfo = bucketService.getBucketUseInfo();
-        return ResultFactory.wrapper(bucketUseInfo);
+    public Result<Map<String, Object>> overviewHome() {
+        Map<String, Object> result = bucketService.getBucketUseInfo();
+        return ResultFactory.wrapper(result);
     }
 
     @GetMapping("daily_query_times.json")

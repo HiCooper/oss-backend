@@ -20,7 +20,9 @@ import com.berry.oss.service.IBucketService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -60,7 +62,7 @@ public class BucketServiceImpl implements IBucketService {
         }
 
         // 检查该 bucket 名称是否被占用, 全局 bucket 命名唯一
-        Boolean result = checkBucketNotExist(name);
+        boolean result = checkBucketNotExist(name);
         if (!result) {
             throw new BaseException("403", "该Bucket名字已被占用");
         }
@@ -86,7 +88,7 @@ public class BucketServiceImpl implements IBucketService {
     }
 
     @Override
-    public Boolean checkBucketNotExist(String bucketName) {
+    public boolean checkBucketNotExist(String bucketName) {
         int count = bucketInfoDaoService.count(new QueryWrapper<BucketInfo>().eq("name", bucketName));
         return 0 == count;
     }
@@ -122,11 +124,29 @@ public class BucketServiceImpl implements IBucketService {
     }
 
     @Override
-    public List<BucketStatisticsInfoVo> getBucketUseInfo() {
-        // todo 方法不对
+    public Map<String, Object> getBucketUseInfo() {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
         List<BucketStatisticsInfoDto> dtos = bucketInfoDaoService.getBucketUseInfo(currentUser.getId());
-        return dtos.stream().map(item -> {
+        Map<String, Long> totalCountMap = new HashMap<>(16);
+        dtos.forEach(i -> {
+            setMapValue("maxSize", "max", totalCountMap, i.getObjectMaxSize());
+            setMapValue("minSize", "min", totalCountMap, i.getObjectMinSize());
+            setMapValue("totalUsed", "sum", totalCountMap, i.getUsedCapacity());
+            setMapValue("totalObjectCount", "sum", totalCountMap, i.getObjectCount());
+            setMapValue("allAverage", "average", totalCountMap, i.getObjectAverageSize());
+        });
+        Map<String, Object> formatTotalCountMap = new HashMap<>(16);
+        for (Map.Entry<String, Long> entry : totalCountMap.entrySet()) {
+            String key = entry.getKey();
+            Long value = entry.getValue();
+            if (!"totalObjectCount".equals(key)) {
+                formatTotalCountMap.put(key, StringUtils.getFormattedSize(value));
+            } else {
+                formatTotalCountMap.put(key, value);
+            }
+        }
+        formatTotalCountMap.put("bucketCount", dtos.size());
+        List<BucketStatisticsInfoVo> collect = dtos.stream().map(item -> {
             BucketStatisticsInfoVo vo = new BucketStatisticsInfoVo();
             vo.setBucketName(item.getBucketName());
             vo.setObjectCount(item.getObjectCount());
@@ -136,5 +156,38 @@ public class BucketServiceImpl implements IBucketService {
             vo.setUsedCapacity(StringUtils.getFormattedSize(item.getUsedCapacity()));
             return vo;
         }).collect(Collectors.toList());
+        Map<String, Object> result = new HashMap<>(16);
+        result.put("detail", collect);
+        result.put("total", formatTotalCountMap);
+        return result;
+    }
+
+    private void setMapValue(String key, String calculateType, Map<String, Long> totalCountMap, Long val) {
+        Long value = totalCountMap.get(key) == null ? 0L : totalCountMap.get(key);
+        switch (calculateType) {
+            case "max":
+                value = Math.max(val, value);
+                break;
+            case "min":
+                if (value == 0) {
+                    value = val;
+                } else {
+                    value = Math.min(val, value);
+                }
+                break;
+            case "sum":
+                value += val;
+                break;
+            case "average":
+                if (value != 0 && val != 0) {
+                    value = (val + value) / 2;
+                } else {
+                    value = val;
+                }
+                break;
+            default:
+                value = val;
+        }
+        totalCountMap.put(key, value);
     }
 }
