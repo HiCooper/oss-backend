@@ -338,16 +338,15 @@ public class ObjectServiceImpl implements IObjectService {
         String headReferer = request.getHeader("Referer");
         RefererInfo refererInfo = refererInfoDaoService.getOne(new QueryWrapper<RefererInfo>().eq(BUCKET_ID_COLUMN, bucketInfo.getId()));
         if (refererInfo != null) {
-            // 是否 允许空 Referer
-            Boolean allowEmpty = refererInfo.getAllowEmpty();
+            // 是否 允许空 Referer（默认允许为空）
+            boolean allowEmptyPrimitive = refererInfo.getAllowEmpty();
+            // 1.允许为空
+            if (allowEmptyPrimitive) {
+                return;
+            }
             String whiteList = refererInfo.getWhiteList();
             // 同时设置了 ‘允许空 Referer’(非 null) 和 ‘白名单’ 两者方可生效
-            if (allowEmpty != null && isNotBlank(whiteList)) {
-                // 1.允许为空
-                boolean allowEmptyPrimitive = allowEmpty;
-                if (allowEmptyPrimitive) {
-                    return;
-                }
+            if (isNotBlank(whiteList)) {
                 // 2.不允许 空 referer，请求 头中 没有 referer，则deny
                 if (isBlank(headReferer)) {
                     throw new XmlResponseException(new AccessDenied("referer deny"));
