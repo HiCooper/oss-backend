@@ -25,6 +25,8 @@ import com.berry.oss.module.vo.ObjectInfoVo;
 import com.berry.oss.security.SecurityUtils;
 import com.berry.oss.security.dto.UserInfoDTO;
 import com.berry.oss.service.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -60,6 +62,7 @@ import static org.apache.commons.lang3.StringUtils.*;
  */
 @Service
 public class ObjectServiceImpl implements IObjectService {
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private static final int UPLOAD_PER_SIZE_LIMIT = 200;
     private static final String BASE64_DATA_START_PATTERN = "data:image/[a-z];";
@@ -698,33 +701,44 @@ public class ObjectServiceImpl implements IObjectService {
      * @throws IOException IO 异常
      */
     private void handlerResponse(String bucket, String objectPath, HttpServletResponse response, WebRequest request, ObjectInfo objectInfo, Boolean download) throws IOException {
-        ObjectResource object = dataService.getObject(bucket, objectInfo.getFileId());
-        if (download != null && download) {
-            if (object == null || object.getInputStream() == null) {
-                throw new XmlResponseException(new NotFound());
+        ObjectResource object = null;
+        try {
+            if (download != null && download) {
+                object = dataService.getObject(bucket, objectInfo.getFileId());
+                if (object == null || object.getInputStream() == null) {
+                    throw new XmlResponseException(new NotFound());
+                }
+                response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
+                StreamUtils.copy(object.getInputStream(), response.getOutputStream());
+                response.flushBuffer();
+                return;
             }
-            response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
-            StreamUtils.copy(object.getInputStream(), response.getOutputStream());
-            response.flushBuffer();
-            return;
-        }
 
-        long lastModified = objectInfo.getUpdateTime().getTime();
-        String eTag = "\"" + DigestUtils.md5DigestAsHex(objectPath.getBytes()) + "\"";
-        if (request.checkNotModified(eTag, lastModified)) {
-            response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
-        } else {
-            if (object == null) {
-                throw new XmlResponseException(new NotFound());
+            long lastModified = objectInfo.getUpdateTime().getTime();
+            String eTag = "\"" + DigestUtils.md5DigestAsHex(objectPath.getBytes()) + "\"";
+            if (request.checkNotModified(eTag, lastModified)) {
+                response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
+            } else {
+                object = dataService.getObject(bucket, objectInfo.getFileId());
+                if (object == null) {
+                    throw new XmlResponseException(new NotFound());
+                }
+                String contentType = StringUtils.getContentType(object.getFileName());
+                response.setContentType(contentType);
+                response.setHeader(HttpHeaders.ETAG, eTag);
+                ZonedDateTime expiresDate = ZonedDateTime.now().with(LocalTime.MAX);
+                String expires = expiresDate.format(DateTimeFormatter.RFC_1123_DATE_TIME);
+                response.setHeader(HttpHeaders.EXPIRES, expires);
+                StreamUtils.copy(object.getInputStream(), response.getOutputStream());
+                response.flushBuffer();
             }
-            String contentType = StringUtils.getContentType(object.getFileName());
-            response.setContentType(contentType);
-            response.setHeader(HttpHeaders.ETAG, eTag);
-            ZonedDateTime expiresDate = ZonedDateTime.now().with(LocalTime.MAX);
-            String expires = expiresDate.format(DateTimeFormatter.RFC_1123_DATE_TIME);
-            response.setHeader(HttpHeaders.EXPIRES, expires);
-            StreamUtils.copy(object.getInputStream(), response.getOutputStream());
-            response.flushBuffer();
+        } catch (Exception e) {
+            logger.error("Exception catch, msg:{}", e.getMessage());
+        } finally {
+            if (object != null && object.getInputStream() != null) {
+                object.getInputStream().close();
+            }
+            response.getOutputStream().close();
         }
     }
 
