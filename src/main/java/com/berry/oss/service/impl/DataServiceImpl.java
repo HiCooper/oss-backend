@@ -122,9 +122,10 @@ public class DataServiceImpl implements IDataService {
             logger.debug("get object from disk or net ...");
             if (shardInfo.getSingleton() != null && shardInfo.getSingleton()) {
                 // 单机模式
-                byte[] bytes = shardSaveService.readShard(shardJson);
-                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                ByteArrayOutputStream outputStream;
                 try {
+                    byte[] bytes = shardSaveService.readShard(shardJson);
+                    outputStream = new ByteArrayOutputStream();
                     outputStream.write(bytes);
                 } catch (Exception e) {
                     logger.error("构造返回数据流失败");

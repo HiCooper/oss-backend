@@ -375,7 +375,8 @@ public class ObjectServiceImpl implements IObjectService {
     public Map<String, Object> getObjectHead(String bucket, String path, String objectName) {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
         BucketInfo bucketInfo = bucketService.checkUserHaveBucket(bucket);
-        String eTag = DigestUtils.md5DigestAsHex(objectName.getBytes());
+        String fullPath = path.equals("/") ? (path + objectName) : (path + "/" + objectName);
+        String eTag = DigestUtils.md5DigestAsHex(fullPath.getBytes());
         QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<ObjectInfo>()
                 .eq(BUCKET_ID_COLUMN, bucketInfo.getId())
                 .eq(USER_ID_COLUMN, currentUser.getId())
@@ -456,11 +457,10 @@ public class ObjectServiceImpl implements IObjectService {
             List<ObjectInfo> files = objectInfos.stream().filter(info -> !info.getIsDir()).collect(Collectors.toList());
 
             if (!CollectionUtils.isEmpty(files)) {
+                // 1.对象hash引用 计数 -1
+                objectHashService.batchDecreaseRefCountByHash(files.stream().map(ObjectInfo::getHash).collect(Collectors.toList()));
+                // 2. 删除 文件
                 objectInfoDaoService.removeByIds(files.stream().map(ObjectInfo::getId).collect(Collectors.toList()));
-                files.forEach(file -> {
-                    // 对象hash引用 计数 -1
-                    objectHashService.decreaseRefCountByHash(file.getHash());
-                });
             }
 
             List<ObjectInfo> dirs = objectInfos.stream().filter(ObjectInfo::getIsDir).collect(Collectors.toList());
@@ -477,10 +477,10 @@ public class ObjectServiceImpl implements IObjectService {
                             .eq(USER_ID_COLUMN, currentUser.getId())
                             .likeRight(FILE_PATH_COLUMN, dirFullPath);
                     List<ObjectInfo> infos = objectInfoDaoService.list(objectInfoQueryWrapper);
-                    // 1. 删除文件和子项
-                    objectInfoDaoService.removeByIds(infos.stream().map(ObjectInfo::getId).collect(Collectors.toList()));
-                    // 2. 对应文件的 引用计数 -1
+                    // 1. 对应文件的 引用计数 -1
                     objectHashService.batchDecreaseRefCountByHash(infos.stream().map(ObjectInfo::getHash).collect(Collectors.toList()));
+                    // 2. 删除文件和子项
+                    objectInfoDaoService.removeByIds(infos.stream().map(ObjectInfo::getId).collect(Collectors.toList()));
                 });
             }
         }
@@ -702,44 +702,39 @@ public class ObjectServiceImpl implements IObjectService {
      */
     private void handlerResponse(String bucket, String objectPath, HttpServletResponse response, WebRequest request, ObjectInfo objectInfo, Boolean download) throws IOException {
         ObjectResource object = null;
-        try {
-            if (download != null && download) {
-                object = dataService.getObject(bucket, objectInfo.getFileId());
-                if (object == null || object.getInputStream() == null) {
-                    throw new XmlResponseException(new NotFound());
-                }
-                response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
-                StreamUtils.copy(object.getInputStream(), response.getOutputStream());
-                response.flushBuffer();
-                return;
+        if (download != null && download) {
+            object = dataService.getObject(bucket, objectInfo.getFileId());
+            if (object == null || object.getInputStream() == null) {
+                throw new XmlResponseException(new NotFound());
             }
-
-            long lastModified = objectInfo.getUpdateTime().getTime();
-            String eTag = "\"" + DigestUtils.md5DigestAsHex(objectPath.getBytes()) + "\"";
-            if (request.checkNotModified(eTag, lastModified)) {
-                response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
-            } else {
-                object = dataService.getObject(bucket, objectInfo.getFileId());
-                if (object == null) {
-                    throw new XmlResponseException(new NotFound());
-                }
-                String contentType = StringUtils.getContentType(object.getFileName());
-                response.setContentType(contentType);
-                response.setHeader(HttpHeaders.ETAG, eTag);
-                ZonedDateTime expiresDate = ZonedDateTime.now().with(LocalTime.MAX);
-                String expires = expiresDate.format(DateTimeFormatter.RFC_1123_DATE_TIME);
-                response.setHeader(HttpHeaders.EXPIRES, expires);
-                StreamUtils.copy(object.getInputStream(), response.getOutputStream());
-                response.flushBuffer();
-            }
-        } catch (Exception e) {
-            logger.error("Exception catch, msg:{}", e.getMessage());
-        } finally {
-            if (object != null && object.getInputStream() != null) {
-                object.getInputStream().close();
-            }
-            response.getOutputStream().close();
+            response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
+            StreamUtils.copy(object.getInputStream(), response.getOutputStream());
+            response.flushBuffer();
+            return;
         }
+
+        long lastModified = objectInfo.getUpdateTime().getTime();
+        String eTag = "\"" + DigestUtils.md5DigestAsHex(objectPath.getBytes()) + "\"";
+        if (request.checkNotModified(eTag, lastModified)) {
+            response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
+        } else {
+            object = dataService.getObject(bucket, objectInfo.getFileId());
+            if (object == null) {
+                throw new XmlResponseException(new NotFound());
+            }
+            String contentType = StringUtils.getContentType(object.getFileName());
+            response.setContentType(contentType);
+            response.setHeader(HttpHeaders.ETAG, eTag);
+            ZonedDateTime expiresDate = ZonedDateTime.now().with(LocalTime.MAX);
+            String expires = expiresDate.format(DateTimeFormatter.RFC_1123_DATE_TIME);
+            response.setHeader(HttpHeaders.EXPIRES, expires);
+            StreamUtils.copy(object.getInputStream(), response.getOutputStream());
+            response.flushBuffer();
+        }
+        if (object != null && object.getInputStream() != null) {
+            object.getInputStream().close();
+        }
+        response.getOutputStream().close();
     }
 
     private String getPublicObjectUrl(String bucket, String filePath, String fileName) {

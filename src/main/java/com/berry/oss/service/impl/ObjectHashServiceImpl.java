@@ -10,11 +10,15 @@ import com.berry.oss.common.utils.HttpClient;
 import com.berry.oss.dao.entity.ObjectHash;
 import com.berry.oss.dao.entity.ObjectInfo;
 import com.berry.oss.dao.entity.ShardInfo;
+import com.berry.oss.dao.mapper.ObjectHashMapper;
 import com.berry.oss.dao.service.IObjectHashDaoService;
 import com.berry.oss.dao.service.IObjectInfoDaoService;
 import com.berry.oss.dao.service.IShardInfoDaoService;
 import com.berry.oss.service.IObjectHashService;
 import org.apache.commons.io.FileUtils;
+import org.apache.ibatis.session.ExecutorType;
+import org.apache.ibatis.session.SqlSession;
+import org.mybatis.spring.SqlSessionTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
@@ -22,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
+import javax.annotation.Resource;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -43,6 +48,9 @@ import java.util.stream.Collectors;
 public class ObjectHashServiceImpl implements IObjectHashService {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    @Resource
+    private SqlSessionTemplate sqlSessionTemplate;
 
     private final IObjectHashDaoService objectHashDaoService;
     private final IShardInfoDaoService shardInfoDaoService;
@@ -71,7 +79,6 @@ public class ObjectHashServiceImpl implements IObjectHashService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    @Async("taskExecutor")
     public void increaseRefCountByHash(String hash, String fileId, Long size) {
         QueryWrapper<ObjectHash> queryWrapper = new QueryWrapper<ObjectHash>()
                 .eq("hash", hash)
@@ -116,12 +123,17 @@ public class ObjectHashServiceImpl implements IObjectHashService {
         if (CollectionUtils.isEmpty(list)) {
             return;
         }
-        list.forEach(item -> {
-            int newCount = Math.max(item.getReferenceCount() - 1, 0);
-            item.setReferenceCount(newCount);
-        });
-        // 引用为 0  的索引，由定时任务程序去扫描整理删除 对应的数据和引用
-        objectHashDaoService.updateBatchById(list);
+        try (SqlSession session = sqlSessionTemplate.getSqlSessionFactory().openSession(ExecutorType.BATCH, false)) {
+            ObjectHashMapper mapper = session.getMapper(ObjectHashMapper.class);
+            list.forEach(item -> {
+                int newCount = Math.max(item.getReferenceCount() - 1, 0);
+                item.setReferenceCount(newCount);
+                mapper.updateById(item);
+            });
+            session.commit();
+            // 清理缓存，防止溢出
+            session.clearCache();
+        }
     }
 
     @Override
@@ -130,13 +142,13 @@ public class ObjectHashServiceImpl implements IObjectHashService {
         QueryWrapper<ObjectHash> queryWrapper = new QueryWrapper<ObjectHash>()
                 .eq("reference_count", 0)
                 .eq("locked", false);
-        List<ObjectHash> nonRefObjectList = objectHashDaoService.list(queryWrapper);
-        if (CollectionUtils.isEmpty(nonRefObjectList)) {
+        List<ObjectHash> nonRefObjectHashList = objectHashDaoService.list(queryWrapper);
+        if (CollectionUtils.isEmpty(nonRefObjectHashList)) {
             logger.info("暂无需要清理的数据");
             return;
         }
         // 2. 再次根据 hash 进行对象引用查询确认
-        nonRefObjectList.forEach(item -> {
+        nonRefObjectHashList.forEach(item -> {
             int count = objectInfoDaoService.count(new QueryWrapper<ObjectInfo>().eq("hash", item.getHash()));
             if (count != 0) {
                 item.setReferenceCount(count);
@@ -144,11 +156,11 @@ public class ObjectHashServiceImpl implements IObjectHashService {
                 item.setLocked(true);
             }
         });
-        objectHashDaoService.updateBatchById(nonRefObjectList);
+        objectHashDaoService.updateBatchById(nonRefObjectHashList);
         // 3.过滤步骤2中更新引用大于0的hash对象
-        nonRefObjectList = nonRefObjectList.stream().filter(s -> s.getReferenceCount() == 0).collect(Collectors.toList());
+        nonRefObjectHashList = nonRefObjectHashList.stream().filter(s -> s.getReferenceCount() == 0).collect(Collectors.toList());
         // 4. 查出这些对象的数据位置
-        List<String> fileIdList = nonRefObjectList.stream().map(ObjectHash::getFileId).collect(Collectors.toList());
+        List<String> fileIdList = nonRefObjectHashList.stream().map(ObjectHash::getFileId).collect(Collectors.toList());
         QueryWrapper<ShardInfo> dealShardQuery = new QueryWrapper<ShardInfo>().in("file_id", fileIdList);
         List<ShardInfo> shardInfos = shardInfoDaoService.list(dealShardQuery);
         // 5. 删除数据
@@ -184,7 +196,7 @@ public class ObjectHashServiceImpl implements IObjectHashService {
             }
         });
         // 4. 删除 hash 记录
-        objectHashDaoService.removeByIds(nonRefObjectList.stream().map(ObjectHash::getId).collect(Collectors.toList()));
+        objectHashDaoService.removeByIds(nonRefObjectHashList.stream().map(ObjectHash::getId).collect(Collectors.toList()));
         // 5. 删除位置信息
         shardInfoDaoService.remove(dealShardQuery);
     }
