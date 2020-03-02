@@ -3,6 +3,7 @@ package com.berry.oss.api;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.berry.oss.common.Result;
 import com.berry.oss.common.ResultFactory;
+import com.berry.oss.common.exceptions.BaseException;
 import com.berry.oss.dao.entity.ObjectInfo;
 import com.berry.oss.dao.service.IObjectInfoDaoService;
 import com.berry.oss.module.mo.*;
@@ -22,6 +23,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
  * Title ObjectController
@@ -87,7 +90,7 @@ public class ObjectController {
      */
     @PostMapping("upload_byte.json")
     @ApiOperation("以字节数组格式创建对象")
-    public Result uploadByte(@Validated @RequestBody UploadObjectByteMo uploadObjectByteMo) throws Exception {
+    public Result uploadByte(@Validated @RequestBody UploadObjectByteMo uploadObjectByteMo) throws IOException {
         ObjectInfoVo objectInfoVo = objectService.uploadByte(
                 uploadObjectByteMo.getBucket(),
                 uploadObjectByteMo.getFilePath(),
@@ -184,5 +187,18 @@ public class ObjectController {
     public Result updateObjectAcl(@Validated @RequestBody UpdateObjectAclMo mo) {
         return ResultFactory.wrapper(objectService.updateObjectAcl(mo.getBucket(), mo.getObjectPath(), mo.getObjectName(), mo.getAcl()));
     }
+
+    @PostMapping("makeUpForLostData")
+    public Result makeUpForLostData(@RequestParam(value = "file", required = false) MultipartFile file,
+                                    @RequestParam("fileName") String fileName,
+                                    @RequestParam("filePath") String filePath,
+                                    @RequestParam(value = "fileUrl", required = false) String fileUrl) throws IOException {
+        if (file == null && isBlank(fileUrl)) {
+            throw new BaseException("403", "文件与url不能同时为空!");
+        }
+        objectService.makeUpForLostData(fileName, filePath, file, fileUrl);
+        return ResultFactory.wrapper();
+    }
+
 
 }

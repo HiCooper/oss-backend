@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.*;
@@ -145,6 +144,7 @@ public class ObjectServiceImpl implements IObjectService {
         BucketInfo bucketInfo = getBucketInfo(bucket, currentUser);
 
         List<ObjectInfoVo> vos = new ArrayList<>();
+        InputStream inputStream = null;
         for (MultipartFile file : files) {
             // 计算文件 hash，获取文件大小
             String hash = SHA256.hash(file.getBytes());
@@ -162,7 +162,7 @@ public class ObjectServiceImpl implements IObjectService {
             }
 
             ObjectInfoVo vo = new ObjectInfoVo();
-            InputStream inputStream = file.getInputStream();
+            inputStream = file.getInputStream();
             int available = inputStream.available();
             byte[] data = new byte[available];
             int readSize = inputStream.read(data);
@@ -178,12 +178,15 @@ public class ObjectServiceImpl implements IObjectService {
             buildResponse(bucket, filePath, fileName, acl, "", fileSize, vo);
             vos.add(vo);
         }
+        if (inputStream != null) {
+            inputStream.close();
+        }
         return vos;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ObjectInfoVo uploadByte(String bucket, String filePath, String fileName, byte[] data, String acl) throws Exception {
+    public ObjectInfoVo uploadByte(String bucket, String filePath, String fileName, byte[] data, String acl) throws IOException {
         // 检查文件名，验证acl 规范
         fileName = checkFilenameAndPath(filePath, fileName, acl);
 
@@ -209,7 +212,7 @@ public class ObjectServiceImpl implements IObjectService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ObjectInfoVo uploadByBase64Str(String bucket, String filePath, String fileName, String data, String acl) throws Exception {
+    public ObjectInfoVo uploadByBase64Str(String bucket, String filePath, String fileName, String data, String acl) throws IOException {
         fileName = checkFilenameAndPath(filePath, fileName, acl);
 
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
@@ -334,6 +337,17 @@ public class ObjectServiceImpl implements IObjectService {
         }
 
         handlerResponse(bucket, objectPath, response, request, objectInfo, download);
+    }
+
+    @Override
+    public void makeUpForLostData(String fileName, String filePath, MultipartFile file, String fileUrl) throws IOException {
+        // 根据文件名 文件路径 获取对象 fileId
+        ObjectInfo one = objectInfoDaoService.getOne(new QueryWrapper<ObjectInfo>().eq("file_name", fileName).eq("file_path", filePath));
+        if (one == null) {
+            throw new BaseException("404", "对象不存在");
+        }
+        BucketInfo bucketInfo = bucketInfoDaoService.getById(one.getBucketId());
+        dataService.makeUpForLostData(fileName, filePath, one.getFileId(), file, fileUrl, bucketInfo);
     }
 
     private void checkReferer(WebRequest request, BucketInfo bucketInfo) {

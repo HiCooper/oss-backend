@@ -171,7 +171,6 @@ public class ReedSolomonEncoderService {
                 String readUrl = shard.getString("url");
                 String writeUrl = readUrl.replace("read", "write");
                 String path = shard.getString("path");
-                System.out.println(path);
                 // path 由  basePath + bucketName + filePath + fileName 组成
                 String[] split = path.split(bucket);
                 if (split.length != 2) {
@@ -181,8 +180,6 @@ public class ReedSolomonEncoderService {
                 String fullFilePath = split[1];
                 String fileName = path.substring(path.lastIndexOf("/") + 1, path.lastIndexOf("."));
                 String filePath = fullFilePath.substring(0, fullFilePath.lastIndexOf("/"));
-                System.out.println(filePath);
-                System.out.println(fileName);
 
                 Map<String, Object> params = new HashMap<>(16);
                 params.put("bucketName", bucket);
@@ -204,7 +201,7 @@ public class ReedSolomonEncoderService {
      * @param params 参数
      * @return 写入路径
      */
-    public String writeOneShard(String url, int index, Map<String, Object> params) {
+    private String writeOneShard(String url, int index, Map<String, Object> params) {
         String writePath = HttpClient.doPost(url, params);
         if (StringUtils.isBlank(writePath)) {
             logger.error("数据写入失败，index:{},服务：{}", index, url);

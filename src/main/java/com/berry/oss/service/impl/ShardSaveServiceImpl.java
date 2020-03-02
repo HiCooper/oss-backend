@@ -3,14 +3,12 @@ package com.berry.oss.service.impl;
 import com.berry.oss.common.exceptions.BaseException;
 import com.berry.oss.config.GlobalProperties;
 import com.berry.oss.service.IShardSaveService;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -77,5 +75,23 @@ public class ShardSaveServiceImpl implements IShardSaveService {
             }
         }
         throw new BaseException("403", "数据丢失，path:" + path);
+    }
+
+    @Override
+    public void fixShard(String shardJson, String fileName, byte[] data) throws IOException {
+        File file = new File(shardJson);
+        if (file.exists() && file.isFile()) {
+            // 已存在先删除
+            FileUtils.deleteQuietly(file);
+            logger.debug("旧文件存在，已删除");
+        }
+        if (!file.getParentFile().exists()) {
+            // 父级目录不存在，创建目录
+            file.getParentFile().mkdirs();
+        }
+        try (FileOutputStream outputStream = new FileOutputStream(file)) {
+            outputStream.write(data);
+            logger.debug("write data to:{}", shardJson);
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.berry.oss.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.berry.oss.common.exceptions.BaseException;
 import com.berry.oss.common.utils.ObjectId;
 import com.berry.oss.config.GlobalProperties;
 import com.berry.oss.dao.entity.BucketInfo;
@@ -14,12 +15,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
 
 /**
  * Created with IntelliJ IDEA.
@@ -155,6 +157,49 @@ public class DataServiceImpl implements IDataService {
                 .setFileSize(shardInfo.getSize())
                 .setHash(shardInfo.getHash())
                 .setInputStream(cacheIs);
+    }
+
+    @Override
+    public void makeUpForLostData(String fileName, String filePath, String fileId, MultipartFile file, String fileUrl, BucketInfo bucketInfo) throws IOException {
+        ShardInfo shardInfo = shardInfoDaoService.getOne(new QueryWrapper<ShardInfo>().eq("file_id", fileId));
+        if (shardInfo == null) {
+            throw new BaseException("404", "数据存储位置信息丢失");
+        }
+        InputStream inputStream;
+        byte[] data;
+        if (file == null) {
+            // 获取网络图片流
+            URL url = new URL(fileUrl);
+            URLConnection connection = url.openConnection();
+            HttpURLConnection urlConnection = (HttpURLConnection) connection;
+            urlConnection.setRequestProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 5.0; Windows NT; DigExt)");
+            inputStream = urlConnection.getInputStream();
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            byte[] bs = new byte[1024];
+            int len;
+            while (-1 != (len = inputStream.read(bs))) {
+                outputStream.write(bs, 0, len);
+            }
+            data = outputStream.toByteArray();
+        } else {
+            inputStream = file.getInputStream();
+            int available = inputStream.available();
+            data = new byte[available];
+            int read = inputStream.read(data);
+            if (read != available) {
+                throw new BaseException("404", "数据获取异常");
+            }
+        }
+        if (data.length > 0) {
+            if (shardInfo.getSingleton() != null && shardInfo.getSingleton()) {
+                // 单机模式 分片信息仅保存本地路径
+                shardSaveService.fixShard(shardInfo.getShardJson(), fileName, data);
+            } else {
+                // 分布式模式
+                reedSolomonEncoderService.writeData(filePath, data, fileName, bucketInfo);
+            }
+        }
+        inputStream.close();
     }
 
     private void saveShardInfo(long size, String hash, String fileName, String fileId,

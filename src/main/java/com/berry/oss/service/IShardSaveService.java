@@ -1,5 +1,6 @@
 package com.berry.oss.service;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 /**
@@ -32,4 +33,11 @@ public interface IShardSaveService {
      * @throws IOException
      */
     byte[] readShard(String path) throws IOException;
+
+    /**
+     * shardJson 路径保存 文件 data
+     * @param shardJson
+     * @param data
+     */
+    void fixShard(String shardJson, String fileName, byte[] data) throws IOException;
 }
