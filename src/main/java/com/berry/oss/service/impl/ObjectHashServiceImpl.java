@@ -172,9 +172,9 @@ public class ObjectHashServiceImpl implements IObjectHashService {
                 File tempFile = new File(shardJson);
                 if (tempFile.exists() && tempFile.isFile()) {
                     FileUtils.deleteQuietly(tempFile);
-                    logger.info("删除文件成功：{}", tempFile.getPath());
+                    logger.debug("删除文件成功：{}", tempFile.getPath());
                 } else {
-                    logger.info("文件不存在或非文件：{}", tempFile.getPath());
+                    logger.debug("文件不存在或非文件：{}", tempFile.getPath());
                 }
             } else {
                 // 分布式多机模式
@@ -188,9 +188,9 @@ public class ObjectHashServiceImpl implements IObjectHashService {
                     try {
                         params.put("path", URLEncoder.encode(path, StandardCharsets.UTF_8.name()));
                         HttpClient.doPost(removeUrl, params);
-                        logger.info("删除分片文件成功：{} , {}", url, path);
+                        logger.debug("删除分片文件成功：{} , {}", url, path);
                     } catch (UnsupportedEncodingException e) {
-                        logger.info("删除分片文件失败：{} , {}, msg:{}", url, path, e.getMessage());
+                        logger.debug("删除分片文件失败：{} , {}, msg:{}", url, path, e.getMessage());
                     }
                 }
             }

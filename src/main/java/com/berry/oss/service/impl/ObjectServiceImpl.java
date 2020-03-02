@@ -505,7 +505,6 @@ public class ObjectServiceImpl implements IObjectService {
         return objectInfoDaoService.updateById(objectInfo);
     }
 
-    @Async("taskExecutor")
     public void saveObjectInfo(String bucketId, String acl, String hash, Long contentLength, String fileName, String filePath, String fileId) {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
         List<ObjectInfo> newObject = new ArrayList<>();
