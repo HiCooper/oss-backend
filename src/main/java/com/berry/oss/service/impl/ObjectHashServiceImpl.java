@@ -91,7 +91,7 @@ public class ObjectHashServiceImpl implements IObjectHashService {
                     .setSize(size)
                     .setReferenceCount(0);
         }
-        if (one.getReferenceCount() == null ){
+        if (one.getReferenceCount() == null) {
             one.setReferenceCount(1);
         } else {
             one.setReferenceCount(one.getReferenceCount() + 1);
@@ -120,8 +120,21 @@ public class ObjectHashServiceImpl implements IObjectHashService {
     @Override
     @Async("taskExecutor")
     public void batchDecreaseRefCountByHash(List<String> hashList) {
+        if (CollectionUtils.isEmpty(hashList)) {
+            return;
+        }
+        Map<String, Integer> map = new HashMap<>(16);
+        hashList.forEach(item -> {
+            Integer count = map.get(item);
+            if (null == count) {
+                count = 1;
+            } else {
+                count++;
+            }
+            map.put(item, count);
+        });
         QueryWrapper<ObjectHash> queryWrapper = new QueryWrapper<ObjectHash>()
-                .in("hash", hashList)
+                .in("hash", map.keySet())
                 .eq("locked", false);
         List<ObjectHash> list = objectHashDaoService.list(queryWrapper);
         if (CollectionUtils.isEmpty(list)) {
@@ -130,7 +143,7 @@ public class ObjectHashServiceImpl implements IObjectHashService {
         try (SqlSession session = sqlSessionTemplate.getSqlSessionFactory().openSession(ExecutorType.BATCH, false)) {
             ObjectHashMapper mapper = session.getMapper(ObjectHashMapper.class);
             list.forEach(item -> {
-                int newCount = Math.max(item.getReferenceCount() - 1, 0);
+                int newCount = Math.max(item.getReferenceCount() - map.get(item.getHash()), 0);
                 item.setReferenceCount(newCount);
                 mapper.updateById(item);
             });

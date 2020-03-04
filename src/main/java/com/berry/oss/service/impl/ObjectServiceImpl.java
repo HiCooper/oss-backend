@@ -471,7 +471,7 @@ public class ObjectServiceImpl implements IObjectService {
             List<ObjectInfo> files = objectInfos.stream().filter(info -> !info.getIsDir()).collect(Collectors.toList());
 
             if (!CollectionUtils.isEmpty(files)) {
-                // 1.对象hash引用 计数 -1
+                // 1.对象hash引用 计数 -1 (注意这里 hash 可能相等， 所以不能使用set)
                 objectHashService.batchDecreaseRefCountByHash(files.stream().map(ObjectInfo::getHash).collect(Collectors.toList()));
                 // 2. 删除 文件
                 objectInfoDaoService.removeByIds(files.stream().map(ObjectInfo::getId).collect(Collectors.toList()));
