@@ -91,7 +91,11 @@ public class ObjectHashServiceImpl implements IObjectHashService {
                     .setSize(size)
                     .setReferenceCount(0);
         }
-        one.setReferenceCount(one.getReferenceCount() + 1);
+        if (one.getReferenceCount() == null ){
+            one.setReferenceCount(1);
+        } else {
+            one.setReferenceCount(one.getReferenceCount() + 1);
+        }
         objectHashDaoService.saveOrUpdate(one);
     }
 
