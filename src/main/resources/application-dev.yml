@@ -50,7 +50,7 @@ server:
     buffer-size: 1024
     direct-buffers: true
     io-threads: 4
-    worker-threads: 20
+    worker-threads: 32
 
 #mybatis
 mybatis-plus:
