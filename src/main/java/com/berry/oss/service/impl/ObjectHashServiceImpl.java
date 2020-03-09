@@ -188,7 +188,7 @@ public class ObjectHashServiceImpl implements IObjectHashService {
                 // 单机模式
                 File tempFile = new File(shardJson);
                 if (tempFile.exists() && tempFile.isFile()) {
-                    FileUtils.deleteQuietly(tempFile);
+//                    FileUtils.deleteQuietly(tempFile);
                     logger.debug("删除文件成功：{}", tempFile.getPath());
                 } else {
                     logger.debug("文件不存在或非文件：{}", tempFile.getPath());
@@ -213,8 +213,11 @@ public class ObjectHashServiceImpl implements IObjectHashService {
             }
         });
         // 4. 删除 hash 记录
-        objectHashDaoService.removeByIds(nonRefObjectHashList.stream().map(ObjectHash::getId).collect(Collectors.toList()));
+//        objectHashDaoService.removeByIds(nonRefObjectHashList.stream().map(ObjectHash::getId).collect(Collectors.toList()));
         // 5. 删除位置信息
-        shardInfoDaoService.remove(dealShardQuery);
+//        shardInfoDaoService.remove(dealShardQuery);
+        // 6. unlock hash field
+        nonRefObjectHashList.forEach(item -> item.setLocked(false));
+        objectHashDaoService.updateBatchById(nonRefObjectHashList);
     }
 }

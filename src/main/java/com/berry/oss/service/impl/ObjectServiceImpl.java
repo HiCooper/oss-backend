@@ -562,18 +562,21 @@ public class ObjectServiceImpl implements IObjectService {
         vo.setReplace(exist);
 
         if (exist) {
-            if (!objectInfo.getHash().equals(hash)) {
-                // 存在，但文件内容有变动
-                String oldHash = objectInfo.getHash();
-                objectHashService.decreaseRefCountByHash(oldHash);
-                vo.setUploadType(false);
-                // 调用存储数据服务，保存对象，返回24位对象id,
-                String fileId = dataService.saveObject(filePath, data, size, hash, fullFileName, bucketInfo);
+            String oldHash = objectInfo.getHash();
+            if (!oldHash.equals(hash)) {
+                // 存在，但文件内容有变动, 尝试快速上传
+                String fileId = objectHashService.checkExist(hash);
+                if (isBlank(fileId)) {
+                    vo.setUploadType(false);
+                    // 快速上传失败 调用存储数据服务，保存对象，返回24位对象id,
+                    fileId = dataService.saveObject(filePath, data, size, hash, fullFileName, bucketInfo);
+                }
                 objectInfo.setFileId(fileId);
                 objectInfo.setHash(hash);
                 objectInfo.setSize(size);
                 objectInfo.setFormattedSize(StringUtils.getFormattedSize(size));
                 objectHashService.increaseRefCountByHash(hash, fileId, size);
+                objectHashService.decreaseRefCountByHash(oldHash);
             }
             objectInfo.setUpdateTime(new Date());
             objectInfoDaoService.updateById(objectInfo);
