@@ -17,7 +17,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -67,32 +66,20 @@ public class ReedSolomonEncoderService {
         this.regionInfoDaoService = regionInfoDaoService;
     }
 
-    String writeData(String filePath, byte[] data, String fileName, BucketInfo bucketInfo) throws IOException {
-        final int fileSize = data.length;
-
-        // 计算每个数据分片大小.  (文件大小 + 4个数据分片头) 除以 4 向上取整
-        final int storedSize = fileSize + BYTES_IN_INT;
-        final int shardSize = (storedSize + DATA_SHARDS - 1) / DATA_SHARDS;
-
-        List<WriteShardResponse> result = getWriteShardResponses(filePath, fileName, bucketInfo, shardSize, data);
-        return JSON.toJSONString(result);
-    }
-
     /**
      * 将输入流，分片 4+2 保存
      *
-     * @param inputStream 输入流
-     * @param fileName    文件名
-     * @param bucketInfo  存储空间
-     * @param username    用户名
+     * @param filePath   路径
+     * @param data       数据
+     * @param fileName   文件名
+     * @param bucketInfo 存储空间
      * @return 对象唯一标识id
-     * @throws IOException
      */
-    String writeData(String filePath, InputStream inputStream, String fileName, BucketInfo bucketInfo) throws IOException {
+    String writeData(String filePath, byte[] data, String fileName, BucketInfo bucketInfo) {
 
         // Get the size of the input file.  (Files bigger that
         // Integer.MAX_VALUE will fail here!) 最大 2G
-        final int fileSize = inputStream.available();
+        final int fileSize = data.length;
 
         // 计算每个数据分片大小.  (文件大小 + 4个数据分片头) 除以 4 向上取整
         final int storedSize = fileSize + BYTES_IN_INT;
@@ -105,12 +92,8 @@ public class ReedSolomonEncoderService {
         // buffer前4个字节（4B）写入数据长度
         ByteBuffer.wrap(allBytes).putInt(fileSize);
 
-        // 读入文件到 字节数组（allBytes）
-        int bytesRead = inputStream.read(allBytes, BYTES_IN_INT, fileSize);
-        if (bytesRead != fileSize) {
-            throw new IOException("not enough bytes read");
-        }
-        inputStream.close();
+        // 复制数据到 字节数组（allBytes）
+        System.arraycopy(data, 0, allBytes, BYTES_IN_INT, fileSize);
 
         List<WriteShardResponse> result = getWriteShardResponses(filePath, fileName, bucketInfo, shardSize, allBytes);
 

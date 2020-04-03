@@ -5,7 +5,6 @@ import com.berry.oss.module.dto.ObjectResource;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * Created with IntelliJ IDEA.
@@ -16,20 +15,6 @@ import java.io.InputStream;
  * Use：数据存储服务，该接口整存整取
  */
 public interface IDataService {
-
-    /**
-     * 保存对象
-     *
-     * @param filePath    保存路径
-     * @param inputStream 输入流
-     * @param size        size
-     * @param hash        hash
-     * @param fileName    文件名
-     * @param bucketInfo  存储空间
-     * @return fileId 对象唯一id
-     * @throws IOException
-     */
-    String saveObject(String filePath, InputStream inputStream, long size, String hash, String fileName, BucketInfo bucketInfo) throws IOException;
 
     /**
      * 保存对象（字节数组）
@@ -62,7 +47,7 @@ public interface IDataService {
      * @param filePath   路径
      * @param fileId     文件id
      * @param file       文件
-     * @param fileUrl fileUrl
+     * @param fileUrl    fileUrl
      * @param bucketInfo bucketInfo
      * @throws IOException IO
      */

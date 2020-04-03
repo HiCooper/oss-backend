@@ -61,30 +61,6 @@ public class DataServiceImpl implements IDataService {
     }
 
     @Override
-    public String saveObject(String filePath, InputStream inputStream, long size, String hash, String fileName, BucketInfo bucketInfo) throws IOException {
-        String fileId = ObjectId.get();
-        boolean singleton = globalProperties.isSingleton();
-        String json;
-        if (singleton) {
-            // 单机模式
-            int available = inputStream.available();
-            byte[] data = new byte[available];
-            int read = inputStream.read(data);
-            if (read != available) {
-                throw new RuntimeException("数据流读取错误");
-            }
-            // 单机模式 分片信息仅保存本地路径
-            json = shardSaveService.writeShard(filePath, bucketInfo.getName(), fileName, data);
-        } else {
-            // 分布式模式
-            json = reedSolomonEncoderService.writeData(filePath, inputStream, fileName, bucketInfo);
-        }
-        // 保存对象信息
-        saveShardInfo(size, hash, fileName, fileId, singleton, json);
-        return fileId;
-    }
-
-    @Override
     public String saveObject(String filePath, byte[] data, long size, String hash, String fileName, BucketInfo bucketInfo) throws IOException {
         logger.debug("ready to save object,fileName: {}, filePath:{}", fileName, filePath);
         String fileId = ObjectId.get();
