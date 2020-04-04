@@ -80,11 +80,11 @@ global:
   # 单机模式(单机模式没用数据冗余)
   singleton: true
   hotDataCache: false
+  dataPath: ./store
   # 本机ip
-  server-ip: 127.0.0.1
-  http-port: 7077
+  serverIp: 127.0.0.1
+  httpPort: 7077
   mail:
     from: berry_cooper@163.com
-    base-url: http://127.0.0.1:8080
-  data-path: ./
+    baseUrl:
 
