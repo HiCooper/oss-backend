@@ -1,6 +1,8 @@
 package com.berry.oss.dao.entity;
 
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
@@ -37,6 +39,7 @@ public class AccessKeyInfo implements Serializable {
     /**
      * 用户id
      */
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long userId;
 
     /**

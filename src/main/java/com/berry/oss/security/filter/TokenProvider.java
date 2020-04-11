@@ -133,7 +133,7 @@ public class TokenProvider {
 
         UserInfoDTO principal = new UserInfoDTO();
         principal.setUsername(claimMap.get("sub").asString());
-        principal.setId(claimMap.get(USER_ID_KEY).asInt());
+        principal.setId(claimMap.get(USER_ID_KEY).asLong());
         return new UsernamePasswordAuthenticationToken(principal, jwt, authorities);
     }
 

@@ -12,7 +12,7 @@ spring:
     platform: mysql
 
   redis:
-    database: 0
+    database: 1
     # Redis服务器地址
     host: 47.101.42.169
     # Redis服务器连接端口

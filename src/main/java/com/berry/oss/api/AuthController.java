@@ -13,6 +13,8 @@ import com.berry.oss.security.dao.service.IUserRoleDaoService;
 import com.berry.oss.security.filter.AuthFilter;
 import com.berry.oss.security.filter.TokenProvider;
 import com.berry.oss.security.vm.LoginVM;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.Data;
@@ -115,7 +117,7 @@ public class AuthController {
             UserRole userRole = new UserRole();
             userRole.setUserId(user.getId());
             // 默认普通角色，没有角色管理-。-
-            userRole.setRoleId(2);
+            userRole.setRoleId(2L);
             userRoleDaoService.save(userRole);
         }
         return ResultFactory.wrapper();
@@ -144,10 +146,11 @@ public class AuthController {
 
     @Data
     private static class UserInfo {
-        private Integer id;
+        @JsonSerialize(using = ToStringSerializer.class)
+        private Long id;
         private String username;
 
-        UserInfo(Integer id, String username) {
+        UserInfo(Long id, String username) {
             this.id = id;
             this.username = username;
         }

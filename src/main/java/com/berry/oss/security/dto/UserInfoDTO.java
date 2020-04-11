@@ -1,6 +1,8 @@
 package com.berry.oss.security.dto;
 
 import com.berry.oss.security.interceptor.AccessKeyPair;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
@@ -18,7 +20,8 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class UserInfoDTO extends AccessKeyPair {
 
-    private Integer id;
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long id;
 
     private String username;
 
@@ -26,7 +29,7 @@ public class UserInfoDTO extends AccessKeyPair {
 
     }
 
-    public UserInfoDTO(Integer id, String username) {
+    public UserInfoDTO(Long id, String username) {
         this.id = id;
         this.username = username;
     }

@@ -1,5 +1,7 @@
 package com.berry.oss.security.dao.entity;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
@@ -29,11 +31,13 @@ public class UserRole implements Serializable {
     /**
      * 用户id
      */
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long userId;
 
     /**
      * 角色id
      */
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long roleId;
 
 
