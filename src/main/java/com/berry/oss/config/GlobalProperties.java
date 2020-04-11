@@ -32,7 +32,7 @@ public class GlobalProperties {
     /**
      * 单机模式下 数据存储路径
      */
-    private String dataPath = "./data";
+    private String dataPath = "./store";
 
     /**
      * 服务 访问ip
