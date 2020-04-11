@@ -53,7 +53,7 @@
         `object_info` a
         LEFT JOIN bucket_info b ON a.bucket_id = b.id
         WHERE
-        is_dir = 0 AND b.NAME IS NOT NULL
+        is_dir = 0 AND b.NAME IS NOT NULL AND b.user_id = #{userId}
         GROUP BY
         bucket_id
         ) f
@@ -70,7 +70,7 @@
         object_info a
         LEFT JOIN bucket_info b ON a.bucket_id = b.id
         WHERE
-        is_dir = 0
+        is_dir = 0 AND b.user_id = #{userId}
         AND size &gt; ( SELECT min( size ) FROM object_info )
         AND size &lt; ( SELECT max( size ) FROM object_info )
         GROUP BY
