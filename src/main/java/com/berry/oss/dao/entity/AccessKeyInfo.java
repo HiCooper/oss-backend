@@ -37,7 +37,7 @@ public class AccessKeyInfo implements Serializable {
     /**
      * 用户id
      */
-    private Integer userId;
+    private Long userId;
 
     /**
      * 创建时间

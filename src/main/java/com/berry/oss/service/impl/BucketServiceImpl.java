@@ -45,7 +45,7 @@ public class BucketServiceImpl implements IBucketService {
     }
 
     @Override
-    public List<BucketInfoVo> listBucket(Integer userId, String name) {
+    public List<BucketInfoVo> listBucket(Long userId, String name) {
         return bucketInfoDaoService.listBucket(userId, name);
     }
 
@@ -91,7 +91,7 @@ public class BucketServiceImpl implements IBucketService {
     }
 
     @Override
-    public boolean checkUserHaveBucket(Integer userId, String bucket) {
+    public boolean checkUserHaveBucket(Long userId, String bucket) {
         int count = bucketInfoDaoService.count(new QueryWrapper<BucketInfo>().eq("name", bucket)
                 .eq("user_id", userId));
         return 1 == count;

@@ -35,12 +35,12 @@ public class BucketInfoDaoServiceImpl extends ServiceImpl<BucketInfoMapper, Buck
 
 
     @Override
-    public List<BucketInfoVo> listBucket(Integer userId, String name) {
+    public List<BucketInfoVo> listBucket(Long userId, String name) {
         return bucketInfoMapper.listBucket(userId, name);
     }
 
     @Override
-    public List<BucketStatisticsInfoDto> getBucketUseInfo(Integer userId) {
+    public List<BucketStatisticsInfoDto> getBucketUseInfo(Long userId) {
         return bucketInfoMapper.getBucketUseInfo(userId);
     }
 }

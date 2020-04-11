@@ -29,12 +29,12 @@ public class UserRole implements Serializable {
     /**
      * 用户id
      */
-    private Integer userId;
+    private Long userId;
 
     /**
      * 角色id
      */
-    private Integer roleId;
+    private Long roleId;
 
 
 }

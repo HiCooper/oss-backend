@@ -23,5 +23,5 @@ public interface UserMapper extends BaseMapper<User> {
      * @param userId 用户id
      * @return
      */
-    Set<Role> getRolesByUserId(@Param("userId") Integer userId);
+    Set<Role> getRolesByUserId(@Param("userId") Long userId);
 }

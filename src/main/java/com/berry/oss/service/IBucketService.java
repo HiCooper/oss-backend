@@ -25,7 +25,7 @@ public interface IBucketService {
      * @param name   全模糊搜索名字
      * @return list
      */
-    List<BucketInfoVo> listBucket(Integer userId, String name);
+    List<BucketInfoVo> listBucket(Long userId, String name);
 
     /**
      * 创建 bucket
@@ -59,7 +59,7 @@ public interface IBucketService {
      * @param bucket bucket name
      * @return true or false
      */
-    boolean checkUserHaveBucket(Integer userId, String bucket);
+    boolean checkUserHaveBucket(Long userId, String bucket);
 
     /**
      * 获取bucket的 防盗链白名单信息

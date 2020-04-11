@@ -552,7 +552,7 @@ public class ObjectServiceImpl implements IObjectService {
         objectHashService.increaseRefCountByHash(hash, fileId, contentLength);
     }
 
-    private void saveOrUpdateObject(String filePath, byte[] data, String acl, Integer userId,
+    private void saveOrUpdateObject(String filePath, byte[] data, String acl, Long userId,
                                     BucketInfo bucketInfo, String hash, long size,
                                     ObjectInfoVo vo, String fullFileName) throws IOException {
         // 检查 该用户 同目录 同名 同bucket 下 文件是否已经存在（只检查文件路径和名称，不检查文件内容）
@@ -648,7 +648,7 @@ public class ObjectServiceImpl implements IObjectService {
      *
      * @return true or false
      */
-    private ObjectInfo getObjectInfo(String filePath, Integer userId, String bucketId, String fileName) {
+    private ObjectInfo getObjectInfo(String filePath, Long userId, String bucketId, String fileName) {
         // 检查该 bucket 及 path 下 同名文件是否存在
         QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq(USER_ID_COLUMN, userId);
@@ -665,7 +665,7 @@ public class ObjectServiceImpl implements IObjectService {
      * @param bucketId bucketId
      * @param filePath 文件夹全路径
      */
-    private List<ObjectInfo> getFolderInfoList(Integer userId, String bucketId, String filePath) {
+    private List<ObjectInfo> getFolderInfoList(Long userId, String bucketId, String filePath) {
         // 1. 检查路径是否存在
         String folder = filePath.startsWith("/") ? filePath.substring(1) : filePath;
         // 不存在则 进行创建

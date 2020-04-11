@@ -19,7 +19,7 @@ import java.util.List;
  */
 public interface BucketInfoMapper extends BaseMapper<BucketInfo> {
 
-    List<BucketInfoVo> listBucket(@Param("userId") Integer userId, @Param("name") String name);
+    List<BucketInfoVo> listBucket(@Param("userId") Long userId, @Param("name") String name);
 
-    List<BucketStatisticsInfoDto> getBucketUseInfo(@Param("userId") Integer userId);
+    List<BucketStatisticsInfoDto> getBucketUseInfo(@Param("userId") Long userId);
 }

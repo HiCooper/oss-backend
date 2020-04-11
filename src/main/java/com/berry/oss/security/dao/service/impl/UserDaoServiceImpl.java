@@ -32,7 +32,7 @@ public class UserDaoServiceImpl extends ServiceImpl<UserMapper, User> implements
     }
 
     @Override
-    public Set<Role> findRoleListByUserId(Integer userId) {
+    public Set<Role> findRoleListByUserId(Long userId) {
         return userMapper.getRolesByUserId(userId);
     }
 }

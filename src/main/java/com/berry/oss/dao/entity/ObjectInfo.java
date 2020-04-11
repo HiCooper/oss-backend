@@ -30,7 +30,7 @@ public class ObjectInfo implements Serializable {
     /**
      * 用户id
      */
-    private Integer userId;
+    private Long userId;
 
     /**
      * Bucket id

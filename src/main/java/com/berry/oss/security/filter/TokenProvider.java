@@ -62,7 +62,7 @@ public class TokenProvider {
      * @param rememberMe     是否记住我
      * @return 加密token
      */
-    public String createAndSignToken(Authentication authentication, Integer userId, boolean rememberMe) {
+    public String createAndSignToken(Authentication authentication, Long userId, boolean rememberMe) {
 
         String authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)

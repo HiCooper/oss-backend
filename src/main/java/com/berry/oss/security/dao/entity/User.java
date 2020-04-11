@@ -1,5 +1,7 @@
 package com.berry.oss.security.dao.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -24,7 +26,8 @@ public class User implements Serializable {
     /**
      * 主键
      */
-    private Integer id;
+    @TableId(type = IdType.ID_WORKER)
+    private Long id;
 
     /**
      * 用户名

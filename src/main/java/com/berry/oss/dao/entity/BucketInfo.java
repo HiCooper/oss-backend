@@ -30,7 +30,7 @@ public class BucketInfo implements Serializable {
     /**
      * 用户id
      */
-    private Integer userId;
+    private Long userId;
 
     /**
      * Bucket名称
