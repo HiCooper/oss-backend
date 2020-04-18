@@ -13,8 +13,8 @@ import com.berry.oss.security.dto.UserInfoDTO;
 public interface IAuthService {
 
     /**
-     * 检查用户 是否拥有权限访问 bucket
-     * 1. 用户组授权，该用户继承用户组权限，
+     * 检查用户 是否拥有权限访问 bucket <br/>
+     * 1. 用户组授权，该用户继承用户组权限，<br/>
      * 2. bucket 其他账户授权,授予特定 bucket(对象/目录) 的访问权限
      *
      * @param user       用户
