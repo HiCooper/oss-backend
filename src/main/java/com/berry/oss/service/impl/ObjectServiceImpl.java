@@ -422,8 +422,7 @@ public class ObjectServiceImpl implements IObjectService {
         if (!objectPath.startsWith(DEFAULT_FILE_PATH)) {
             objectPath = DEFAULT_FILE_PATH + objectPath;
         }
-        String ip = globalProperties.getServerIp();
-        String url = "http://" + ip + ":" + port + "/ajax/bucket/file/" + bucket + objectPath;
+        String url = globalProperties.getServerIp() + ":" + port + "/ajax/bucket/file/" + bucket + objectPath;
 
         long expires = (System.currentTimeMillis() + timeout * 1000) / 1000;
         String tempAccessKeyId = URLEncoder.encode(ossAccessKeyId, CHART_SET);
