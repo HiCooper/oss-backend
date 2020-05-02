@@ -41,13 +41,6 @@ spring:
 #      host: 127.0.0.1
 #      port: 8500
 
-server:
-  undertow:
-    buffer-size: 1024
-    direct-buffers: true
-    io-threads: 4
-    worker-threads: 32
-
 management:
   endpoint:
     health:

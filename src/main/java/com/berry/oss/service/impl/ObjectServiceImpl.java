@@ -25,9 +25,6 @@ import com.berry.oss.module.vo.ObjectInfoVo;
 import com.berry.oss.security.SecurityUtils;
 import com.berry.oss.security.dto.UserInfoDTO;
 import com.berry.oss.service.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -61,7 +58,6 @@ import static org.apache.commons.lang3.StringUtils.*;
  */
 @Service
 public class ObjectServiceImpl implements IObjectService {
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private static final int UPLOAD_PER_SIZE_LIMIT = 200;
     private static final String BASE64_DATA_START_PATTERN = "data:image/[a-z];";
@@ -81,9 +77,6 @@ public class ObjectServiceImpl implements IObjectService {
     private final GlobalProperties globalProperties;
     private final IAuthService authService;
     private final IRefererInfoDaoService refererInfoDaoService;
-
-    @Value("${server.port}")
-    private String port;
 
     ObjectServiceImpl(IObjectInfoDaoService objectInfoDaoService,
                       IObjectHashService objectHashService,
@@ -422,7 +415,7 @@ public class ObjectServiceImpl implements IObjectService {
         if (!objectPath.startsWith(DEFAULT_FILE_PATH)) {
             objectPath = DEFAULT_FILE_PATH + objectPath;
         }
-        String url = globalProperties.getServerIp() + ":" + port + "/ajax/bucket/file/" + bucket + objectPath;
+        String url = globalProperties.getServerAddress() + "/ajax/bucket/file/" + bucket + objectPath;
 
         long expires = (System.currentTimeMillis() + timeout * 1000) / 1000;
         String tempAccessKeyId = URLEncoder.encode(ossAccessKeyId, CHART_SET);
@@ -753,11 +746,11 @@ public class ObjectServiceImpl implements IObjectService {
     }
 
     private String getPublicObjectUrl(String bucket, String filePath, String fileName) {
-        String ip = globalProperties.getServerIp();
+        String serverAddress = globalProperties.getServerAddress();
         String objectPath = filePath + DEFAULT_FILE_PATH + fileName;
         if (filePath.equals(DEFAULT_FILE_PATH)) {
             objectPath = DEFAULT_FILE_PATH + fileName;
         }
-        return "http://" + ip + ":" + port + "/ajax/bucket/file/" + bucket + objectPath;
+        return "http://" + serverAddress + "/ajax/bucket/file/" + bucket + objectPath;
     }
 }
