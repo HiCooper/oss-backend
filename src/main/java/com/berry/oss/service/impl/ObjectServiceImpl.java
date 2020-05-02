@@ -751,6 +751,6 @@ public class ObjectServiceImpl implements IObjectService {
         if (filePath.equals(DEFAULT_FILE_PATH)) {
             objectPath = DEFAULT_FILE_PATH + fileName;
         }
-        return "http://" + serverAddress + "/ajax/bucket/file/" + bucket + objectPath;
+        return serverAddress + "/ajax/bucket/file/" + bucket + objectPath;
     }
 }

@@ -2,7 +2,6 @@ package com.berry.oss.service;
 
 import com.berry.oss.dao.entity.BucketInfo;
 import com.berry.oss.module.vo.BucketInfoVo;
-import com.berry.oss.module.vo.BucketStatisticsInfoVo;
 import com.berry.oss.module.vo.RefererDetailVo;
 
 import java.util.List;

@@ -91,9 +91,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.OPTIONS, "/**")
                 .antMatchers("/i18n/**")
                 .antMatchers("/static/**")
-                .antMatchers("/webjars/**")
-                .antMatchers("/v2/api-docs")
-                .antMatchers("/swagger-ui/index.html");
+                .antMatchers("/webjars/**");
+//                .antMatchers("/swagger-ui/index.html")
+//                .antMatchers("/v2/api-docs");
     }
 
     /**

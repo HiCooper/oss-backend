@@ -7,7 +7,6 @@ import com.berry.oss.dao.mapper.BucketInfoMapper;
 import com.berry.oss.dao.service.IBucketInfoDaoService;
 import com.berry.oss.module.dto.BucketStatisticsInfoDto;
 import com.berry.oss.module.vo.BucketInfoVo;
-import com.berry.oss.module.vo.BucketStatisticsInfoVo;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;

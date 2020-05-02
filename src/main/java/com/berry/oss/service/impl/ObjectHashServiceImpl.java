@@ -15,7 +15,6 @@ import com.berry.oss.dao.service.IObjectHashDaoService;
 import com.berry.oss.dao.service.IObjectInfoDaoService;
 import com.berry.oss.dao.service.IShardInfoDaoService;
 import com.berry.oss.service.IObjectHashService;
-import org.apache.commons.io.FileUtils;
 import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
 import org.mybatis.spring.SqlSessionTemplate;

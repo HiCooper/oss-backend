@@ -74,8 +74,8 @@ global:
   singleton: true
   hotDataCache: false
   dataPath: ./store
-  # 本机ip
-  serverIp: 127.0.0.1
+  # 本机 服务地址
+  serverAddress: http://127.0.0.1:8077
   httpPort: 7077
   mail:
     from: berry_cooper@163.com

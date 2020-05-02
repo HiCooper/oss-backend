@@ -40,3 +40,5 @@ src/main/resources/application-prod.yml
 log
 
 hicooer.cn.pfx
+
+/store/
