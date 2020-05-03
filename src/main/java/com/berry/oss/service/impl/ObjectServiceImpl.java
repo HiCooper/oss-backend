@@ -25,6 +25,8 @@ import com.berry.oss.module.vo.ObjectInfoVo;
 import com.berry.oss.security.SecurityUtils;
 import com.berry.oss.security.dto.UserInfoDTO;
 import com.berry.oss.service.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -58,6 +60,8 @@ import static org.apache.commons.lang3.StringUtils.*;
  */
 @Service
 public class ObjectServiceImpl implements IObjectService {
+
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private static final int UPLOAD_PER_SIZE_LIMIT = 200;
     private static final String BASE64_DATA_START_PATTERN = "data:image/[a-z];";
@@ -716,8 +720,7 @@ public class ObjectServiceImpl implements IObjectService {
                 throw new XmlResponseException(new NotFound());
             }
             response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
-            StreamUtils.copy(object.getInputStream(), response.getOutputStream());
-            response.flushBuffer();
+            copyStream(0L, object.getFileSize() - 1, response, object.getInputStream());
             return;
         }
 
@@ -731,18 +734,68 @@ public class ObjectServiceImpl implements IObjectService {
                 throw new XmlResponseException(new NotFound());
             }
             String contentType = StringUtils.getContentType(object.getFileName());
+            InputStream inputStream = object.getInputStream();
+            // 针对 safari 浏览器处理
+            Map<String, Long> res = handleForSafari(request, object.getFileSize(), response);
+            // 非 safari 浏览器常规处理
             response.setContentType(contentType);
             response.setHeader(HttpHeaders.ETAG, eTag);
             ZonedDateTime expiresDate = ZonedDateTime.now().with(LocalTime.MAX);
             String expires = expiresDate.format(DateTimeFormatter.RFC_1123_DATE_TIME);
             response.setHeader(HttpHeaders.EXPIRES, expires);
-            StreamUtils.copy(object.getInputStream(), response.getOutputStream());
-            response.flushBuffer();
+            copyStream(res.get("start"), res.get("end"), response, inputStream);
         }
         if (object != null && object.getInputStream() != null) {
             object.getInputStream().close();
         }
-        response.getOutputStream().close();
+    }
+
+    private void copyStream(Long start, Long end, HttpServletResponse response, InputStream inputStream) throws IOException {
+        try {
+            StreamUtils.copyRange(inputStream, response.getOutputStream(), start, end);
+        } catch (Exception e) {
+            logger.error("Something went wrong when copy stream, msg: {}", e.getMessage());
+        } finally {
+            response.getOutputStream().close();
+        }
+        response.flushBuffer();
+    }
+
+    private Map<String, Long> handleForSafari(WebRequest request, long size, HttpServletResponse response) {
+        Map<String, Long> map = new HashMap<>(8);
+        map.put("start", 0L);
+        map.put("end", size - 1);
+        long length = size;
+        // bytes=0-1
+        String range = request.getHeader("Range");
+        if (isNotBlank(range)) {
+            //206
+            String[] split = range.split("=");
+            String s = split[1];
+            if (isNotBlank(s)) {
+                String[] split1 = s.split("-");
+                if (split1.length > 1) {
+                    response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT);
+                    String startStr = split1[0];
+                    String endStr = split1[1];
+                    long start = 0L;
+                    long end = size - 1L;
+                    if (isNotBlank(startStr) && isNumeric(startStr)) {
+                        start = Long.parseLong(startStr);
+                    }
+                    if (isNotBlank(endStr) && isNumeric(endStr)) {
+                        end = Long.parseLong(endStr);
+                    }
+                    length = end - start + 1;
+                    response.setHeader("Accept-Ranges", "bytes");
+                    response.setHeader("Content-Range", "bytes " + start + "-" + end + "/" + size);
+                    map.put("start", start);
+                    map.put("end", end);
+                }
+            }
+        }
+        response.setHeader("Content-length", length + "");
+        return map;
     }
 
     private String getPublicObjectUrl(String bucket, String filePath, String fileName) {

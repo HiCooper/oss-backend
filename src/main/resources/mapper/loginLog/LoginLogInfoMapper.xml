@@ -4,12 +4,12 @@
 
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.berry.oss.dao.entity.LoginLogInfo">
-        <id column="id" property="id" />
-        <result column="username" property="username" />
-        <result column="login_time" property="loginTime" />
-        <result column="ip" property="ip" />
-        <result column="user_agent" property="userAgent" />
-        <result column="logout_time" property="logoutTime" />
+        <id column="id" property="id"/>
+        <result column="username" property="username"/>
+        <result column="login_time" property="loginTime"/>
+        <result column="ip" property="ip"/>
+        <result column="user_agent" property="userAgent"/>
+        <result column="logout_time" property="logoutTime"/>
     </resultMap>
 
     <!-- 通用查询结果列 -->

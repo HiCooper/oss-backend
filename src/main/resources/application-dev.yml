@@ -29,7 +29,7 @@ spring:
         max-idle: 8
         # 连接池中的最小空闲连接
         min-idle: 0
-    timeout: 20000ms
+    timeout: 2000ms
 
 #  cloud:
 #    consul:

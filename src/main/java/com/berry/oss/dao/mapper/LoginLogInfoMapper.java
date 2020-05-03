@@ -5,7 +5,7 @@ import com.berry.oss.dao.entity.LoginLogInfo;
 
 /**
  * <p>
- *  Mapper 接口
+ * Mapper 接口
  * </p>
  *
  * @author HiCooper

@@ -154,10 +154,11 @@ public interface IObjectService {
 
     /**
      * 对于意外丢失的数据，根据文件名， 文件路径，文件填充
+     *
      * @param fileName name
      * @param filePath path
-     * @param file file
-     * @param fileUrl fileUrl
+     * @param file     file
+     * @param fileUrl  fileUrl
      * @throws IOException io
      */
     void makeUpForLostData(String fileName, String filePath, MultipartFile file, String fileUrl) throws IOException;

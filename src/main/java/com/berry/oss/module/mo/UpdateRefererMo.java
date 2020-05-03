@@ -26,10 +26,9 @@ public class UpdateRefererMo {
     @NotBlank
     private String bucket;
 
-    private Boolean allowEmpty;
+    private Boolean allowEmpty = true;
     /**
      * 多个host，支持模式匹配,逗号隔开
      */
-    @NotBlank
     private String whiteList;
 }
