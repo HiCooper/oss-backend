@@ -487,10 +487,12 @@ public class ObjectServiceImpl implements IObjectService {
                             .eq(USER_ID_COLUMN, currentUser.getId())
                             .likeRight(FILE_PATH_COLUMN, dirFullPath);
                     List<ObjectInfo> infos = objectInfoDaoService.list(objectInfoQueryWrapper);
-                    // 1. 对应文件的 引用计数 -1
-                    objectHashService.batchDecreaseRefCountByHash(infos.stream().map(ObjectInfo::getHash).collect(Collectors.toList()));
-                    // 2. 删除文件和子项
-                    objectInfoDaoService.removeByIds(infos.stream().map(ObjectInfo::getId).collect(Collectors.toList()));
+                    if (!CollectionUtils.isEmpty(infos)){
+                        // 1. 对应文件的 引用计数 -1
+                        objectHashService.batchDecreaseRefCountByHash(infos.stream().map(ObjectInfo::getHash).collect(Collectors.toList()));
+                        // 2. 删除文件和子项
+                        objectInfoDaoService.removeByIds(infos.stream().map(ObjectInfo::getId).collect(Collectors.toList()));
+                    }
                 });
             }
         }
