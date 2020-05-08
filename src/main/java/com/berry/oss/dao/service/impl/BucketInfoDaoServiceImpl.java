@@ -7,7 +7,6 @@ import com.berry.oss.dao.mapper.BucketInfoMapper;
 import com.berry.oss.dao.service.IBucketInfoDaoService;
 import com.berry.oss.module.dto.BucketStatisticsInfoDto;
 import com.berry.oss.module.vo.BucketInfoVo;
-import com.berry.oss.module.vo.BucketStatisticsInfoVo;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -35,12 +34,12 @@ public class BucketInfoDaoServiceImpl extends ServiceImpl<BucketInfoMapper, Buck
 
 
     @Override
-    public List<BucketInfoVo> listBucket(Integer userId, String name) {
+    public List<BucketInfoVo> listBucket(Long userId, String name) {
         return bucketInfoMapper.listBucket(userId, name);
     }
 
     @Override
-    public List<BucketStatisticsInfoDto> getBucketUseInfo(Integer userId) {
+    public List<BucketStatisticsInfoDto> getBucketUseInfo(Long userId) {
         return bucketInfoMapper.getBucketUseInfo(userId);
     }
 }

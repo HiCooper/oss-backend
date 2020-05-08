@@ -32,12 +32,12 @@ public class GlobalProperties {
     /**
      * 单机模式下 数据存储路径
      */
-    private String dataPath = "./data";
+    private String dataPath = "./store";
 
     /**
-     * 服务 访问ip
+     * 服务器访问地址，包含端口
      */
-    private String serverIp;
+    private String serverAddress;
 
     /**
      * http 访问端口 默认 7077

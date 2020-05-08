@@ -5,12 +5,17 @@ import com.alibaba.fastjson.support.config.FastJsonConfig;
 import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
 import com.berry.oss.security.interceptor.AccessInterceptor;
 import com.berry.oss.security.interceptor.AccessProvider;
-import org.apache.http.Consts;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.format.FormatterRegistry;
+import org.springframework.format.datetime.DateFormatter;
+import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -30,28 +35,31 @@ public class WebMvcConfig implements WebMvcConfigurer {
         this.accessProvider = accessProvider;
     }
 
-
     /**
-     * 将返回值序列化，如数字型null输出0，字符串类型null输出 空字符串
+     * 添加类型转换器和格式化器
      *
-     * @param converters
+     * @param registry registry
      */
+    @Override
+    public void addFormatters(FormatterRegistry registry) {
+        registry.addFormatterForFieldType(Date.class, new DateFormatter());
+    }
+
     @Override
     public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
         FastJsonHttpMessageConverter converter = new FastJsonHttpMessageConverter();
-        FastJsonConfig config = new FastJsonConfig();
-        config.setSerializerFeatures(
-                // 禁用循环引用检测
-                SerializerFeature.DisableCircularReferenceDetect,
+        FastJsonConfig fastJsonConfig = new FastJsonConfig();
+        fastJsonConfig.setSerializerFeatures(SerializerFeature.PrettyFormat,
                 SerializerFeature.WriteMapNullValue,
                 SerializerFeature.WriteNullStringAsEmpty,
-                SerializerFeature.WriteNullBooleanAsFalse,
+                SerializerFeature.DisableCircularReferenceDetect,
                 SerializerFeature.WriteNullListAsEmpty,
-                //输出时间格式化
-                SerializerFeature.WriteDateUseDateFormat,
-                SerializerFeature.WriteNullNumberAsZero);
-        converter.setFastJsonConfig(config);
-        converter.setDefaultCharset(Consts.UTF_8);
+                SerializerFeature.WriteDateUseDateFormat);
+        List<MediaType> fastMediaTypes = new ArrayList<>();
+        fastMediaTypes.add(MediaType.ALL);
+        converter.setSupportedMediaTypes(fastMediaTypes);
+        converter.setDefaultCharset(StandardCharsets.UTF_8);
+        converter.setFastJsonConfig(fastJsonConfig);
         converters.add(converter);
     }
 

@@ -137,7 +137,7 @@ public interface IObjectService {
      * @return object info
      * @throws IOException 编码异常，密钥生成异常
      */
-    ObjectInfoVo uploadByte(String bucket, String filePath, String fileName, byte[] data, String acl) throws Exception;
+    ObjectInfoVo uploadByte(String bucket, String filePath, String fileName, byte[] data, String acl) throws IOException;
 
     /**
      * base64 字符串类型 创建对象
@@ -150,5 +150,16 @@ public interface IObjectService {
      * @return object info
      * @throws IOException 编码异常，密钥生成异常
      */
-    ObjectInfoVo uploadByBase64Str(String bucket, String filePath, String fileName, String data, String acl) throws Exception;
+    ObjectInfoVo uploadByBase64Str(String bucket, String filePath, String fileName, String data, String acl) throws IOException;
+
+    /**
+     * 对于意外丢失的数据，根据文件名， 文件路径，文件填充
+     *
+     * @param fileName name
+     * @param filePath path
+     * @param file     file
+     * @param fileUrl  fileUrl
+     * @throws IOException io
+     */
+    void makeUpForLostData(String fileName, String filePath, MultipartFile file, String fileUrl) throws IOException;
 }

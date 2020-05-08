@@ -1,5 +1,10 @@
 server:
   port: 8077
+  undertow:
+    buffer-size: 1024
+    direct-buffers: true
+    io-threads: 4
+    worker-threads: 32
   ssl:
     key-store: hicooer.cn.pfx
     key-store-password: ddoTwdhm

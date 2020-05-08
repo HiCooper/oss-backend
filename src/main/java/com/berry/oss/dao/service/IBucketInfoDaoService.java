@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.berry.oss.dao.entity.BucketInfo;
 import com.berry.oss.module.dto.BucketStatisticsInfoDto;
 import com.berry.oss.module.vo.BucketInfoVo;
-import com.berry.oss.module.vo.BucketStatisticsInfoVo;
 
 import java.util.List;
 
@@ -25,7 +24,7 @@ public interface IBucketInfoDaoService extends IService<BucketInfo> {
      * @param name   名称（非必填）
      * @return
      */
-    List<BucketInfoVo> listBucket(Integer userId, String name);
+    List<BucketInfoVo> listBucket(Long userId, String name);
 
-    List<BucketStatisticsInfoDto> getBucketUseInfo(Integer userId);
+    List<BucketStatisticsInfoDto> getBucketUseInfo(Long userId);
 }

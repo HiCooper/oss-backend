@@ -6,6 +6,7 @@ import com.berry.oss.common.ResultFactory;
 import com.berry.oss.common.XmlResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.NestedExceptionUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -16,6 +17,9 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author Berry_Cooper.
@@ -27,6 +31,9 @@ import javax.servlet.http.HttpServletResponse;
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    // Similar declaration exists in AbstractSockJsSession..
+    private static final Set<String> DISCONNECTED_CLIENT_EXCEPTIONS = new HashSet<>(
+            Arrays.asList("AbortedException", "ClientAbortException", "EOFException", "EofException"));
 
     // http状态码均为200，返回错误信息实体
 
@@ -69,6 +76,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
      */
     @ExceptionHandler(value = Exception.class)
     public Result exceptionHandler(Exception ex) {
+        if (isDisconnectedClientError(ex)) {
+            logger.debug("Client went away: {}", ex.getMessage());
+        }
         logger.error("系统异常:{}", ex.toString());
         return ResultFactory.wrapper(ResultCode.FAIL);
     }
@@ -98,5 +108,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public void runtimeExceptionHandler(HttpServletRequest req, RuntimeException ex) {
         logger.error("接口 [{}] 内部错误:{},位置：{}", req.getRequestURI(), ex.toString(), ex.getStackTrace()[0]);
+    }
+
+    private boolean isDisconnectedClientError(Throwable ex) {
+        String message = NestedExceptionUtils.getMostSpecificCause(ex).getMessage();
+        if (message != null) {
+            String text = message.toLowerCase();
+            if (text.contains("broken pipe") || text.contains("connection reset by peer")) {
+                return true;
+            }
+        }
+        return DISCONNECTED_CLIENT_EXCEPTIONS.contains(ex.getClass().getSimpleName());
     }
 }

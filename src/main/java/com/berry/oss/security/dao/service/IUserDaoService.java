@@ -31,5 +31,5 @@ public interface IUserDaoService extends IService<User> {
      * @param userId
      * @return
      */
-    Set<Role> findRoleListByUserId(Integer userId);
+    Set<Role> findRoleListByUserId(Long userId);
 }

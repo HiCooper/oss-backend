@@ -25,10 +25,10 @@ import com.berry.oss.module.vo.ObjectInfoVo;
 import com.berry.oss.security.SecurityUtils;
 import com.berry.oss.security.dto.UserInfoDTO;
 import com.berry.oss.service.*;
-import org.springframework.beans.factory.annotation.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.*;
@@ -61,6 +61,8 @@ import static org.apache.commons.lang3.StringUtils.*;
 @Service
 public class ObjectServiceImpl implements IObjectService {
 
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
+
     private static final int UPLOAD_PER_SIZE_LIMIT = 200;
     private static final String BASE64_DATA_START_PATTERN = "data:image/[a-z];";
 
@@ -79,9 +81,6 @@ public class ObjectServiceImpl implements IObjectService {
     private final GlobalProperties globalProperties;
     private final IAuthService authService;
     private final IRefererInfoDaoService refererInfoDaoService;
-
-    @Value("${server.port}")
-    private String port;
 
     ObjectServiceImpl(IObjectInfoDaoService objectInfoDaoService,
                       IObjectHashService objectHashService,
@@ -142,6 +141,7 @@ public class ObjectServiceImpl implements IObjectService {
         BucketInfo bucketInfo = getBucketInfo(bucket, currentUser);
 
         List<ObjectInfoVo> vos = new ArrayList<>();
+        InputStream inputStream = null;
         for (MultipartFile file : files) {
             // 计算文件 hash，获取文件大小
             String hash = SHA256.hash(file.getBytes());
@@ -159,7 +159,7 @@ public class ObjectServiceImpl implements IObjectService {
             }
 
             ObjectInfoVo vo = new ObjectInfoVo();
-            InputStream inputStream = file.getInputStream();
+            inputStream = file.getInputStream();
             int available = inputStream.available();
             byte[] data = new byte[available];
             int readSize = inputStream.read(data);
@@ -175,12 +175,15 @@ public class ObjectServiceImpl implements IObjectService {
             buildResponse(bucket, filePath, fileName, acl, "", fileSize, vo);
             vos.add(vo);
         }
+        if (inputStream != null) {
+            inputStream.close();
+        }
         return vos;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ObjectInfoVo uploadByte(String bucket, String filePath, String fileName, byte[] data, String acl) throws Exception {
+    public ObjectInfoVo uploadByte(String bucket, String filePath, String fileName, byte[] data, String acl) throws IOException {
         // 检查文件名，验证acl 规范
         fileName = checkFilenameAndPath(filePath, fileName, acl);
 
@@ -206,7 +209,7 @@ public class ObjectServiceImpl implements IObjectService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ObjectInfoVo uploadByBase64Str(String bucket, String filePath, String fileName, String data, String acl) throws Exception {
+    public ObjectInfoVo uploadByBase64Str(String bucket, String filePath, String fileName, String data, String acl) throws IOException {
         fileName = checkFilenameAndPath(filePath, fileName, acl);
 
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
@@ -333,6 +336,17 @@ public class ObjectServiceImpl implements IObjectService {
         handlerResponse(bucket, objectPath, response, request, objectInfo, download);
     }
 
+    @Override
+    public void makeUpForLostData(String fileName, String filePath, MultipartFile file, String fileUrl) throws IOException {
+        // 根据文件名 文件路径 获取对象 fileId
+        ObjectInfo one = objectInfoDaoService.getOne(new QueryWrapper<ObjectInfo>().eq("file_name", fileName).eq("file_path", filePath));
+        if (one == null) {
+            throw new BaseException("404", "对象不存在");
+        }
+        BucketInfo bucketInfo = bucketInfoDaoService.getById(one.getBucketId());
+        dataService.makeUpForLostData(fileName, filePath, one.getFileId(), file, fileUrl, bucketInfo);
+    }
+
     private void checkReferer(WebRequest request, BucketInfo bucketInfo) {
         // 匿名访问，检查 referer
         String headReferer = request.getHeader("Referer");
@@ -371,7 +385,8 @@ public class ObjectServiceImpl implements IObjectService {
     public Map<String, Object> getObjectHead(String bucket, String path, String objectName) {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
         BucketInfo bucketInfo = bucketService.checkUserHaveBucket(bucket);
-        String eTag = DigestUtils.md5DigestAsHex(objectName.getBytes());
+        String fullPath = path.equals("/") ? (path + objectName) : (path + "/" + objectName);
+        String eTag = DigestUtils.md5DigestAsHex(fullPath.getBytes());
         QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<ObjectInfo>()
                 .eq(BUCKET_ID_COLUMN, bucketInfo.getId())
                 .eq(USER_ID_COLUMN, currentUser.getId())
@@ -403,8 +418,7 @@ public class ObjectServiceImpl implements IObjectService {
         if (!objectPath.startsWith(DEFAULT_FILE_PATH)) {
             objectPath = DEFAULT_FILE_PATH + objectPath;
         }
-        String ip = globalProperties.getServerIp();
-        String url = "http://" + ip + ":" + port + "/ajax/bucket/file/" + bucket + objectPath;
+        String url = globalProperties.getServerAddress() + "/ajax/bucket/file/" + bucket + objectPath;
 
         long expires = (System.currentTimeMillis() + timeout * 1000) / 1000;
         String tempAccessKeyId = URLEncoder.encode(ossAccessKeyId, CHART_SET);
@@ -452,11 +466,10 @@ public class ObjectServiceImpl implements IObjectService {
             List<ObjectInfo> files = objectInfos.stream().filter(info -> !info.getIsDir()).collect(Collectors.toList());
 
             if (!CollectionUtils.isEmpty(files)) {
+                // 1.对象hash引用 计数 -1 (注意这里 hash 可能相等， 所以不能使用set)
+                objectHashService.batchDecreaseRefCountByHash(files.stream().map(ObjectInfo::getHash).collect(Collectors.toList()));
+                // 2. 删除 文件
                 objectInfoDaoService.removeByIds(files.stream().map(ObjectInfo::getId).collect(Collectors.toList()));
-                files.forEach(file -> {
-                    // 对象hash引用 计数 -1
-                    objectHashService.decreaseRefCountByHash(file.getHash());
-                });
             }
 
             List<ObjectInfo> dirs = objectInfos.stream().filter(ObjectInfo::getIsDir).collect(Collectors.toList());
@@ -473,10 +486,12 @@ public class ObjectServiceImpl implements IObjectService {
                             .eq(USER_ID_COLUMN, currentUser.getId())
                             .likeRight(FILE_PATH_COLUMN, dirFullPath);
                     List<ObjectInfo> infos = objectInfoDaoService.list(objectInfoQueryWrapper);
-                    // 1. 删除文件和子项
-                    objectInfoDaoService.removeByIds(infos.stream().map(ObjectInfo::getId).collect(Collectors.toList()));
-                    // 2. 对应文件的 引用计数 -1
-                    objectHashService.batchDecreaseRefCountByHash(infos.stream().map(ObjectInfo::getHash).collect(Collectors.toList()));
+                    if (!CollectionUtils.isEmpty(infos)){
+                        // 1. 对应文件的 引用计数 -1
+                        objectHashService.batchDecreaseRefCountByHash(infos.stream().map(ObjectInfo::getHash).collect(Collectors.toList()));
+                        // 2. 删除文件和子项
+                        objectInfoDaoService.removeByIds(infos.stream().map(ObjectInfo::getId).collect(Collectors.toList()));
+                    }
                 });
             }
         }
@@ -501,7 +516,6 @@ public class ObjectServiceImpl implements IObjectService {
         return objectInfoDaoService.updateById(objectInfo);
     }
 
-    @Async("taskExecutor")
     public void saveObjectInfo(String bucketId, String acl, String hash, Long contentLength, String fileName, String filePath, String fileId) {
         UserInfoDTO currentUser = SecurityUtils.getCurrentUser();
         List<ObjectInfo> newObject = new ArrayList<>();
@@ -535,7 +549,7 @@ public class ObjectServiceImpl implements IObjectService {
         objectHashService.increaseRefCountByHash(hash, fileId, contentLength);
     }
 
-    private void saveOrUpdateObject(String filePath, byte[] data, String acl, Integer userId,
+    private void saveOrUpdateObject(String filePath, byte[] data, String acl, Long userId,
                                     BucketInfo bucketInfo, String hash, long size,
                                     ObjectInfoVo vo, String fullFileName) throws IOException {
         // 检查 该用户 同目录 同名 同bucket 下 文件是否已经存在（只检查文件路径和名称，不检查文件内容）
@@ -545,18 +559,21 @@ public class ObjectServiceImpl implements IObjectService {
         vo.setReplace(exist);
 
         if (exist) {
-            if (!objectInfo.getHash().equals(hash)) {
-                // 存在，但文件内容有变动
-                String oldHash = objectInfo.getHash();
-                objectHashService.decreaseRefCountByHash(oldHash);
-                vo.setUploadType(false);
-                // 调用存储数据服务，保存对象，返回24位对象id,
-                String fileId = dataService.saveObject(filePath, data, size, hash, fullFileName, bucketInfo);
+            String oldHash = objectInfo.getHash();
+            if (!oldHash.equals(hash)) {
+                // 存在，但文件内容有变动, 尝试快速上传
+                String fileId = objectHashService.checkExist(hash);
+                if (isBlank(fileId)) {
+                    vo.setUploadType(false);
+                    // 快速上传失败 调用存储数据服务，保存对象，返回24位对象id,
+                    fileId = dataService.saveObject(filePath, data, size, hash, fullFileName, bucketInfo);
+                }
                 objectInfo.setFileId(fileId);
                 objectInfo.setHash(hash);
                 objectInfo.setSize(size);
                 objectInfo.setFormattedSize(StringUtils.getFormattedSize(size));
                 objectHashService.increaseRefCountByHash(hash, fileId, size);
+                objectHashService.decreaseRefCountByHash(oldHash);
             }
             objectInfo.setUpdateTime(new Date());
             objectInfoDaoService.updateById(objectInfo);
@@ -628,7 +645,7 @@ public class ObjectServiceImpl implements IObjectService {
      *
      * @return true or false
      */
-    private ObjectInfo getObjectInfo(String filePath, Integer userId, String bucketId, String fileName) {
+    private ObjectInfo getObjectInfo(String filePath, Long userId, String bucketId, String fileName) {
         // 检查该 bucket 及 path 下 同名文件是否存在
         QueryWrapper<ObjectInfo> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq(USER_ID_COLUMN, userId);
@@ -645,7 +662,7 @@ public class ObjectServiceImpl implements IObjectService {
      * @param bucketId bucketId
      * @param filePath 文件夹全路径
      */
-    private List<ObjectInfo> getFolderInfoList(Integer userId, String bucketId, String filePath) {
+    private List<ObjectInfo> getFolderInfoList(Long userId, String bucketId, String filePath) {
         // 1. 检查路径是否存在
         String folder = filePath.startsWith("/") ? filePath.substring(1) : filePath;
         // 不存在则 进行创建
@@ -697,14 +714,14 @@ public class ObjectServiceImpl implements IObjectService {
      * @throws IOException IO 异常
      */
     private void handlerResponse(String bucket, String objectPath, HttpServletResponse response, WebRequest request, ObjectInfo objectInfo, Boolean download) throws IOException {
-        ObjectResource object = dataService.getObject(bucket, objectInfo.getFileId());
+        ObjectResource object = null;
         if (download != null && download) {
+            object = dataService.getObject(bucket, objectInfo.getFileId());
             if (object == null || object.getInputStream() == null) {
                 throw new XmlResponseException(new NotFound());
             }
             response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
-            StreamUtils.copy(object.getInputStream(), response.getOutputStream());
-            response.flushBuffer();
+            copyStream(0L, object.getFileSize() - 1, response, object.getInputStream());
             return;
         }
 
@@ -713,26 +730,81 @@ public class ObjectServiceImpl implements IObjectService {
         if (request.checkNotModified(eTag, lastModified)) {
             response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
         } else {
+            object = dataService.getObject(bucket, objectInfo.getFileId());
             if (object == null) {
                 throw new XmlResponseException(new NotFound());
             }
             String contentType = StringUtils.getContentType(object.getFileName());
+            InputStream inputStream = object.getInputStream();
+            // 针对 safari 浏览器处理
+            Map<String, Long> res = handleForSafari(request, object.getFileSize(), response);
+            // 非 safari 浏览器常规处理
             response.setContentType(contentType);
             response.setHeader(HttpHeaders.ETAG, eTag);
             ZonedDateTime expiresDate = ZonedDateTime.now().with(LocalTime.MAX);
             String expires = expiresDate.format(DateTimeFormatter.RFC_1123_DATE_TIME);
             response.setHeader(HttpHeaders.EXPIRES, expires);
-            StreamUtils.copy(object.getInputStream(), response.getOutputStream());
-            response.flushBuffer();
+            copyStream(res.get("start"), res.get("end"), response, inputStream);
+        }
+        if (object != null && object.getInputStream() != null) {
+            object.getInputStream().close();
         }
     }
 
+    private void copyStream(Long start, Long end, HttpServletResponse response, InputStream inputStream) throws IOException {
+        try {
+            StreamUtils.copyRange(inputStream, response.getOutputStream(), start, end);
+        } catch (Exception e) {
+            logger.error("Something went wrong when copy stream, msg: {}", e.getMessage());
+        } finally {
+            response.getOutputStream().close();
+        }
+        response.flushBuffer();
+    }
+
+    private Map<String, Long> handleForSafari(WebRequest request, long size, HttpServletResponse response) {
+        Map<String, Long> map = new HashMap<>(8);
+        map.put("start", 0L);
+        map.put("end", size - 1);
+        long length = size;
+        // bytes=0-1
+        String range = request.getHeader("Range");
+        if (isNotBlank(range)) {
+            //206
+            String[] split = range.split("=");
+            String s = split[1];
+            if (isNotBlank(s)) {
+                String[] split1 = s.split("-");
+                if (split1.length > 1) {
+                    response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT);
+                    String startStr = split1[0];
+                    String endStr = split1[1];
+                    long start = 0L;
+                    long end = size - 1L;
+                    if (isNotBlank(startStr) && isNumeric(startStr)) {
+                        start = Long.parseLong(startStr);
+                    }
+                    if (isNotBlank(endStr) && isNumeric(endStr)) {
+                        end = Long.parseLong(endStr);
+                    }
+                    length = end - start + 1;
+                    response.setHeader("Accept-Ranges", "bytes");
+                    response.setHeader("Content-Range", "bytes " + start + "-" + end + "/" + size);
+                    map.put("start", start);
+                    map.put("end", end);
+                }
+            }
+        }
+        response.setHeader("Content-length", length + "");
+        return map;
+    }
+
     private String getPublicObjectUrl(String bucket, String filePath, String fileName) {
-        String ip = globalProperties.getServerIp();
+        String serverAddress = globalProperties.getServerAddress();
         String objectPath = filePath + DEFAULT_FILE_PATH + fileName;
         if (filePath.equals(DEFAULT_FILE_PATH)) {
             objectPath = DEFAULT_FILE_PATH + fileName;
         }
-        return "http://" + ip + ":" + port + "/ajax/bucket/file/" + bucket + objectPath;
+        return serverAddress + "/ajax/bucket/file/" + bucket + objectPath;
     }
 }

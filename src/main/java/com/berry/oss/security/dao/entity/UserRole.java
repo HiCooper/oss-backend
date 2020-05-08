@@ -1,5 +1,9 @@
 package com.berry.oss.security.dao.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
@@ -24,17 +28,20 @@ public class UserRole implements Serializable {
     /**
      * 主键
      */
+    @TableId(type = IdType.AUTO)
     private Integer id;
 
     /**
      * 用户id
      */
-    private Integer userId;
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long userId;
 
     /**
      * 角色id
      */
-    private Integer roleId;
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long roleId;
 
 
 }

@@ -21,6 +21,7 @@ public class CorsConfig {
         corsConfiguration.addAllowedMethod("*");
         corsConfiguration.addExposedHeader("authorization");
         corsConfiguration.setAllowCredentials(true);
+        corsConfiguration.setMaxAge(3600L);
         return corsConfiguration;
     }
 

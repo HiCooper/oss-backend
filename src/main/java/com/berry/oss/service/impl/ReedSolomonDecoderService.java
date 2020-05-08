@@ -1,5 +1,6 @@
 package com.berry.oss.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.berry.oss.common.utils.HttpClient;
@@ -53,7 +54,7 @@ public class ReedSolomonDecoderService {
 
         long start = System.currentTimeMillis();
 
-        JSONArray jsonArray = JSONArray.parseArray(shardJson);
+        JSONArray jsonArray = JSON.parseArray(shardJson);
 
         final byte[][] shards = new byte[TOTAL_SHARDS][];
         final boolean[] shardPresent = new boolean[TOTAL_SHARDS];

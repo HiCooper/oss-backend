@@ -26,8 +26,8 @@ public interface IHotDataCacheService {
     /**
      * 设置更新 对象缓存
      *
-     * @param objectId    objectId
-     * @param data data
+     * @param objectId objectId
+     * @param data     data
      * @throws IOException
      */
     void trySetObject(String objectId, byte[] data) throws IOException;

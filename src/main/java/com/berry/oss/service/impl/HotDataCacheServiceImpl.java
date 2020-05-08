@@ -62,7 +62,7 @@ public class HotDataCacheServiceImpl implements IHotDataCacheService {
      * 尝试更新缓存，保证 hashOperations 缓存的数据 始终是 zSetOperations 的前  RANK_DATA_KEEP_SIZE 个
      * todo not finished
      *
-     * @param objectId    objectId
+     * @param objectId  objectId
      * @param dataInput data
      * @throws IOException
      */

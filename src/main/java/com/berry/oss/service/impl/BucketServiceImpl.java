@@ -45,7 +45,7 @@ public class BucketServiceImpl implements IBucketService {
     }
 
     @Override
-    public List<BucketInfoVo> listBucket(Integer userId, String name) {
+    public List<BucketInfoVo> listBucket(Long userId, String name) {
         return bucketInfoDaoService.listBucket(userId, name);
     }
 
@@ -91,7 +91,7 @@ public class BucketServiceImpl implements IBucketService {
     }
 
     @Override
-    public boolean checkUserHaveBucket(Integer userId, String bucket) {
+    public boolean checkUserHaveBucket(Long userId, String bucket) {
         int count = bucketInfoDaoService.count(new QueryWrapper<BucketInfo>().eq("name", bucket)
                 .eq("user_id", userId));
         return 1 == count;
@@ -143,29 +143,30 @@ public class BucketServiceImpl implements IBucketService {
 
     private void setMapValue(String key, String calculateType, Map<String, Long> totalCountMap, Long val) {
         Long value = totalCountMap.get(key) == null ? 0L : totalCountMap.get(key);
+        Long valTemp = val == null ? 0L : val;
         switch (calculateType) {
             case "max":
-                value = Math.max(val, value);
+                value = Math.max(valTemp, value);
                 break;
             case "min":
                 if (value == 0) {
-                    value = val;
+                    value = valTemp;
                 } else {
-                    value = Math.min(val, value);
+                    value = Math.min(valTemp, value);
                 }
                 break;
             case "sum":
-                value += val;
+                value += valTemp;
                 break;
             case "average":
-                if (value != 0 && val != 0) {
-                    value = (val + value) / 2;
+                if (value != 0 && valTemp != 0) {
+                    value = (valTemp + value) / 2;
                 } else {
-                    value = val;
+                    value = valTemp;
                 }
                 break;
             default:
-                value = val;
+                value = valTemp;
         }
         totalCountMap.put(key, value);
     }

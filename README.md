@@ -16,7 +16,7 @@
 
 ![Demo](docs/demo.png)
 
-Demo 示例在线地址：[www.hicooer.cn](https://www.hicooer.cn)
+Demo 示例在线地址(服务器带宽1M ！！！加载慢！！！)：[www.hicooper.cn](https://www.hicooper.cn)
 
 ```text
 username: test

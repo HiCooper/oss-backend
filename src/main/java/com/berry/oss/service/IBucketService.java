@@ -2,7 +2,6 @@ package com.berry.oss.service;
 
 import com.berry.oss.dao.entity.BucketInfo;
 import com.berry.oss.module.vo.BucketInfoVo;
-import com.berry.oss.module.vo.BucketStatisticsInfoVo;
 import com.berry.oss.module.vo.RefererDetailVo;
 
 import java.util.List;
@@ -25,7 +24,7 @@ public interface IBucketService {
      * @param name   全模糊搜索名字
      * @return list
      */
-    List<BucketInfoVo> listBucket(Integer userId, String name);
+    List<BucketInfoVo> listBucket(Long userId, String name);
 
     /**
      * 创建 bucket
@@ -59,7 +58,7 @@ public interface IBucketService {
      * @param bucket bucket name
      * @return true or false
      */
-    boolean checkUserHaveBucket(Integer userId, String bucket);
+    boolean checkUserHaveBucket(Long userId, String bucket);
 
     /**
      * 获取bucket的 防盗链白名单信息
