@@ -11,7 +11,7 @@
  Target Server Version : 80013
  File Encoding         : 65001
 
- Date: 16/10/2019 13:47:29
+ Date: 08/05/2020 11:33:52
 */
 
 SET NAMES utf8mb4;
@@ -24,7 +24,7 @@ DROP TABLE IF EXISTS `access_key_info`;
 CREATE TABLE `access_key_info`  (
   `access_key_id` varchar(22) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT '密钥id(AK)',
   `access_key_secret` varchar(31) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT 'SK',
-  `user_id` int(11) UNSIGNED NOT NULL COMMENT '用户id',
+  `user_id` bigint(20) UNSIGNED NOT NULL COMMENT '用户id',
   `create_time` datetime(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0) COMMENT '创建时间',
   `update_time` datetime(0) NULL DEFAULT CURRENT_TIMESTAMP(0) ON UPDATE CURRENT_TIMESTAMP(0) COMMENT '更新时间',
   `state` bit(1) NULL DEFAULT NULL COMMENT '密钥状态，启用，禁用',
@@ -37,7 +37,7 @@ CREATE TABLE `access_key_info`  (
 DROP TABLE IF EXISTS `bucket_info`;
 CREATE TABLE `bucket_info`  (
   `id` varchar(24) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT 'id主键',
-  `user_id` int(11) NULL DEFAULT NULL COMMENT '用户id',
+  `user_id` bigint(20) NULL DEFAULT NULL COMMENT '用户id',
   `name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT 'Bucket名称',
   `acl` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT '读写权限',
   `region_id` varchar(24) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT '区域id',
@@ -53,7 +53,7 @@ CREATE TABLE `bucket_info`  (
 DROP TABLE IF EXISTS `group_acl_info`;
 CREATE TABLE `group_acl_info`  (
   `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键id',
-  `group_id` int(11) NULL DEFAULT NULL COMMENT '分组id',
+  `group_id` bigint(20) NULL DEFAULT NULL COMMENT '分组id',
   `bucket_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT '存储空间名称',
   `acl` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT '组对bucket的acl',
   `create_time` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0) COMMENT '创建时间',
@@ -67,13 +67,27 @@ CREATE TABLE `group_acl_info`  (
 -- ----------------------------
 DROP TABLE IF EXISTS `group_info`;
 CREATE TABLE `group_info`  (
-  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键id',
-  `user_id` int(11) UNSIGNED NOT NULL COMMENT '用户id',
+  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键id',
+  `user_id` bigint(20) UNSIGNED NOT NULL COMMENT '用户id',
   `group_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT '组名',
   `create_time` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0) COMMENT '创建时间',
   `update_time` timestamp(0) NULL DEFAULT CURRENT_TIMESTAMP(0) ON UPDATE CURRENT_TIMESTAMP(0) COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '用户组主表信息' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '用户组主表信息' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for login_log_info
+-- ----------------------------
+DROP TABLE IF EXISTS `login_log_info`;
+CREATE TABLE `login_log_info`  (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键id',
+  `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT '登录用户名',
+  `login_time` datetime(0) NULL DEFAULT NULL COMMENT '登录时间',
+  `ip` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT '登录ip',
+  `user_agent` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT '用户代理',
+  `logout_time` datetime(0) NULL DEFAULT NULL COMMENT '登出时间',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 63 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for object_hash
@@ -88,8 +102,8 @@ CREATE TABLE `object_hash`  (
   `locked` bit(1) NULL DEFAULT b'0' COMMENT '是否已锁定',
   `create_time` datetime(0) NULL DEFAULT CURRENT_TIMESTAMP(0) COMMENT '创建时间',
   PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `hash_unique`(`hash`) USING BTREE COMMENT '文件hash唯一'
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '对象 hash' ROW_FORMAT = Dynamic;
+  UNIQUE INDEX `hash_unique`(`hash`, `locked`) USING BTREE COMMENT '文件hash, 状态唯一'
+) ENGINE = InnoDB AUTO_INCREMENT = 1086 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '对象 hash' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for object_info
@@ -97,7 +111,7 @@ CREATE TABLE `object_hash`  (
 DROP TABLE IF EXISTS `object_info`;
 CREATE TABLE `object_info`  (
   `id` varchar(24) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT '主键id',
-  `user_id` int(11) NOT NULL COMMENT '用户id',
+  `user_id` bigint(20) NOT NULL COMMENT '用户id',
   `bucket_id` varchar(24) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT 'bucket id',
   `acl` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT '读写权限(目录没有)',
   `file_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT '文件名',
@@ -141,11 +155,11 @@ CREATE TABLE `referer_info`  (
   `bucket_id` varchar(24) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT 'bucket id',
   `white_list` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT '白名单',
   `black_list` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT '黑明单',
-  `allow_empty` bit(1) NULL DEFAULT NULL COMMENT '允许空 Referer',
+  `allow_empty` bit(1) NULL DEFAULT b'1' COMMENT '允许空 Referer',
   `create_time` datetime(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0) COMMENT '创建时间',
   `update_time` datetime(0) NULL DEFAULT CURRENT_TIMESTAMP(0) ON UPDATE CURRENT_TIMESTAMP(0) COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '防盗链，http referer 白名单设置' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '防盗链，http referer 白名单设置' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for region_and_server
@@ -159,21 +173,7 @@ CREATE TABLE `region_and_server`  (
   `create_time` datetime(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0) COMMENT '创建时间',
   `update_time` datetime(0) NULL DEFAULT CURRENT_TIMESTAMP(0) ON UPDATE CURRENT_TIMESTAMP(0) COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '区域服务器关联关系' ROW_FORMAT = Dynamic;
-
-
--- ----------------------------
--- Records of region_and_server
--- ----------------------------
-INSERT INTO `region_and_server` VALUES (1, 'hqsrqtwf61m7h7tr7cb9pz4y', '5kgbvjoqvjadyhce2hrv3rzj', 'up', '2019-06-24 04:05:46', '2019-06-24 04:05:46');
-INSERT INTO `region_and_server` VALUES (2, 'hqsrqtwf61m7h7tr7cb9pz4y', 'i00mdflqycivuwc4n6u1rpdc', 'down', '2019-06-24 04:05:46', '2019-06-25 01:54:15');
-INSERT INTO `region_and_server` VALUES (3, 'hqsrqtwf61m7h7tr7cb9pz4y', 'kkovpt8zevpec8oh1xnvwyoh', 'down', '2019-06-24 04:05:46', '2019-06-25 01:54:15');
-INSERT INTO `region_and_server` VALUES (4, 'hqsrqtwf61m7h7tr7cb9pz4y', 'lyquqymo6awjxkdfvdjxm9xb', 'down', '2019-06-24 04:05:46', '2019-06-25 01:54:15');
-INSERT INTO `region_and_server` VALUES (5, 'hqsrqtwf61m7h7tr7cb9pz4y', 'mzf4lhmabye7fehgnqndjews', 'down', '2019-06-24 04:05:46', '2019-06-25 01:54:15');
-INSERT INTO `region_and_server` VALUES (6, 'hqsrqtwf61m7h7tr7cb9pz4y', 'tmfrpb8tlxfch7r6rgpgjvh9', 'down', '2019-06-24 04:05:46', '2019-06-25 01:54:15');
-
--- -----
-
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '区域服务器关联关系' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for region_info
@@ -191,28 +191,15 @@ CREATE TABLE `region_info`  (
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '区域信息' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
--- Records of region_info
--- ----------------------------
-INSERT INTO `region_info` VALUES ('hqsrqtwf61m7h7tr7cb9pz4y', '华东1 上海', 'oss-shanghai-1', NULL, 500, '2019-06-24 03:45:29', '2019-06-25 09:20:17');
-
-
--- ----------------------------
 -- Table structure for role
 -- ----------------------------
 DROP TABLE IF EXISTS `role`;
 CREATE TABLE `role`  (
-  `id` int(11) NOT NULL COMMENT '主键',
+  `id` bigint(20) NOT NULL COMMENT '主键',
   `name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT '角色名',
   `description` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT '描述',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '角色信息' ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of role
--- ----------------------------
-INSERT INTO `role` VALUES (1, 'ROLE_ADMIN', '管理员');
-INSERT INTO `role` VALUES (2, 'ROLE_USER', '普通用户');
-
 
 -- ----------------------------
 -- Table structure for server_info
@@ -230,16 +217,6 @@ CREATE TABLE `server_info`  (
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '服务器信息' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
--- Records of server_info
--- ----------------------------
-INSERT INTO `server_info` VALUES ('5kgbvjoqvjadyhce2hrv3rzj', '192.168.2.194', 8081, 100, NULL, '2019-06-24 04:03:34', '2019-06-25 01:18:50');
-INSERT INTO `server_info` VALUES ('i00mdflqycivuwc4n6u1rpdc', '192.168.2.194', 8082, 100, NULL, '2019-06-24 04:03:34', '2019-06-25 01:18:51');
-INSERT INTO `server_info` VALUES ('kkovpt8zevpec8oh1xnvwyoh', '192.168.2.194', 8083, 100, NULL, '2019-06-24 04:03:34', '2019-06-25 01:18:55');
-INSERT INTO `server_info` VALUES ('lyquqymo6awjxkdfvdjxm9xb', '192.168.2.194', 8084, 100, NULL, '2019-06-24 04:03:34', '2019-06-25 01:18:56');
-INSERT INTO `server_info` VALUES ('mzf4lhmabye7fehgnqndjews', '192.168.2.194', 8085, 100, NULL, '2019-06-24 04:03:34', '2019-06-25 01:18:58');
-INSERT INTO `server_info` VALUES ('tmfrpb8tlxfch7r6rgpgjvh9', '192.168.2.194', 8086, 100, NULL, '2019-06-24 04:03:34', '2019-06-25 01:18:59');
-
--- ----------------------------
 -- Table structure for shard_info
 -- ----------------------------
 DROP TABLE IF EXISTS `shard_info`;
@@ -253,15 +230,16 @@ CREATE TABLE `shard_info`  (
   `create_time` datetime(0) NULL DEFAULT CURRENT_TIMESTAMP(0) COMMENT '创建时间',
   `singleton` bit(1) NULL DEFAULT NULL COMMENT '是否为单机模式分块',
   PRIMARY KEY (`id`) USING BTREE,
-  INDEX `file_id`(`file_id`) USING BTREE COMMENT '文件id'
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '分片存储信息' ROW_FORMAT = Dynamic;
+  UNIQUE INDEX `hash_unique`(`hash`) USING BTREE COMMENT 'hash',
+  UNIQUE INDEX `file_id_unique`(`file_id`) USING BTREE COMMENT '文件id'
+) ENGINE = InnoDB AUTO_INCREMENT = 1088 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '分片存储信息' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for user
 -- ----------------------------
 DROP TABLE IF EXISTS `user`;
 CREATE TABLE `user`  (
-  `id` int(11) NOT NULL COMMENT '主键',
+  `id` bigint(20) UNSIGNED NOT NULL COMMENT '主键ID',
   `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT '用户名',
   `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT '密码',
   `email` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT '邮箱',
@@ -275,20 +253,14 @@ CREATE TABLE `user`  (
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '用户信息' ROW_FORMAT = Dynamic;
 
-
--- ----------------------------
--- Records of user
--- ----------------------------
-INSERT INTO `user` VALUES (1, 'admin', '$2a$10$5//RRdiBhvNv8S4IgoWCqOanWqnLfOuRZ9Y2UHkIwI8/kf9uHx9z2', '2018-12-03 15:07:57', NULL, 1);
-
 -- ----------------------------
 -- Table structure for user_and_group
 -- ----------------------------
 DROP TABLE IF EXISTS `user_and_group`;
 CREATE TABLE `user_and_group`  (
   `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键id',
-  `group_id` int(10) UNSIGNED NULL DEFAULT NULL COMMENT '组id',
-  `user_id` int(10) UNSIGNED NULL DEFAULT NULL COMMENT '用户id',
+  `group_id` bigint(20) UNSIGNED NULL DEFAULT NULL COMMENT '组id',
+  `user_id` bigint(20) UNSIGNED NULL DEFAULT NULL COMMENT '用户id',
   `create_time` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0) COMMENT '创建时间',
   `update_time` timestamp(0) NULL DEFAULT CURRENT_TIMESTAMP(0) ON UPDATE CURRENT_TIMESTAMP(0) COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
@@ -301,22 +273,12 @@ CREATE TABLE `user_and_group`  (
 -- ----------------------------
 DROP TABLE IF EXISTS `user_role`;
 CREATE TABLE `user_role`  (
-  `id` int(11) NOT NULL COMMENT '主键',
-  `user_id` int(11) NOT NULL COMMENT '用户id',
-  `role_id` int(11) NOT NULL COMMENT '角色id',
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `user_id` bigint(20) NOT NULL COMMENT '用户id',
+  `role_id` bigint(20) NOT NULL COMMENT '角色id',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `user_id`(`user_id`) USING BTREE,
-  INDEX `role_id`(`role_id`) USING BTREE,
-  CONSTRAINT `user_role_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `role` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `user_role_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '用户角色关联关系' ROW_FORMAT = Dynamic;
-
-
--- ----------------------------
--- Records of user_role
--- ----------------------------
-INSERT INTO `user_role` VALUES (1, 1, 1);
-INSERT INTO `user_role` VALUES (2, 1, 2);
-INSERT INTO `user_role` VALUES (3, 2, 2);
+  INDEX `role_id`(`role_id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '用户角色关联关系' ROW_FORMAT = Dynamic;
 
 SET FOREIGN_KEY_CHECKS = 1;
