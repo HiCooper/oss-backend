@@ -3,6 +3,7 @@ package com.berry.oss.security.filter;
 import com.berry.oss.common.constant.Constants;
 import com.berry.oss.common.utils.NetworkUtils;
 import com.berry.oss.security.interceptor.AccessProvider;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
@@ -53,7 +54,7 @@ public class AuthFilter extends GenericFilterBean {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } else {
                 String ip = NetworkUtils.getRequestIpAddress(httpServletRequest);
-                String ossAuth = httpServletRequest.getHeader(Constants.OSS_SDK_AUTH_HEAD_NAME);
+                String ossAuth = getOssAuthToken(httpServletRequest);
                 if (isNotBlank(ossAuth)) {
                     // 只验证 token 格式 尝试设置用户信息
                     Authentication authentication = this.accessProvider.getSdkAuthentication(ossAuth);
@@ -76,6 +77,15 @@ public class AuthFilter extends GenericFilterBean {
             }
         }
         filterChain.doFilter(servletRequest, servletResponse);
+    }
+
+    private String getOssAuthToken(HttpServletRequest request) {
+        // 优先从url参数获取，再从请求头获取
+        String token = request.getParameter("token");
+        if (StringUtils.isNotBlank(token)) {
+            return token;
+        }
+        return request.getHeader(Constants.OSS_SDK_AUTH_HEAD_NAME);
     }
 
     /**

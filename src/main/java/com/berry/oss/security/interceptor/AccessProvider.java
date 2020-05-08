@@ -82,6 +82,11 @@ public class AccessProvider {
         String path = request.getRequestURI();
         String query = request.getQueryString();
         String urlStr = isBlank(query) ? path : path + "?" + query;
+        // token 本身不参与签名，token 必须是在 最后一个参数
+        int index = urlStr.indexOf("token=");
+        if (index != -1) {
+            urlStr = urlStr.substring(0, index - 1);
+        }
         // 校验 token 签名
         Auth.validRequest(credentials, URLDecoder.decode(urlStr, "utf-8"), userInfoDTO.getAccessKeyId(), userInfoDTO.getAccessKeySecret());
     }
