@@ -35,7 +35,7 @@ public class AccessInterceptor implements HandlerInterceptor {
         String requestUrl = request.getRequestURI();
         if (Constants.WRITE_LIST.stream().noneMatch(requestUrl::matches)) {
             // sdk 通用请求拦截器,sdk token 验证后将不验证 upload token
-            String ossAuth = request.getHeader(Constants.OSS_SDK_AUTH_HEAD_NAME);
+            String ossAuth = getOssAuthToken(request);
             String ip = NetworkUtils.getRequestIpAddress(request);
             if (isNotBlank(ossAuth)) {
                 // 验证 token 合法性
@@ -52,5 +52,14 @@ public class AccessInterceptor implements HandlerInterceptor {
             }
         }
         return true;
+    }
+
+    private String getOssAuthToken(HttpServletRequest request) {
+        // 优先从url参数获取，再从请求头获取
+        String token = request.getParameter("token");
+        if (isNotBlank(token)) {
+            return token;
+        }
+        return request.getHeader(Constants.OSS_SDK_AUTH_HEAD_NAME);
     }
 }
