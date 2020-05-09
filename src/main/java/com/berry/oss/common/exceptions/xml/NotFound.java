@@ -5,6 +5,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import org.aspectj.weaver.ast.Not;
 
 /**
  * Created with IntelliJ IDEA.
@@ -18,6 +19,10 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 @JacksonXmlRootElement(localName = "ERROR")
 public class NotFound implements XmlErrorInfo {
+
+    public NotFound() {
+
+    }
 
     public NotFound(String msg) {
         this.message = msg;
