@@ -736,6 +736,10 @@ public class ObjectServiceImpl implements IObjectService {
             }
             String contentType = StringUtils.getContentType(object.getFileName());
             InputStream inputStream = object.getInputStream();
+            if (inputStream == null) {
+                throw new XmlResponseException(new NotFound("获取文件失败"));
+            }
+
             // 针对 safari 浏览器处理
             Map<String, Long> res = handleForSafari(request, object.getFileSize(), response);
             // 非 safari 浏览器常规处理
@@ -760,6 +764,7 @@ public class ObjectServiceImpl implements IObjectService {
             response.getOutputStream().close();
         }
         response.flushBuffer();
+        inputStream.close();
     }
 
     private Map<String, Long> handleForSafari(WebRequest request, long size, HttpServletResponse response) {

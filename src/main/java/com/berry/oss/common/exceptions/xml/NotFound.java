@@ -19,6 +19,10 @@ import lombok.experimental.Accessors;
 @JacksonXmlRootElement(localName = "ERROR")
 public class NotFound implements XmlErrorInfo {
 
+    public NotFound(String msg) {
+        this.message = msg;
+    }
+
     @JacksonXmlProperty(localName = "Code")
     private String code = "NotFound";
 
