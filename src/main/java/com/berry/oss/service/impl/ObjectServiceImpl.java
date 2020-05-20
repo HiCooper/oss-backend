@@ -333,7 +333,7 @@ public class ObjectServiceImpl implements IObjectService {
             }
         }
 
-        handlerResponse(bucket, objectPath, response, request, objectInfo, download);
+        handlerResponse(bucket, response, request, objectInfo, download);
     }
 
     @Override
@@ -706,14 +706,13 @@ public class ObjectServiceImpl implements IObjectService {
      * 处理对象读取响应
      *
      * @param bucket     bucket name
-     * @param objectPath 对象全路径 如：/test.jpg
      * @param response   响应
      * @param request    请求
      * @param objectInfo 对象信息
      * @param download   是否是下载
      * @throws IOException IO 异常
      */
-    private void handlerResponse(String bucket, String objectPath, HttpServletResponse response, WebRequest request, ObjectInfo objectInfo, Boolean download) throws IOException {
+    private void handlerResponse(String bucket, HttpServletResponse response, WebRequest request, ObjectInfo objectInfo, Boolean download) throws IOException {
         ObjectResource object = null;
         if (download != null && download) {
             object = dataService.getObject(bucket, objectInfo.getFileId());
@@ -726,7 +725,7 @@ public class ObjectServiceImpl implements IObjectService {
         }
 
         long lastModified = objectInfo.getUpdateTime().getTime();
-        String eTag = "\"" + DigestUtils.md5DigestAsHex(objectPath.getBytes()) + "\"";
+        String eTag = "\"" + DigestUtils.md5DigestAsHex((objectInfo.getFileId() + objectInfo.getUpdateTime()).getBytes()) + "\"";
         if (request.checkNotModified(eTag, lastModified)) {
             response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
         } else {
