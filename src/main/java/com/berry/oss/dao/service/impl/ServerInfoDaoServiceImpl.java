@@ -6,6 +6,9 @@ import com.berry.oss.dao.service.IServerInfoDaoService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
+import java.util.List;
+
 /**
  * <p>
  * 服务器信息 服务实现类
@@ -17,4 +20,14 @@ import org.springframework.stereotype.Service;
 @Service
 public class ServerInfoDaoServiceImpl extends ServiceImpl<ServerInfoMapper, ServerInfo> implements IServerInfoDaoService {
 
+    @Resource
+    private ServerInfoMapper mapper;
+
+    @Override
+    public List<ServerInfo> listServerListByRegion(String regionId) {
+
+        return null;
+    }
 }
+
+

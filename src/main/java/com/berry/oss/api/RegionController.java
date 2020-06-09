@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
@@ -53,6 +55,12 @@ public class RegionController {
         }
         regionInfoDaoService.page(page, queryWrapper);
         return ResultFactory.wrapper(page);
+    }
+
+    @GetMapping("/list_server_by_region")
+    public Result listServerListByRegion(@RequestParam("regionId") String regionId) {
+        List<ServerInfo> res = serverInfoDaoService.listServerListByRegion(regionId);
+        return ResultFactory.wrapper(res);
     }
 
     @ApiOperation("分页查询 服务终端列表")
