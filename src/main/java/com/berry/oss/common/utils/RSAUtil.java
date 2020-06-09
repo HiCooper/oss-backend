@@ -86,9 +86,10 @@ public final class RSAUtil {
     private static String getPublicKey() {
         try {
             ClassPathResource publicFile = new ClassPathResource(PUBLIC_KEY_FILE);
-            ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(publicFile.getPath()));
-            PublicKey publicKey = (PublicKey) inputStream.readObject();
-            return Base64Util.encode(publicKey.getEncoded());
+            try(ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(publicFile.getPath()));) {
+                PublicKey publicKey = (PublicKey) inputStream.readObject();
+                return Base64Util.encode(publicKey.getEncoded());
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -103,9 +104,10 @@ public final class RSAUtil {
     private static String getPrivateKey() {
         try {
             ClassPathResource privateFile = new ClassPathResource(PRIVATE_KEY_FILE);
-            ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(privateFile.getPath()));
-            PrivateKey privateKey = (PrivateKey) inputStream.readObject();
-            return Base64Util.encode(privateKey.getEncoded());
+            try(ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(privateFile.getPath()))) {
+                PrivateKey privateKey = (PrivateKey) inputStream.readObject();
+                return Base64Util.encode(privateKey.getEncoded());
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
