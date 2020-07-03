@@ -200,6 +200,10 @@ CREATE TABLE `role`  (
   `description` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT '描述',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '角色信息' ROW_FORMAT = Dynamic;
+-- INSERT data
+INSERT INTO `role`(`id`, `name`, `description`) VALUES (1, 'ROLE_ADMIN', '管理员');
+INSERT INTO `role`(`id`, `name`, `description`) VALUES (2, 'ROLE_USER', '普通用户');
+
 
 -- ----------------------------
 -- Table structure for server_info
@@ -252,6 +256,8 @@ CREATE TABLE `user`  (
   `update_time` datetime(0) NULL DEFAULT CURRENT_TIMESTAMP(0) ON UPDATE CURRENT_TIMESTAMP(0) COMMENT '上次修改时间',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '用户信息' ROW_FORMAT = Dynamic;
+-- INSERT Data
+INSERT INTO `user`(`id`, `username`, `password`, `email`, `nick_name`, `activated`, `enabled`, `locked`, `expired`, `create_time`, `update_time`) VALUES (1, 'admin', '$2a$10$fk2Y5aXVONM9E.xi47/E1eMcaWO8PKxT22u2htNOuz06ImAW7qIC2', NULL, NULL, b'1', b'1', b'0', NULL, '2020-07-03 11:07:57', '2020-07-03 11:07:57');
 
 -- ----------------------------
 -- Table structure for user_and_group
@@ -280,5 +286,8 @@ CREATE TABLE `user_role`  (
   INDEX `user_id`(`user_id`) USING BTREE,
   INDEX `role_id`(`role_id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '用户角色关联关系' ROW_FORMAT = Dynamic;
+-- INSERT Data
+INSERT INTO `user_role`(`id`, `user_id`, `role_id`) VALUES (1, 1, 1);
+
 
 SET FOREIGN_KEY_CHECKS = 1;

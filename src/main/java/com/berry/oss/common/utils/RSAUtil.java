@@ -40,7 +40,6 @@ public final class RSAUtil {
     private static final String PUBLIC_KEY = getPublicKey();
     private static final String PRIVATE_KEY = getPrivateKey();
 
-
     /**
      * 初始化密钥
      *
@@ -60,8 +59,8 @@ public final class RSAUtil {
         ObjectOutputStream oos1 = null;
         ObjectOutputStream oos2 = null;
         try {
-            ClassPathResource publicFile = new ClassPathResource(PUBLIC_KEY_FILE);
-            ClassPathResource privateFile = new ClassPathResource(PRIVATE_KEY_FILE);
+            ClassPathResource publicFile = new ClassPathResource("./publicKey_rsa_1024.pub");
+            ClassPathResource privateFile = new ClassPathResource("./privateKey_rsa_1024");
             oos1 = new ObjectOutputStream(new FileOutputStream(publicFile.getPath()));
             oos2 = new ObjectOutputStream(new FileOutputStream(privateFile.getPath()));
             oos1.writeObject(publicKey);
