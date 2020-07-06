@@ -189,6 +189,9 @@ CREATE TABLE `region_info`  (
   `update_time` datetime(0) NULL DEFAULT CURRENT_TIMESTAMP(0) ON UPDATE CURRENT_TIMESTAMP(0) COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '区域信息' ROW_FORMAT = Dynamic;
+-- INSERT Data
+INSERT INTO `db_oss_service`.`region_info`(`id`, `name`, `code`, `remark`, `capacity`, `create_time`, `update_time`) VALUES ('hqsrqtwf61m7h7tr7cb9pz4y', '华东1 上海', 'oss-shanghai-1', NULL, 500, '2019-06-24 03:45:29', '2019-06-25 09:20:17');
+
 
 -- ----------------------------
 -- Table structure for role
