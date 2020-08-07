@@ -226,15 +226,14 @@ public class ObjectServiceImpl implements IObjectService {
         // 计算数据hash
         byte[] byteData = Base64Utils.decodeFromString(dataArr[1]);
         String hash = SHA256.hash(byteData);
-        long size = dataArr[1].length();
 
         // 返回对象
         ObjectInfoVo vo = new ObjectInfoVo();
 
         // 保存或更新改对象信息
-        saveOrUpdateObject(filePath, byteData, acl, currentUser.getId(), bucketInfo, hash, size, vo, fileName);
+        saveOrUpdateObject(filePath, byteData, acl, currentUser.getId(), bucketInfo, hash, byteData.length, vo, fileName);
 
-        buildResponse(bucket, filePath, fileName, acl, size, vo);
+        buildResponse(bucket, filePath, fileName, acl, byteData.length, vo);
         return vo;
     }
 
@@ -764,7 +763,6 @@ public class ObjectServiceImpl implements IObjectService {
         Map<String, Long> map = new HashMap<>(8);
         map.put("start", 0L);
         map.put("end", size - 1);
-        long length = size;
         // bytes=0-1
         String range = request.getHeader("Range");
         if (isNotBlank(range)) {
@@ -785,15 +783,15 @@ public class ObjectServiceImpl implements IObjectService {
                     if (isNotBlank(endStr) && isNumeric(endStr)) {
                         end = Long.parseLong(endStr);
                     }
-                    length = end - start + 1;
+                    long length = end - start + 1;
                     response.setHeader("Accept-Ranges", "bytes");
                     response.setHeader("Content-Range", "bytes " + start + "-" + end + "/" + size);
                     map.put("start", start);
                     map.put("end", end);
+                    response.setHeader("Content-Length", length + "");
                 }
             }
         }
-        response.setHeader("Content-length", length + "");
         return map;
     }
 
