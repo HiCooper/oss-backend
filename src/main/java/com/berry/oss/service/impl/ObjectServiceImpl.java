@@ -172,7 +172,7 @@ public class ObjectServiceImpl implements IObjectService {
             // 保存或更新改对象信息
             saveOrUpdateObject(filePath, data, acl, currentUser.getId(), bucketInfo, hash, fileSize, vo, fileName);
 
-            buildResponse(bucket, filePath, fileName, acl, "", fileSize, vo);
+            buildResponse(bucket, filePath, fileName, acl, fileSize, vo);
             vos.add(vo);
         }
         if (inputStream != null) {
@@ -203,7 +203,7 @@ public class ObjectServiceImpl implements IObjectService {
         // 保存或更新改对象信息
         saveOrUpdateObject(filePath, data, acl, currentUser.getId(), bucketInfo, hash, size, vo, fileName);
 
-        buildResponse(bucket, filePath, fileName, acl, "", size, vo);
+        buildResponse(bucket, filePath, fileName, acl, size, vo);
         return vo;
     }
 
@@ -223,7 +223,6 @@ public class ObjectServiceImpl implements IObjectService {
             throw new UploadException("403", "非法base64数据");
         }
 
-        String fileType = getFileType(dataArr[0]);
         // 计算数据hash
         byte[] byteData = Base64Utils.decodeFromString(dataArr[1]);
         String hash = SHA256.hash(byteData);
@@ -233,9 +232,9 @@ public class ObjectServiceImpl implements IObjectService {
         ObjectInfoVo vo = new ObjectInfoVo();
 
         // 保存或更新改对象信息
-        saveOrUpdateObject(filePath, byteData, acl, currentUser.getId(), bucketInfo, hash, size, vo, fileName + fileType);
+        saveOrUpdateObject(filePath, byteData, acl, currentUser.getId(), bucketInfo, hash, size, vo, fileName);
 
-        buildResponse(bucket, filePath, fileName, acl, fileType, size, vo);
+        buildResponse(bucket, filePath, fileName, acl, size, vo);
         return vo;
     }
 
@@ -486,7 +485,7 @@ public class ObjectServiceImpl implements IObjectService {
                             .eq(USER_ID_COLUMN, currentUser.getId())
                             .likeRight(FILE_PATH_COLUMN, dirFullPath);
                     List<ObjectInfo> infos = objectInfoDaoService.list(objectInfoQueryWrapper);
-                    if (!CollectionUtils.isEmpty(infos)){
+                    if (!CollectionUtils.isEmpty(infos)) {
                         // 1. 对应文件的 引用计数 -1
                         objectHashService.batchDecreaseRefCountByHash(infos.stream().map(ObjectInfo::getHash).collect(Collectors.toList()));
                         // 2. 删除文件和子项
@@ -605,14 +604,13 @@ public class ObjectServiceImpl implements IObjectService {
         return fileName;
     }
 
-    private void buildResponse(String bucket, String filePath, String fileName, String acl, String fileType, long size, ObjectInfoVo vo) {
+    private void buildResponse(String bucket, String filePath, String fileName, String acl, long size, ObjectInfoVo vo) {
         vo.setAcl(acl);
         vo.setFileName(fileName);
         vo.setFilePath(filePath);
         vo.setSize(size);
         vo.setFormattedSize(StringUtils.getFormattedSize(size));
-        String url = getPublicObjectUrl(bucket, filePath, fileName);
-        vo.setUrl(url + fileType);
+        vo.setUrl(getPublicObjectUrl(bucket, filePath, fileName));
     }
 
     private BucketInfo getBucketInfo(String bucket, UserInfoDTO currentUser) {
@@ -624,10 +622,6 @@ public class ObjectServiceImpl implements IObjectService {
             throw new UploadException("404", "bucket not exist");
         }
         return bucketInfo;
-    }
-
-    private static String getFileType(String dataPrefix) {
-        return "." + dataPrefix.substring(dataPrefix.lastIndexOf(DEFAULT_FILE_PATH) + 1, dataPrefix.length() - 1);
     }
 
     private static void checkPath(String filePath) {

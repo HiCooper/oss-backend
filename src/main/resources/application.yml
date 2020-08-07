@@ -5,11 +5,6 @@ server:
     direct-buffers: true
     io-threads: 4
     worker-threads: 32
-  ssl:
-    key-store: hicooer.cn.pfx
-    key-store-password: ddoTwdhm
-    key-store-type: PKCS12
-    key-alias: tomcat
 
 spring:
   application:

@@ -5,7 +5,6 @@ import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
 
 /**
  * Created with IntelliJ IDEA.
@@ -21,9 +20,8 @@ public class UploadObjectBase64Mo {
     String bucket;
 
     /**
-     * 不带后缀名（系统自动判断）
+     * 带后缀名
      */
-    @Pattern(regexp = "^((?!/).)*$")
     @NotBlank
     String fileName;
 
