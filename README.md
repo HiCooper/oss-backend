@@ -99,3 +99,9 @@ service -- 业务服务层
 
 邮件异步发送
 
+
+### 开发支持
+感谢 JetBrains 提供的  Free Open Source license(s)
+
+[![JetBrains](./docs/jetbrains.svg)](https://www.jetbrains.com/?from=https://github.com/HiCooper/oss-backend)
+

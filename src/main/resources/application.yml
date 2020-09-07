@@ -10,7 +10,7 @@ spring:
   application:
     name: oss-service
   profiles:
-    active: test
+    active: dev
   servlet:
     multipart:
       maxFileSize: "1024MB"
