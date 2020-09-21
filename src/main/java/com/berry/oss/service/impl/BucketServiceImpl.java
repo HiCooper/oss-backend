@@ -133,7 +133,7 @@ public class BucketServiceImpl implements IBucketService {
             setMapValue("allAverage", "average", totalCountMap, i.getObjectAverageSize());
         });
         totalCountMap.put("bucketCount", (long) dtos.size());
-        // 暂时设置 最大容量为 60G，这里暂没有任何意义，不做判断，只为了 显示和后续
+        // 暂时设置 最大容量为 60G，这里暂没有任何意义，不做判断，只为了 显示和后续拓展
         totalCountMap.put("capacity", 60 * 1024 * 1024 * 1024L);
         Map<String, Object> result = new HashMap<>(16);
         result.put("detail", dtos);

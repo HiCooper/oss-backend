@@ -22,7 +22,7 @@ apply plugin: 'io.spring.dependency-management'
 apply from: "sonar.gradle"
 
 group = 'com.berry'
-version = '0.0.1-SNAPSHOT'
+version = 'v20200921_0.0.2'
 sourceCompatibility = 1.8
 
 repositories {

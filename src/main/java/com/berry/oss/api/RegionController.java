@@ -11,7 +11,6 @@ import com.berry.oss.dao.service.IRegionInfoDaoService;
 import com.berry.oss.dao.service.IServerInfoDaoService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import net.sf.jsqlparser.schema.Server;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,7 +31,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  */
 @RestController
 @RequestMapping("ajax/region_server")
-@Api(tags = "Region 与 和 服务终端 管理")
+@Api(tags = "Region 与 服务终端 管理")
 public class RegionController {
 
     @Autowired
@@ -57,6 +56,7 @@ public class RegionController {
         return ResultFactory.wrapper(page);
     }
 
+    @ApiOperation("查询region关联服务器列表")
     @GetMapping("/list_server_by_region")
     public Result listServerListByRegion(@RequestParam("regionId") String regionId) {
         List<ServerInfo> res = serverInfoDaoService.listServerListByRegion(regionId);
