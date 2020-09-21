@@ -345,37 +345,56 @@ public class ObjectServiceImpl implements IObjectService {
         dataService.makeUpForLostData(fileName, filePath, one.getFileId(), file, fileUrl, bucketInfo);
     }
 
+    /**
+     * 匿名访问，检查 referer
+     * Referer效果
+     * 1. 如果Referer白名单为空，则所有的请求都会被允许。
+     * 2. 如果Referer白名单不为空，且不允许Referer字段为空，则只有Referer属于白名单的请求被允许，其
+     * 他请求（包括Referer为空的请求）会被拒绝。
+     * 3. 如果Referer白名单不为空，但允许Referer字段为空，则Referer为空的请求和符合白名单的请求会被
+     * 允许，其他请求都会被拒绝。
+     * @param request request
+     * @param bucketInfo bucketInfo
+     */
     private void checkReferer(WebRequest request, BucketInfo bucketInfo) {
-        // 匿名访问，检查 referer
         String headReferer = request.getHeader("Referer");
         RefererInfo refererInfo = refererInfoDaoService.getOne(new QueryWrapper<RefererInfo>().eq(BUCKET_ID_COLUMN, bucketInfo.getId()));
-        if (refererInfo != null) {
-            // 是否 允许空 Referer（默认允许为空）
-            boolean allowEmptyPrimitive = refererInfo.getAllowEmpty();
-            // 1.允许为空
-            if (allowEmptyPrimitive) {
-                return;
+        // 未设置 防盗链：所有请求被允许
+        if (refererInfo == null) {
+            return;
+        }
+        // 设置了防盗链
+        boolean allowEmptyPrimitive = refererInfo.getAllowEmpty();
+        String whiteList = refererInfo.getWhiteList();
+
+        // 1. 如果Referer白名单为空，则所有的请求都会被允许。
+        if (isBlank(whiteList)) {
+            return;
+        }
+        // 2. 如果Referer白名单不为空，且不允许Referer字段为空，则只有Referer属于白名单的请求被允许，其他请求（包括Referer为空的请求）会被拒绝
+        // 3. 如果Referer白名单不为空，但允许Referer字段为空，则Referer为空的请求和符合白名单的请求会被允许，其他请求都会被拒绝。
+
+        // 不允许Referer字段为空, 实际为空
+        if (!allowEmptyPrimitive && isBlank(headReferer)) {
+            throw new XmlResponseException(new AccessDenied("referer deny"));
+        }
+
+        // 允许Referer字段为空， 实际为空
+        if (allowEmptyPrimitive && isBlank(headReferer)) {
+            return;
+        }
+
+        // 白名单，pass
+        String[] whiteArr = whiteList.split(",");
+        boolean match = false;
+        for (String white : whiteArr) {
+            if (headReferer.matches(white)) {
+                match = true;
+                break;
             }
-            String whiteList = refererInfo.getWhiteList();
-            // 同时设置了 ‘允许空 Referer’(非 null) 和 ‘白名单’ 两者方可生效
-            if (isNotBlank(whiteList)) {
-                // 2.不允许 空 referer，请求 头中 没有 referer，则deny
-                if (isBlank(headReferer)) {
-                    throw new XmlResponseException(new AccessDenied("referer deny"));
-                }
-                // 3. 白名单，pass
-                String[] whiteArr = whiteList.split(",");
-                boolean match = false;
-                for (String white : whiteArr) {
-                    if (headReferer.matches(white)) {
-                        match = true;
-                        break;
-                    }
-                }
-                if (!match) {
-                    throw new XmlResponseException(new AccessDenied("referer deny"));
-                }
-            }
+        }
+        if (!match) {
+            throw new XmlResponseException(new AccessDenied("referer deny"));
         }
     }
 

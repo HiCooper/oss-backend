@@ -22,7 +22,7 @@ public interface IObjectHashService {
 
     /**
      * 增加 哈希引用计算, 记录可能不存在，所以需要 fileId  size 进行创建时初始化
-     * 不能异步， 否则批量创建是，hash引用将会出错
+     * 不能异步， 否则批量创建时，hash引用将会出错
      *
      * @param hash   hash值
      * @param fileId fileId
