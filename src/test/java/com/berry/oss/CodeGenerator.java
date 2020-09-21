@@ -28,7 +28,7 @@ public class CodeGenerator {
 
     private static final String db = "47.101.42.169:3306/db_oss_service";
     private static final String dbUsername = "berry";
-    private static final String dbPassword = "okmnji123";
+    private static final String dbPassword = "";
     private static final String tableName = "worm_strategy";
     private static final String moduleName = "wormStrategy";
     private static final String author = "HiCooper";
