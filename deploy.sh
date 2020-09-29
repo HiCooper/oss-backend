@@ -7,13 +7,13 @@ export LANG="en_US.UTF-8"
 
 # 远程服务器 ip
 #remote_server_ip='47.101.42.169'
-remote_server_ip='10.50.5.28'
-#remote_server_ip='192.168.2.195'
-username='root'
+#remote_server_ip='10.50.5.28'
+remote_server_ip='10.0.103.215'
+username='centos'
 # !确保远程文件夹存在
 #jar_store_dir='/home/jar-task/backend-service'
-jar_store_dir='/home/sjtu-dev/pd-micro-service/oss-service'
-#jar_store_dir='/bagua/oss_service/backend'
+#jar_store_dir='/home/sjtu-dev/pd-micro-service/oss-service'
+jar_store_dir='/home/centos/jar-project/oss-service/backend'
 
 #----------------------------------------------------------------------
 # 脚本
@@ -42,3 +42,4 @@ if [ -f ./build/libs/*.jar ]; then
   fi
   echo "上传成功"
 fi
+read

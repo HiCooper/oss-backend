@@ -1,17 +1,17 @@
 /*
  Navicat Premium Data Transfer
 
- Source Server         : 47.101.42.169
+ Source Server         : 10.0.103.215
  Source Server Type    : MySQL
- Source Server Version : 80013
- Source Host           : 47.101.42.169:3306
+ Source Server Version : 50731
+ Source Host           : 10.0.103.215:3306
  Source Schema         : db_oss_service
 
  Target Server Type    : MySQL
- Target Server Version : 80013
+ Target Server Version : 50731
  File Encoding         : 65001
 
- Date: 08/05/2020 11:33:52
+ Date: 29/09/2020 14:32:34
 */
 
 SET NAMES utf8mb4;
@@ -60,7 +60,7 @@ CREATE TABLE `group_acl_info`  (
   `update_time` timestamp(0) NULL DEFAULT CURRENT_TIMESTAMP(0) ON UPDATE CURRENT_TIMESTAMP(0) COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `group_id`(`group_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '分组权限' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '分组权限' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for group_info
@@ -73,7 +73,7 @@ CREATE TABLE `group_info`  (
   `create_time` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0) COMMENT '创建时间',
   `update_time` timestamp(0) NULL DEFAULT CURRENT_TIMESTAMP(0) ON UPDATE CURRENT_TIMESTAMP(0) COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '用户组主表信息' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '用户组主表信息' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for login_log_info
@@ -87,7 +87,12 @@ CREATE TABLE `login_log_info`  (
   `user_agent` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT '用户代理',
   `logout_time` datetime(0) NULL DEFAULT NULL COMMENT '登出时间',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 63 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 208 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of login_log_info
+-- ----------------------------
+INSERT INTO `login_log_info` VALUES (207, 'admin', '2020-09-29 06:32:09', '192.168.20.226', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36', NULL);
 
 -- ----------------------------
 -- Table structure for object_hash
@@ -103,7 +108,7 @@ CREATE TABLE `object_hash`  (
   `create_time` datetime(0) NULL DEFAULT CURRENT_TIMESTAMP(0) COMMENT '创建时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `hash_unique`(`hash`, `locked`) USING BTREE COMMENT '文件hash, 状态唯一'
-) ENGINE = InnoDB AUTO_INCREMENT = 1086 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '对象 hash' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1104 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '对象 hash' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for object_info
@@ -173,7 +178,7 @@ CREATE TABLE `region_and_server`  (
   `create_time` datetime(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0) COMMENT '创建时间',
   `update_time` datetime(0) NULL DEFAULT CURRENT_TIMESTAMP(0) ON UPDATE CURRENT_TIMESTAMP(0) COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '区域服务器关联关系' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '区域服务器关联关系' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for region_info
@@ -189,9 +194,11 @@ CREATE TABLE `region_info`  (
   `update_time` datetime(0) NULL DEFAULT CURRENT_TIMESTAMP(0) ON UPDATE CURRENT_TIMESTAMP(0) COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '区域信息' ROW_FORMAT = Dynamic;
--- INSERT Data
-INSERT INTO `db_oss_service`.`region_info`(`id`, `name`, `code`, `remark`, `capacity`, `create_time`, `update_time`) VALUES ('hqsrqtwf61m7h7tr7cb9pz4y', '华东1 上海', 'oss-shanghai-1', NULL, 500, '2019-06-24 03:45:29', '2019-06-25 09:20:17');
 
+-- ----------------------------
+-- Records of region_info
+-- ----------------------------
+INSERT INTO `region_info` VALUES ('hqsrqtwf61m7h7tr7cb9pz4y', '华东1 上海', 'oss-shanghai-1', NULL, 500, '2019-06-24 03:45:29', '2019-06-25 09:20:17');
 
 -- ----------------------------
 -- Table structure for role
@@ -203,10 +210,12 @@ CREATE TABLE `role`  (
   `description` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT '描述',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '角色信息' ROW_FORMAT = Dynamic;
--- INSERT data
-INSERT INTO `role`(`id`, `name`, `description`) VALUES (1, 'ROLE_ADMIN', '管理员');
-INSERT INTO `role`(`id`, `name`, `description`) VALUES (2, 'ROLE_USER', '普通用户');
 
+-- ----------------------------
+-- Records of role
+-- ----------------------------
+INSERT INTO `role` VALUES (1, 'ROLE_ADMIN', '管理员');
+INSERT INTO `role` VALUES (2, 'ROLE_USER', '普通用户');
 
 -- ----------------------------
 -- Table structure for server_info
@@ -239,7 +248,7 @@ CREATE TABLE `shard_info`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `hash_unique`(`hash`) USING BTREE COMMENT 'hash',
   UNIQUE INDEX `file_id_unique`(`file_id`) USING BTREE COMMENT '文件id'
-) ENGINE = InnoDB AUTO_INCREMENT = 1088 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '分片存储信息' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1105 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '分片存储信息' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for user
@@ -259,8 +268,11 @@ CREATE TABLE `user`  (
   `update_time` datetime(0) NULL DEFAULT CURRENT_TIMESTAMP(0) ON UPDATE CURRENT_TIMESTAMP(0) COMMENT '上次修改时间',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '用户信息' ROW_FORMAT = Dynamic;
--- INSERT Data
-INSERT INTO `user`(`id`, `username`, `password`, `email`, `nick_name`, `activated`, `enabled`, `locked`, `expired`, `create_time`, `update_time`) VALUES (1, 'admin', '$2a$10$fk2Y5aXVONM9E.xi47/E1eMcaWO8PKxT22u2htNOuz06ImAW7qIC2', NULL, NULL, b'1', b'1', b'0', NULL, '2020-07-03 11:07:57', '2020-07-03 11:07:57');
+
+-- ----------------------------
+-- Records of user
+-- ----------------------------
+INSERT INTO `user` VALUES (1, 'admin', '$2a$10$fk2Y5aXVONM9E.xi47/E1eMcaWO8PKxT22u2htNOuz06ImAW7qIC2', NULL, NULL, b'1', b'1', b'0', NULL, '2018-12-03 15:07:57', '2020-07-03 03:46:29');
 
 -- ----------------------------
 -- Table structure for user_and_group
@@ -275,7 +287,7 @@ CREATE TABLE `user_and_group`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `group_id`(`group_id`) USING BTREE,
   INDEX `user_id`(`user_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for user_role
@@ -289,8 +301,29 @@ CREATE TABLE `user_role`  (
   INDEX `user_id`(`user_id`) USING BTREE,
   INDEX `role_id`(`role_id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '用户角色关联关系' ROW_FORMAT = Dynamic;
--- INSERT Data
-INSERT INTO `user_role`(`id`, `user_id`, `role_id`) VALUES (1, 1, 1);
 
+-- ----------------------------
+-- Records of user_role
+-- ----------------------------
+INSERT INTO `user_role` VALUES (1, 1, 1);
+
+-- ----------------------------
+-- Table structure for worm_strategy
+-- ----------------------------
+DROP TABLE IF EXISTS `worm_strategy`;
+CREATE TABLE `worm_strategy`  (
+  `id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT '主键ID',
+  `target_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT '策略目标对象ID',
+  `target_type` enum('BUCKET','OBJECT') CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT '策略应用对象类型（BUCKET/OBJECT）',
+  `retention_period_val` int(10) NULL DEFAULT NULL COMMENT '保存期限值',
+  `retention_period_unit` enum('DATE','MONTH','YEAR') CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT '保存期限单位（DATE/MONTH/YEAR）',
+  `retention_period_desc` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT '保存期限描述（1天到70年）',
+  `start_date` date NULL DEFAULT NULL COMMENT '策略计算开始时间',
+  `dead_date` date NULL DEFAULT NULL COMMENT '策略失效日期',
+  `worm_state` enum('InProgress','Locked') CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT '策略状态(InProgress/Locked/Expired)',
+  `create_time` datetime(0) NULL DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime(0) NULL DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin ROW_FORMAT = Dynamic;
 
 SET FOREIGN_KEY_CHECKS = 1;
