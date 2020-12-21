@@ -7,6 +7,7 @@ import com.berry.oss.security.interceptor.AccessProvider;
 import org.springframework.beans.factory.BeanInitializationException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -23,6 +24,8 @@ import org.springframework.web.filter.CorsFilter;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author xueancao
@@ -41,10 +44,12 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Resource
     private CorsFilter corsFilter;
 
+    @Resource
+    Environment environment;
+
     private final TokenProvider tokenProvider;
 
     private AccessProvider accessProvider;
-
 
     public SecurityConfiguration(TokenProvider tokenProvider, AccessProvider accessProvider) {
         this.tokenProvider = tokenProvider;
@@ -92,8 +97,14 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/i18n/**")
                 .antMatchers("/static/**")
                 .antMatchers("/webjars/**");
-//                .antMatchers("/swagger-ui/index.html")
-//                .antMatchers("/v2/api-docs");
+        String[] activeProfiles = environment.getActiveProfiles();
+        List<String> profiles = Arrays.asList(activeProfiles);
+        if (profiles.contains("dev") ) {
+            web.ignoring()
+                    .antMatchers("/v2/api-docs")
+                    .antMatchers("/swagger-resources/**")
+                    .antMatchers("/swagger**");
+        }
     }
 
     /**
@@ -130,6 +141,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/ajax/activate").permitAll()
                 .antMatchers("/ajax/account/password/init").permitAll()
                 .antMatchers("/ajax/account/password/finish").permitAll()
+                .antMatchers("/ajax/worm_strategy/**").permitAll()
                 .antMatchers("/ajax/**").authenticated()
                 .antMatchers("/management/health").permitAll()
                 .antMatchers("/management/info").permitAll()

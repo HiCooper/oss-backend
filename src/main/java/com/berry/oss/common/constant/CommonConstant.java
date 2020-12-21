@@ -34,6 +34,27 @@ public class CommonConstant {
         }
     }
 
+    public enum WormState {
+        /**
+         * 合规保留策略状态
+         */
+        InProgress("待提交锁定"),
+        Locked("已提交锁定"),
+        Expired("过期");
+
+        private final String desc;
+
+        public static final String ALL_NAME = Arrays.toString(WormState.values());
+
+        WormState(String desc) {
+            this.desc = desc;
+        }
+
+        public String getDesc() {
+            return desc;
+        }
+    }
+
     public enum ActionType {
         /**
          * 权限

@@ -1,10 +1,11 @@
 package com.berry.oss.dao.entity;
 
-import java.util.Date;
-import java.io.Serializable;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
+
+import java.io.Serializable;
+import java.util.Date;
 
 /**
  * <p>
@@ -12,7 +13,7 @@ import lombok.experimental.Accessors;
  * </p>
  *
  * @author HiCooper
- * @since 2020-09-21
+ * @since 2020-12-21
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -29,22 +30,12 @@ public class WormStrategy implements Serializable {
     /**
      * 策略目标对象ID
      */
-    private String targetId;
+    private String bucket;
 
     /**
-     * 策略应用对象类型（bucket/object）
+     * 保存期限值, 单位天
      */
-    private String targetType;
-
-    /**
-     * 保存期限值
-     */
-    private Integer retentionPeriodVal;
-
-    /**
-     * 保存期限单位（天/月/年）
-     */
-    private String retentionPeriodUnit;
+    private Integer retentionPeriodValue;
 
     /**
      * 保存期限描述（1天到70年）
@@ -52,17 +43,12 @@ public class WormStrategy implements Serializable {
     private String retentionPeriodDesc;
 
     /**
-     * 策略计算开始时间
+     * 策略生效开始时间
      */
-    private Date startDate;
+    private Date activeTime;
 
     /**
-     * 策略失效日期
-     */
-    private Date deadDate;
-
-    /**
-     * 策略状态(InProgress/Locked)
+     * 策略状态(InProgress/Locked/Expired)
      */
     private String wormState;
 

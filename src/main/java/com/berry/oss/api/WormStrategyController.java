@@ -3,13 +3,14 @@ package com.berry.oss.api;
 
 import com.berry.oss.common.Result;
 import com.berry.oss.common.ResultFactory;
+import com.berry.oss.dao.entity.WormStrategy;
+import com.berry.oss.module.mo.InitWormStrategyMo;
+import com.berry.oss.service.IWormStrategyService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * <p>
@@ -24,10 +25,14 @@ import org.springframework.web.bind.annotation.RestController;
 @Api(tags = "合规保留策略")
 public class WormStrategyController {
 
+    @Autowired
+    private IWormStrategyService wormStrategyService;
+
     @ApiOperation("新建合规保留策略")
     @PostMapping("/init")
-    public Result initWormStrategy() {
-        return ResultFactory.wrapper();
+    public Result initWormStrategy(@Validated @RequestBody InitWormStrategyMo mo) {
+        WormStrategy wormStrategy = wormStrategyService.initWormStrategy(mo.getBucket(), mo.getDays());
+        return ResultFactory.wrapper(wormStrategy);
     }
 
     @ApiOperation("取消未锁定的合规保留策略")

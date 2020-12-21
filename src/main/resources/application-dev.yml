@@ -4,7 +4,7 @@ spring:
       name: berry
       password: berry123
   datasource:
-    url: jdbc:mysql://47.101.42.169:3306/db_oss_service?characterEncoding=utf8&useSSL=false&useUnicode=true&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    url: jdbc:mysql://47.101.42.169:3306/db_oss_service_dev?characterEncoding=utf8&useSSL=false&useUnicode=true&allowPublicKeyRetrieval=true
     username: berry
     password:
     driver-class-name: com.mysql.cj.jdbc.Driver
