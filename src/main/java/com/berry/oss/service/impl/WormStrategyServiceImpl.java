@@ -9,9 +9,9 @@ import com.berry.oss.dao.entity.BucketInfo;
 import com.berry.oss.dao.entity.WormStrategy;
 import com.berry.oss.dao.service.IBucketInfoDaoService;
 import com.berry.oss.dao.service.IWormStrategyDaoService;
+import com.berry.oss.quartz.QuartzJobManagement;
 import com.berry.oss.quartz.dynamic.WormCheckJob;
 import com.berry.oss.security.filter.TokenProvider;
-import com.berry.oss.service.IQuartzService;
 import com.berry.oss.service.IWormStrategyService;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Resource;
 import java.util.*;
 
 /**
@@ -35,8 +36,8 @@ import java.util.*;
 public class WormStrategyServiceImpl implements IWormStrategyService {
     private final static Logger logger = LoggerFactory.getLogger(TokenProvider.class);
 
-    @Autowired
-    private IQuartzService quartzService;
+    @Resource
+    private QuartzJobManagement quartzJobManagement;
 
     @Autowired
     private IBucketInfoDaoService bucketInfoDaoService;
@@ -81,7 +82,7 @@ public class WormStrategyServiceImpl implements IWormStrategyService {
 
         Map<String, String> dataMap = new HashMap<>(16);
         dataMap.put("bucket", bucket);
-        quartzService.addJob(bucket, WormCheckJob.class, DateUtils.getCron(activeTime), dataMap);
+        quartzJobManagement.addJob(bucket, WormCheckJob.class, DateUtils.getCron(activeTime), dataMap);
         logger.info("策略：FOR【{}】初始化完成", bucket);
         return wormStrategy;
     }

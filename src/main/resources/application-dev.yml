@@ -6,7 +6,7 @@ spring:
   datasource:
     url: jdbc:mysql://47.101.42.169:3306/db_oss_service_dev?characterEncoding=utf8&useSSL=false&useUnicode=true&allowPublicKeyRetrieval=true
     username: berry
-    password:
+    password: okmnji123
     driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.alibaba.druid.pool.DruidDataSource
     platform: mysql

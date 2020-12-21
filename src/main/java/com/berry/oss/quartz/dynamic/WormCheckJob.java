@@ -7,9 +7,16 @@ import com.berry.oss.dao.service.IWormStrategyDaoService;
 import org.quartz.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.support.ApplicationObjectSupport;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.ContextLoader;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import javax.annotation.PostConstruct;
 
@@ -22,22 +29,14 @@ import javax.annotation.PostConstruct;
  * fileName：WormCheckJob
  * Use：
  */
-@Component
-public class WormCheckJob extends QuartzJobBean {
+public class WormCheckJob implements Job {
 
     private static final Logger logger = LoggerFactory.getLogger(WormCheckJob.class);
 
-    @PostConstruct
-    public void init() {
-        System.out.println("WormCheckJob init");
-    }
-
-    // TODO null
-    @Autowired
     private IWormStrategyDaoService wormStrategyDaoService;
 
     @Override
-    protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
+    public void execute(JobExecutionContext context) throws JobExecutionException {
         JobDetail jobDetail = context.getJobDetail();
         String jobName = jobDetail.getKey().getName();
         logger.info("=== WORM 检查任务开始执行【{}】 ===", jobName);
