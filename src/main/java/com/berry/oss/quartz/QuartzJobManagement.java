@@ -2,6 +2,9 @@ package com.berry.oss.quartz;
 
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -20,20 +23,12 @@ import java.util.Map;
 public class QuartzJobManagement {
     private static final String JOB_GROUP_NAME = "WORM_CHECK_JOB_GROUP";
     private static final String TRIGGER_GROUP_NAME = "WORM_CHECK_TRIGGER_GROUP";
+
     /**
      * Quartz调度器
      */
+    @Autowired
     private Scheduler scheduler;
-
-    /**
-     * 初始化调度器
-     * @throws SchedulerException e
-     */
-    @PostConstruct
-    public void init() throws SchedulerException {
-        SchedulerFactory schedulerFactory = new StdSchedulerFactory();
-        scheduler = schedulerFactory.getScheduler();
-    }
 
     /**
      * 添加一个定时任务

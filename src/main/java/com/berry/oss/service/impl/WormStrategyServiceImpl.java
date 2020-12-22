@@ -75,7 +75,7 @@ public class WormStrategyServiceImpl implements IWormStrategyService {
         wormStrategy.setWormState(CommonConstant.WormState.InProgress.name());
         wormStrategy.setCreateTime(new Date());
         // 策略生效开始时间（在此之前 状态未提交锁定(Locked)，策略自动失效：Expired）
-        Date activeTime = DateTime.now().plusMinutes(1).toDate();
+        Date activeTime = DateTime.now().plusHours(24).toDate();
         wormStrategy.setActiveTime(activeTime);
         wormStrategyDaoService.save(wormStrategy);
         // 启动一个定时任务， 在 activeTime 检查状态， 如果不为 Locked ，则设置为 Expired

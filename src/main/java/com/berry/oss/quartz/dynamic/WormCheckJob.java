@@ -33,6 +33,7 @@ public class WormCheckJob implements Job {
 
     private static final Logger logger = LoggerFactory.getLogger(WormCheckJob.class);
 
+    @Autowired
     private IWormStrategyDaoService wormStrategyDaoService;
 
     @Override
@@ -51,7 +52,7 @@ public class WormCheckJob implements Job {
             return;
         }
         wormStrategy.setWormState(CommonConstant.WormState.Expired.name());
-        wormStrategyDaoService.save(wormStrategy);
+        wormStrategyDaoService.updateById(wormStrategy);
         logger.info("策略：【{}】使失效成功", jobName);
     }
 }
