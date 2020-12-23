@@ -4,6 +4,8 @@ package com.berry.oss.api;
 import com.berry.oss.common.Result;
 import com.berry.oss.common.ResultFactory;
 import com.berry.oss.dao.entity.WormStrategy;
+import com.berry.oss.module.mo.CompleteWormStrategyMo;
+import com.berry.oss.module.mo.ExtendWormStrategyDaysMo;
 import com.berry.oss.module.mo.InitWormStrategyMo;
 import com.berry.oss.service.IWormStrategyService;
 import io.swagger.annotations.Api;
@@ -43,19 +45,22 @@ public class WormStrategyController {
 
     @ApiOperation("锁定合规保留策略")
     @PostMapping("/complete")
-    public Result completeWormStrategy() {
+    public Result completeWormStrategy(@Validated @RequestBody CompleteWormStrategyMo mo) {
+        wormStrategyService.completeWormStrategy(mo.getId());
         return ResultFactory.wrapper();
     }
 
     @ApiOperation("获取合规保留策略")
     @GetMapping("/detail")
-    public Result detailWormStrategy() {
-        return ResultFactory.wrapper();
+    public Result detailWormStrategy(@RequestParam("id") String id) {
+        WormStrategy wormStrategy = wormStrategyService.detailWormStrategy(id);
+        return ResultFactory.wrapper(wormStrategy);
     }
 
     @ApiOperation("延长Object的保留天数")
     @PostMapping("/extend_days")
-    public Result extendWormStrategyDays() {
+    public Result extendWormStrategyDays(@Validated @RequestBody ExtendWormStrategyDaysMo mo) {
+        wormStrategyService.extendWormStrategyDays(mo.getId(), mo.getDays());
         return ResultFactory.wrapper();
     }
 

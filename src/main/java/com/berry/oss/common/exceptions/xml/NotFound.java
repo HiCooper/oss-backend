@@ -5,7 +5,6 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import lombok.Data;
 import lombok.experimental.Accessors;
-import org.aspectj.weaver.ast.Not;
 
 /**
  * Created with IntelliJ IDEA.

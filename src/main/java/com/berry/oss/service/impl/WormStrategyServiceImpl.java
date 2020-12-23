@@ -12,6 +12,7 @@ import com.berry.oss.dao.service.IWormStrategyDaoService;
 import com.berry.oss.quartz.QuartzJobManagement;
 import com.berry.oss.quartz.dynamic.WormCheckJob;
 import com.berry.oss.security.filter.TokenProvider;
+import com.berry.oss.service.IBucketService;
 import com.berry.oss.service.IWormStrategyService;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created with IntelliJ IDEA.
@@ -45,14 +47,14 @@ public class WormStrategyServiceImpl implements IWormStrategyService {
     @Autowired
     private IWormStrategyDaoService wormStrategyDaoService;
 
+    @Autowired
+    private IBucketService bucketService;
+
     @Transactional(rollbackFor = Exception.class)
     @Override
     public WormStrategy initWormStrategy(String bucket, Integer days) {
         // 检查 bucket 是否存在
-        BucketInfo bucketInfo = bucketInfoDaoService.getOne(new QueryWrapper<BucketInfo>().eq("name", bucket));
-        if (bucketInfo == null) {
-            throw new BaseException("404", "bucket does not exist!");
-        }
+        bucketService.checkUserHaveBucket(bucket);
         // 检查 bucket 是否已设置 worm
         Set<String> wormState = new HashSet<>();
         wormState.add("InProgress");
@@ -85,5 +87,66 @@ public class WormStrategyServiceImpl implements IWormStrategyService {
         quartzJobManagement.addJob(bucket, WormCheckJob.class, DateUtils.getCron(activeTime), dataMap);
         logger.info("策略：FOR【{}】初始化完成", bucket);
         return wormStrategy;
+    }
+
+    @Override
+    public void completeWormStrategy(String id) {
+        WormStrategy wormStrategy = wormStrategyDaoService.getById(id);
+        if (wormStrategy == null) {
+            throw new BaseException("404", "策略不存在");
+        }
+        bucketService.checkUserHaveBucket(wormStrategy.getBucket());
+        wormStrategy.setWormState(CommonConstant.WormState.Locked.name());
+        try {
+            quartzJobManagement.removeJob(wormStrategy.getBucket());
+            wormStrategyDaoService.updateById(wormStrategy);
+        } catch (Exception e) {
+            logger.error("error msg: {}", e.getMessage());
+            throw new BaseException("500", "操作失败");
+        }
+    }
+
+    @Override
+    public WormStrategy detailWormStrategy(String id) {
+        WormStrategy wormStrategy = wormStrategyDaoService.getById(id);
+        if (wormStrategy == null) {
+            throw new BaseException("404", "策略不存在");
+        }
+        bucketService.checkUserHaveBucket(wormStrategy.getBucket());
+        return wormStrategy;
+    }
+
+    @Override
+    public void extendWormStrategyDays(String id, int days) {
+        if (days == 0) {
+            return;
+        }
+        WormStrategy wormStrategy = wormStrategyDaoService.getById(id);
+        if (wormStrategy == null) {
+            throw new BaseException("404", "策略不存在");
+        }
+        bucketService.checkUserHaveBucket(wormStrategy.getBucket());
+        if (!CommonConstant.WormState.Locked.name().equals(wormStrategy.getWormState())) {
+            throw new BaseException("409", "策略尚未生效不可延期");
+        }
+        wormStrategy.setRetentionPeriodValue(wormStrategy.getRetentionPeriodValue() + days);
+        String extendDesc = DateUtils.getDateTime() + "延期" + days + "天";
+        wormStrategy.setRetentionPeriodDesc(wormStrategy.getRetentionPeriodDesc() + "," + extendDesc);
+        wormStrategy.setUpdateTime(new Date());
+        wormStrategyDaoService.updateById(wormStrategy);
+    }
+
+    @Override
+    public boolean isLocked(String bucket, Date objectCreateTime) {
+        WormStrategy wormStrategy = wormStrategyDaoService.getOne(
+                new QueryWrapper<WormStrategy>()
+                        .eq("bucket", bucket)
+                        .eq("worm_state", CommonConstant.WormState.Locked.name())
+        );
+        if (wormStrategy == null) {
+            return false;
+        }
+        DateTime dateTime = new DateTime(objectCreateTime);
+        return dateTime.plusDays(wormStrategy.getRetentionPeriodValue()).isAfter(DateTime.now());
     }
 }

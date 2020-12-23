@@ -38,7 +38,7 @@ public class WormStrategy implements Serializable {
     private Integer retentionPeriodValue;
 
     /**
-     * 保存期限描述（1天到70年）
+     * 保存期限描述（1天到70年）, 延期x天
      */
     private String retentionPeriodDesc;
 

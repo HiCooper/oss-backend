@@ -1,7 +1,7 @@
 package com.berry.oss.dao.mapper;
 
-import com.berry.oss.dao.entity.WormStrategy;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.berry.oss.dao.entity.WormStrategy;
 
 /**
  * <p>

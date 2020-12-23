@@ -4,21 +4,15 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.berry.oss.common.constant.CommonConstant;
 import com.berry.oss.dao.entity.WormStrategy;
 import com.berry.oss.dao.service.IWormStrategyDaoService;
-import org.quartz.*;
+import org.quartz.Job;
+import org.quartz.JobDetail;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.support.ApplicationObjectSupport;
-import org.springframework.scheduling.quartz.QuartzJobBean;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.ContextLoader;
-import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.context.support.WebApplicationContextUtils;
 
-import javax.annotation.PostConstruct;
+import java.util.Date;
 
 /**
  * Created with IntelliJ IDEA.
@@ -52,6 +46,7 @@ public class WormCheckJob implements Job {
             return;
         }
         wormStrategy.setWormState(CommonConstant.WormState.Expired.name());
+        wormStrategy.setUpdateTime(new Date());
         wormStrategyDaoService.updateById(wormStrategy);
         logger.info("策略：【{}】使失效成功", jobName);
     }
