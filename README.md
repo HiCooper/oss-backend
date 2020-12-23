@@ -4,11 +4,14 @@
 
 ## [文档](https://hicooper007.gitbook.io/oss/)
 
+## 最新更新
+- 合规保留策略
+
 ## 相关模块
 
 | 项目 | 描述 |
 |------|------|
-| [oss-java-sdk](https://github.com/HiCooper/oss-sdk-java) | JAVA SKD |
+| [oss-java-sdk](https://github.com/HiCooper/oss-sdk-java) | JAVA SDK |
 | [oss-front](https://github.com/HiCooper/oss-front) | 前端工程，React 实现|
 | [oss-data-service](https://github.com/HiCooper/oss-data-service) | 分布式数据读取存储服务 |
 
