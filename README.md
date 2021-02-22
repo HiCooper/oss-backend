@@ -68,6 +68,10 @@ A:
 * 全局资源唯一，系统将会计算 资源hash，同样的资源在系统中 只会存在一份，实现系统已有资源极速上传；
 * 热点数据缓存
 
+### RS （4+2） 算法数学原理
+![1](docs/screenshot-20210222-204529.png)
+![2](docs/screenshot-20210222-204551.png)
+
 ## oss-backend 微服务基本项目结构
 
 用到spring boot ，spring-security, mybatis-plus，undertow，druid，logback日志归档，提供swagger接口文档,基础代码自动生成
