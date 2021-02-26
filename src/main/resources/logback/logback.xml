@@ -2,7 +2,7 @@
 
 <configuration>
 
-    <springProperty scope="context" name="logPath" source="logging.path" defaultValue="./log"/>
+    <springProperty scope="context" name="logPath" source="logging.path" defaultValue="./logs"/>
     <springProperty scope="context" name="fileMaxHistory" source="logging.file.max-history" defaultValue="30"/>
     <springProperty scope="context" name="rootLevel" source="logging.level.root" defaultValue="INFO"/>
 

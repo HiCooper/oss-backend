@@ -37,7 +37,7 @@ script/**/__pycache__/
 src/main/resources/application-dev.yml
 src/main/resources/application-prod.yml
 
-log
+logs
 
 hicooer.cn.pfx
 

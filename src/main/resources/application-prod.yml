@@ -62,7 +62,7 @@ logging:
   level:
     root: INFO
     com.berry.oss: DEBUG
-  path: ./log
+  path: ./logs
   file:
     max-history: 30
 
