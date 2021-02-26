@@ -1,47 +1,21 @@
-server:
-  ssl:
-    key-store: hicooer.cn.pfx
-    key-store-password: ddoTwdhm
-    key-store-type: PKCS12
-    key-alias: tomcat
-
 spring:
   datasource:
-    url: jdbc:mysql://127.0.0.1:3306/db_oss_service?characterEncoding=utf8&useSSL=false&useUnicode=true&allowPublicKeyRetrieval=true
-    username: berry
-    password:
+    url: jdbc:mysql://47.101.42.169:3306/db_oss_service?characterEncoding=utf8&useSSL=false&useUnicode=true&allowPublicKeyRetrieval=true
+    username: user_oss
+    password: IeP6aLE517pmyEwZ
     driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.alibaba.druid.pool.DruidDataSource
     platform: mysql
 
   redis:
-    database: 15
+    database: 1
     # Redis服务器地址
-    host: 127.0.0.1
+    host: 10.0.101.144
     # Redis服务器连接端口
     port: 6379
     # Redis服务器连接密码（默认为空）
-    password:
+    password: seassoon13579
     timeout: 2000ms
-
-#  cloud:
-#    consul:
-#      discovery:
-#        enabled: true
-#        health-check-interval: 10s
-#        health-check-url: http://127.0.0.1:${server.port}/actuator/health
-#        instance-id: ${spring.application.name}:127.0.0.1:${server.port}
-#        port: ${server.port}
-#        service-name: ${spring.application.name}
-#        tags: prod
-#      enabled: true
-#      host: 127.0.0.1
-#      port: 8500
-
-management:
-  endpoint:
-    health:
-      show-details: always
 
 #mybatis
 mybatis-plus:
@@ -52,9 +26,9 @@ mybatis-plus:
     map-underscore-to-camel-case: true
     cache-enabled: false
     call-setters-on-nulls: true
-  # 开启 SQL 解析缓存注解生效
   global-config:
     sql-parser-cache: true
+
 
 # logback set path
 logging:
@@ -72,7 +46,9 @@ global:
   hotDataCache: false
   dataPath: ./store
   # 本机 服务地址
-  serverAddress: http://127.0.0.1:8077
+  serverAddress: http://10.0.102.250:8077
+  httpPort: 7077
   mail:
     from: berry_cooper@163.com
     baseUrl:
+

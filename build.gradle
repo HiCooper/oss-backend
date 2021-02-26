@@ -93,6 +93,12 @@ dependencies {
         exclude module: 'spring-boot-starter-tomcat'
     }
 
+    // micrometer
+    compile('io.micrometer:micrometer-registry-prometheus')
+    compile('io.micrometer:micrometer-core')
+
+
+
     runtime('mysql:mysql-connector-java')
     annotationProcessor 'org.projectlombok:lombok:1.18.8'
     compileOnly 'org.projectlombok:lombok:1.18.8'

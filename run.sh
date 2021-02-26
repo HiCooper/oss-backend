@@ -10,6 +10,12 @@ usage() {
   exit 1
 }
 
+
+if [[ "${APP_NAME##*.}"x -ne "jar"x ]];then
+  echo 'not jar file'
+  exit 1
+fi
+
 function checkParams() {
   if [[ ! -n ${functionName} ]] || [[ ! -n ${APP_NAME} ]]; then
     echo "ERROR!!! Please check the command, need like ./run.sh start app.jar"
@@ -18,8 +24,8 @@ function checkParams() {
 }
 
 function getPid() {
-  task_pid=$(ps -ef | grep java | grep "${APP_NAME}" | grep -v grep | grep -v kill | awk '{print $2}')
-  echo "${task_pid}"
+  task_pid=$(ps -ef | grep java | grep ${APP_NAME} | grep -v grep | grep -v kill | awk '{print $2}')
+  echo ${task_pid}
 }
 
 function start() {
@@ -28,7 +34,7 @@ function start() {
   if [[ -n ${task_pid} ]]; then
     echo "progress is running... try restart?"
   else
-    nohup java -jar "${APP_NAME}" --spring.profiles.active=prod &
+    nohup java -jar -Xms1024m -Xmx1024m ${APP_NAME} > /dev/null 2>&1 --spring.profiles.active=cc &
     echo ">>> start successed PID=$! <<<"
   fi
 }
@@ -38,7 +44,7 @@ function stop() {
   task_pid=$(getPid)
   if [[ -n ${task_pid} ]]; then
     echo "Kill Process! PID:${task_pid}"
-    kill -9 "${task_pid}"
+    kill -9 ${task_pid}
     echo 'Stop Success!'
   else
     echo "Not Running!"
@@ -50,7 +56,7 @@ function halt() {
   task_pid=$(getPid)
   if [[ -n ${task_pid} ]]; then
     echo "Stop Process! PID:${task_pid} Gracefully"
-    kill -15 "${task_pid}"
+    kill -15 ${task_pid}
     echo 'Stop Success!'
   else
     echo "Not Running!"

@@ -145,6 +145,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/ajax/**").authenticated()
                 .antMatchers("/management/health").permitAll()
                 .antMatchers("/management/info").permitAll()
+                .antMatchers("/management/prometheus").permitAll()
                 .antMatchers("/management/**").hasAuthority(AuthoritiesConstants.ADMIN)
                 .and()
                 .apply(securityConfigurerAdapter());

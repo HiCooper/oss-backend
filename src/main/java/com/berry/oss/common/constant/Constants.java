@@ -34,7 +34,7 @@ public final class Constants {
     /**
      * 心跳检查url
      */
-    public static final String HEALTH_CHECK_URL = "/actuator/health";
+    public static final String HEALTH_CHECK_URL = "/management/health";
 
     /**
      * 错误状态响应
