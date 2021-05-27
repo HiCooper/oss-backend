@@ -29,14 +29,14 @@ import java.util.List;
  * @date 2019/6/28 9:28
  */
 @Service
-public class IAccessKeyServiceImpl implements IAccessKeyService {
+public class AccessKeyServiceImpl implements IAccessKeyService {
 
     @Resource
     private IUserDaoService userDaoService;
 
     private final IAccessKeyInfoDaoService accessKeyInfoDaoService;
 
-    public IAccessKeyServiceImpl(IAccessKeyInfoDaoService accessKeyInfoDaoService) {
+    public AccessKeyServiceImpl(IAccessKeyInfoDaoService accessKeyInfoDaoService) {
         this.accessKeyInfoDaoService = accessKeyInfoDaoService;
     }
 

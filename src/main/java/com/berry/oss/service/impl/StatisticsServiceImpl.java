@@ -25,14 +25,8 @@ public class StatisticsServiceImpl implements IStatisticsService {
 
     private static final String PREFIX = "daily-statistics:";
 
-    private final IBucketService bucketService;
-
     @Resource
     private HashOperations<String, String, Object> hashOperations;
-
-    public StatisticsServiceImpl(IBucketService bucketService) {
-        this.bucketService = bucketService;
-    }
 
     @Override
     public void updateDailyStatistics(String bucket, String fileFullPath) {

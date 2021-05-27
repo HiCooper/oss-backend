@@ -41,7 +41,7 @@ public class DataServiceImpl implements IDataService {
     /**
      * 缓存对象最大容量  1M
      */
-    private static final int MAX_CACHE_FILE_SIZE = 1024 * 1024;
+    private static final int MAX_CACHE_FILE_SIZE = 10 * 1024 * 1024;
 
 
     @Resource

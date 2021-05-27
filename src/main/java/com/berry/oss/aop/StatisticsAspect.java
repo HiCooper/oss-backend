@@ -35,7 +35,7 @@ public class StatisticsAspect {
 
     @Around("execution(* com.berry.oss.api.ObjectController.getObject(..))")
     public Object getObjectStatistics(ProceedingJoinPoint joinPoint) throws Throwable {
-        logger.debug("update bucket query statistics");
+        logger.debug("update bucket obj query statistics");
         Object result = joinPoint.proceed();
         RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
         if (requestAttributes != null) {

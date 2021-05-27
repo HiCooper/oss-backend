@@ -81,6 +81,7 @@ public class ObjectServiceImpl implements IObjectService {
     private final GlobalProperties globalProperties;
     private final IAuthService authService;
     private final IRefererInfoDaoService refererInfoDaoService;
+    private final IHotDataCacheService hotDataCacheService;
 
     ObjectServiceImpl(IObjectInfoDaoService objectInfoDaoService,
                       IObjectHashService objectHashService,
@@ -89,7 +90,8 @@ public class ObjectServiceImpl implements IObjectService {
                       IBucketInfoDaoService bucketInfoDaoService,
                       GlobalProperties globalProperties,
                       IRefererInfoDaoService refererInfoDaoService,
-                      IAuthService authService) {
+                      IAuthService authService,
+                      IHotDataCacheService hotDataCacheService) {
         this.objectInfoDaoService = objectInfoDaoService;
         this.objectHashService = objectHashService;
         this.bucketService = bucketService;
@@ -98,6 +100,7 @@ public class ObjectServiceImpl implements IObjectService {
         this.globalProperties = globalProperties;
         this.refererInfoDaoService = refererInfoDaoService;
         this.authService = authService;
+        this.hotDataCacheService = hotDataCacheService;
     }
 
     @Override
@@ -330,6 +333,8 @@ public class ObjectServiceImpl implements IObjectService {
                 throw new XmlResponseException(new AccessDenied("identity check fail."));
             }
         }
+        // update hot data score
+        hotDataCacheService.updateRankKeyScore(objectInfo.getFileId());
 
         handlerResponse(bucket, response, request, objectInfo, download);
     }

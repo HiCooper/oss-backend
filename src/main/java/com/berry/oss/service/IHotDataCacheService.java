@@ -17,18 +17,24 @@ public interface IHotDataCacheService {
     /**
      * 根据 对象全路径获取 对象输入流
      *
-     * @param objectId objectId
+     * @param objectFileId objectFileId
      * @return 输入流
      * @throws IOException
      */
-    InputStream getObjectIsByObjectId(String objectId) throws IOException;
+    InputStream getObjectIsByObjectId(String objectFileId) throws IOException;
+
+    /**
+     * 更新 对象 热点数据score
+     *
+     * @param objectFileId 对象FileID
+     */
+    void updateRankKeyScore(String objectFileId);
 
     /**
      * 设置更新 对象缓存
      *
-     * @param objectId objectId
+     * @param objectFileId objectId
      * @param data     data
-     * @throws IOException
      */
-    void trySetObject(String objectId, byte[] data) throws IOException;
+    void trySetObject(String objectFileId, byte[] data);
 }

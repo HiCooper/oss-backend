@@ -6,19 +6,19 @@ spring:
   datasource:
     url: jdbc:mysql://47.101.42.169:3306/db_oss_service_dev?characterEncoding=utf8&useSSL=false&useUnicode=true&allowPublicKeyRetrieval=true
     username: berry
-    password:
+    password: okmnji123
     driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.alibaba.druid.pool.DruidDataSource
     platform: mysql
 
   redis:
-    database: 1
+    database: 6
     # Redis服务器地址
-    host: 47.101.42.169
+    host: 10.0.101.144
     # Redis服务器连接端口
     port: 6379
     # Redis服务器连接密码（默认为空）
-    password:
+    password: seassoon13579
     jedis:
       pool:
         # 连接池最大连接数（使用负值表示没有限制）
@@ -72,10 +72,10 @@ logging:
 global:
   # 单机模式(单机模式没用数据冗余)
   singleton: true
-  hotDataCache: false
+  hotDataCache: true
   dataPath: ./store
   # 本机 服务地址
-  serverAddress: http://127.0.0.1:8077
+  serverAddress: http://127.0.0.1:${server.port}
   httpPort: 7077
   mail:
     from: berry_cooper@163.com
